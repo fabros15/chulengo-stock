@@ -93,13 +93,7 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 <footer>Precios en pesos argentinos · Actualizado automáticamente · Chulengo Estudio</footer>
 
 <script>
-const CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJimysdaKWdqUCglvXMj5OEdMELC0yuMGeX7DezSRFX9DYtu3kt2xR0ONO7UOxwE0F4T8zJ09oVAkL/pub?gid=471425697&single=true&output=csv';
-
-const PROXIES = [
-  'https://corsproxy.io/?' + encodeURIComponent(CSV),
-  'https://api.allorigins.win/raw?url=' + encodeURIComponent(CSV),
-  'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(CSV)
-];
+const API = 'https://script.google.com/macros/s/AKfycbyQqTFKvy-Q6fSF7XZdgAMTbypeC3xMv08ACBLXnsKczgtD_tWQr9ZSkrifeEyufDPY/exec';
 
 const COLORS = {
   'amarillo':'#FFD600','azul':'#1E88E5','blanco':'#EEEEEE','negro':'#212121',
@@ -216,35 +210,20 @@ function render(){
 }
 
 async function load(){
-  let text=null;
-  for(const url of PROXIES){
-    try{
-      const r=await fetch(url);
-      if(r.ok){
-        // allorigins returns JSON, others return raw text
-        if(url.includes('allorigins')){
-          const j=await r.json();
-          text=j.contents;
-        } else {
-          text=await r.text();
-        }
-        if(text && text.includes(',') && text.length>100) break;
-        text=null;
-      }
-    }catch(e){continue;}
-  }
-  if(!text){
+  try{
+    const r=await fetch(API);
+    if(!r.ok) throw new Error('error');
+    const json=await r.json();
+    DATA=json.map(normalize).filter(d=>d.material||d.denom);
+    populateFilters();
+    render();
+    ['search','fil-material','fil-marca','fil-stock'].forEach(id=>{
+      document.getElementById(id).addEventListener('input',render);
+    });
+  }catch(e){
     document.getElementById('content').innerHTML='<div class="loading">No se pudieron cargar los datos. Intentá recargar la página.</div>';
     document.getElementById('stats').innerHTML='<span>Error al cargar</span>';
-    return;
   }
-  const result=Papa.parse(text,{header:true,skipEmptyLines:true});
-  DATA=result.data.map(normalize).filter(d=>d.material||d.denom);
-  populateFilters();
-  render();
-  ['search','fil-material','fil-marca','fil-stock'].forEach(id=>{
-    document.getElementById(id).addEventListener('input',render);
-  });
 }
 
 load();
