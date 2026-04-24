@@ -217,9 +217,7 @@ function render(){
         im.className='card-img';
         im.src=d.img.split('/').pop();
         im.loading='lazy';
-        im.style.display='none';
-      im.onload=function(){if(this.naturalWidth>10){this.style.display='block';}else{this.style.display='none';}};
-      im.onerror=function(){this.style.display='none';};
+        im.onerror=function(){this.style.display='none';};
         card.appendChild(im);
       }
 
@@ -316,4 +314,3 @@ fetch('https://script.google.com/macros/s/AKfycbxSyk62NZrRKnGfgsYE0L1v5PdiFBOUp2
 </script>
 </body>
 </html>
-
