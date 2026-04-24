@@ -101,8 +101,8 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
   <select id="fil-material"><option value="">Todos los materiales</option></select>
   <select id="fil-marca"><option value="">Todas las marcas</option></select>
   <select id="fil-stock">
+    <option value="">Todos</option>
     <option value="instock">Con stock</option>
-    <option value="">Todo (inc. sin stock)</option>
     <option value="ok">Disponible</option>
     <option value="low">Poco stock</option>
     <option value="out">Sin stock</option>
@@ -154,9 +154,13 @@ function render(){
     if(stk==='instock'&&getSt(d.stock)==='out')return false;if(stk&&stk!=='instock'&&getSt(d.stock)!==stk)return false;
     return true;
   });
+  f.sort(function(a,b){
+    var order={'ok':0,'low':1,'out':2};
+    return order[getSt(a.stock)] - order[getSt(b.stock)];
+  });
   var ok=0,low=0,out=0;
   f.forEach(function(d){var s=getSt(d.stock);if(s==='ok')ok++;else if(s==='low')low++;else out++;});
-  document.getElementById('stats').innerHTML='<span>Mostrando <b id="scnt">0</b> productos</span><span><b id="sok">0</b> disponibles</span><span><b id="slow">0</b> poco stock</span><span><b id="sout">0</b> sin stock</span>';
+  document.getElementById('stats').innerHTML='<span>Mostrando <b id="scnt">0</b> productos</span><span><b id="sok">0</b> disponibles</span><span><b id="slow">0</b> poco stock</span>';
   animateCount(document.getElementById('scnt'), f.length);
   animateCount(document.getElementById('sok'), ok);
   animateCount(document.getElementById('slow'), low);
