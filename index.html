@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chulengo Estudio — Stock</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:#F5F2ED;color:#1A1814;min-height:100vh}
 .site-header{background:#1A1814;color:#fff;padding:1.5rem 2rem;position:sticky;top:0;z-index:100}
-.header-top{display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap;margin-bottom:0.5rem}
+.header-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:0.5rem}
 .site-title{font-family:'DM Mono',monospace;font-size:1.25rem;font-weight:500}
 .site-sub{font-size:0.8rem;color:#9CA3AF;font-family:'DM Mono',monospace}
+.logo{width:40px;height:40px;border-radius:8px;object-fit:cover}
 .promo-pill{display:inline-flex;align-items:center;gap:6px;background:#1D4ED8;color:#fff;font-size:0.72rem;font-weight:500;padding:4px 12px;border-radius:20px}
 .promo-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:#93C5FD;display:inline-block}
 .filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.875rem 2rem;display:flex;gap:10px;flex-wrap:wrap}
@@ -36,7 +36,7 @@ select:focus{border-color:#2D6A4F}
 .card-meta{font-size:0.76rem;color:#8A8479;line-height:1.6}
 .card-meta b{color:#1A1814;font-weight:500}
 .color-chip{display:inline-flex;align-items:center;gap:5px}
-.cdot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(0,0,0,0.12);flex-shrink:0}
+.cdot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(0,0,0,0.12);flex-shrink:0;display:inline-block}
 .stock-line{font-family:'DM Mono',monospace;font-size:0.75rem;color:#8A8479}
 .stock-line b{color:#1A1814}
 .prices{border-top:1px solid #E2DDD6;padding-top:8px;margin-top:2px;display:flex;flex-direction:column;gap:4px}
@@ -58,16 +58,14 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 </style>
 </head>
 <body>
-
 <header class="site-header">
   <div class="header-top">
-    <img src="CHULENGO%20LOGOO.png" alt="Chulengo Estudio" style="width:40px;height:40px;border-radius:8px">
+    <img src="CHULENGO_LOGOO.png" alt="Logo" class="logo">
     <span class="site-title">Chulengo Estudio</span>
     <span class="site-sub">stock de filamentos</span>
   </div>
-  <div class="promo-pill">Precio oferta disponible comprando 2 kg o más</div>
+  <div class="promo-pill">Precio oferta disponible comprando 2 kg o mas</div>
 </header>
-
 <div class="filters-bar">
   <div class="search-wrap">
     <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -82,150 +80,82 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
     <option value="out">Sin stock</option>
   </select>
 </div>
-
-<div class="stats-bar" id="stats">
-  <span>Cargando datos...</span>
-</div>
-
-<div id="content">
-  <div class="loading"><div class="spinner"></div>Cargando stock...</div>
-</div>
-
-<footer>Precios en pesos argentinos · Actualizado automáticamente · Chulengo Estudio</footer>
-
+<div class="stats-bar" id="stats"><span>Cargando datos...</span></div>
+<div id="content"><div class="loading"><div class="spinner"></div>Cargando stock...</div></div>
+<footer>Precios en pesos argentinos - Actualizado automaticamente - Chulengo Estudio</footer>
 <script>
-const API = 'https://script.google.com/macros/s/AKfycbyQqTFKvy-Q6fSF7XZdgAMTbypeC3xMv08ACBLXnsKczgtD_tWQr9ZSkrifeEyufDPY/exec';
-
-const COLORS = {
-  'amarillo':'#FFD600','azul':'#1E88E5','blanco':'#EEEEEE','negro':'#212121',
-  'verde':'#43A047','rojo':'#E53935','naranja':'#FB8C00','rosa':'#E91E63',
-  'marron':'#6D4C41','marrón':'#6D4C41','violeta':'#8E24AA','gris':'#9E9E9E',
-  'plateado':'#B0BEC5','dorado':'#FFA000','celeste':'#4FC3F7','turquesa':'#26C6DA'
-};
-
-let DATA = [];
-
-function fmt(n){
-  return new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(Number(n)||0);
-}
-function status(s){
-  const n=parseInt(s)||0;
-  return n<=0?'out':n<=3?'low':'ok';
-}
-function label(s){return{out:'Sin stock',low:'Poco stock',ok:'Disponible'}[status(s)];}
-function cls(s){return{out:'b-out',low:'b-low',ok:'b-ok'}[status(s)];}
-function dot(c){
-  const h=COLORS[(c||'').toLowerCase()];
-  return h?`<span class="cdot" style="background:${h}"></span>`:'';
-}
-
-function normalize(row){
-  return {
-    marca:    String(row['marca nombre']    || row['marca']    || ''),
-    material: String(row['material nombre'] || row['material'] || ''),
-    present:  String(row['presentacion nombre'] || row['presentacion'] || ''),
-    color:    String(row['color nombre']    || row['color']    || ''),
-    denom:    String(row['denominacion nombre'] || row['denominacion'] || ''),
-    lista:    row['precio_lista']  || 0,
-    oferta:   row['precio_oferta'] || 0,
-    stock:    row['stock'] !== undefined ? row['stock'] : 0,
-  };
-}
-
-function populateFilters(){
-  const mats=[...new Set(DATA.map(d=>d.material).filter(Boolean))].sort();
-  const marcas=[...new Set(DATA.map(d=>d.marca).filter(Boolean))].sort();
-  const fm=document.getElementById('fil-material');
-  const fb=document.getElementById('fil-marca');
+var DATA=[];
+var COLORS={'amarillo':'#FFD600','azul':'#1E88E5','blanco':'#E0E0E0','negro':'#212121','verde':'#43A047','rojo':'#E53935','naranja':'#FB8C00','rosa':'#E91E63','marron':'#6D4C41','violeta':'#8E24AA','gris':'#9E9E9E','plateado':'#B0BEC5','dorado':'#FFA000','celeste':'#4FC3F7','multicolor':'#CCCCCC','transparente':'#E3F2FD','surtido':'#CCCCCC'};
+function fmt(n){return new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(Number(n)||0);}
+function getSt(s){var n=parseInt(s);if(isNaN(n)||n<=0)return'out';if(n<=3)return'low';return'ok';}
+function getLbl(s){var t=getSt(s);return t==='out'?'Sin stock':t==='low'?'Poco stock':'Disponible';}
+function getBdg(s){return'b-'+getSt(s);}
+function getDot(c){if(!c||c==='*n/a')return'';var h=COLORS[c.toLowerCase()];return h?'<span class="cdot" style="background:'+h+'"></span>':'';}
+function populate(){
+  var mats=[],marcas=[],seen={};
+  DATA.forEach(function(d){
+    if(d.material&&!seen['m'+d.material]){seen['m'+d.material]=1;mats.push(d.material);}
+    if(d.marca&&!seen['b'+d.marca]){seen['b'+d.marca]=1;marcas.push(d.marca);}
+  });
+  mats.sort();marcas.sort();
+  var fm=document.getElementById('fil-material'),fb=document.getElementById('fil-marca');
   fm.innerHTML='<option value="">Todos los materiales</option>';
   fb.innerHTML='<option value="">Todas las marcas</option>';
-  mats.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;fm.appendChild(o);});
-  marcas.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;fb.appendChild(o);});
+  mats.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;fm.appendChild(o);});
+  marcas.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;fb.appendChild(o);});
 }
-
 function render(){
-  const q=document.getElementById('search').value.toLowerCase();
-  const mat=document.getElementById('fil-material').value;
-  const marca=document.getElementById('fil-marca').value;
-  const stk=document.getElementById('fil-stock').value;
-
-  const filtered=DATA.filter(d=>{
-    if(q){
-      const hay=d.denom.toLowerCase().includes(q)||
-                d.color.toLowerCase().includes(q)||
-                d.marca.toLowerCase().includes(q)||
-                d.material.toLowerCase().includes(q);
-      if(!hay)return false;
-    }
-    if(mat && d.material!==mat)return false;
-    if(marca && d.marca!==marca)return false;
-    if(stk && status(d.stock)!==stk)return false;
+  var q=document.getElementById('search').value.toLowerCase();
+  var mat=document.getElementById('fil-material').value;
+  var marca=document.getElementById('fil-marca').value;
+  var stk=document.getElementById('fil-stock').value;
+  var f=DATA.filter(function(d){
+    if(q&&(d.denom+' '+d.color+' '+d.marca+' '+d.material).toLowerCase().indexOf(q)===-1)return false;
+    if(mat&&d.material!==mat)return false;
+    if(marca&&d.marca!==marca)return false;
+    if(stk&&getSt(d.stock)!==stk)return false;
     return true;
   });
-
-  const ok=filtered.filter(d=>status(d.stock)==='ok').length;
-  const low=filtered.filter(d=>status(d.stock)==='low').length;
-  const out=filtered.filter(d=>status(d.stock)==='out').length;
-
-  document.getElementById('stats').innerHTML=
-    `<span>Mostrando <b>${filtered.length}</b> productos</span>`+
-    `<span><b>${ok}</b> disponibles</span>`+
-    `<span><b>${low}</b> poco stock</span>`+
-    `<span><b>${out}</b> sin stock</span>`;
-
-  if(!filtered.length){
-    document.getElementById('content').innerHTML='<div class="grid"><div class="empty">No se encontraron productos con esos filtros.</div></div>';
-    return;
-  }
-
-  document.getElementById('content').innerHTML='<div class="grid">'+filtered.map(d=>{
-    const lista=Number(d.lista)||0;
-    const oferta=Number(d.oferta)||0;
-    const hayOferta=oferta>0 && oferta!==lista;
-    const stockN=parseInt(d.stock)||0;
-    return `<div class="card">
-      <div class="card-top">
-        <div class="card-title">${d.material} · ${d.denom}</div>
-        <span class="badge ${cls(d.stock)}">${label(d.stock)}</span>
-      </div>
-      <div class="card-meta">
-        <b>${d.marca}</b> · ${d.present}<br>
-        <span class="color-chip">${dot(d.color)}${d.color||'Sin color'}</span>
-      </div>
-      <div class="stock-line">Stock: <b>${stockN} u.</b></div>
-      <div class="prices">
-        <div class="price-row">
-          <span class="price-label">Precio unitario</span>
-          <span class="price-val">${fmt(lista)}</span>
-        </div>
-        ${hayOferta?`<div class="price-row">
-          <span class="price-label">Oferta <span class="ptag">2 kg o más</span></span>
-          <span class="price-val green">${fmt(oferta)}</span>
-        </div>`:''}
-      </div>
-    </div>`;
-  }).join('')+'</div>';
+  var ok=0,low=0,out=0;
+  f.forEach(function(d){var s=getSt(d.stock);if(s==='ok')ok++;else if(s==='low')low++;else out++;});
+  document.getElementById('stats').innerHTML='<span>Mostrando <b>'+f.length+'</b> productos</span><span><b>'+ok+'</b> disponibles</span><span><b>'+low+'</b> poco stock</span><span><b>'+out+'</b> sin stock</span>';
+  if(!f.length){document.getElementById('content').innerHTML='<div class="grid"><div class="empty">No se encontraron productos.</div></div>';return;}
+  var html='<div class="grid">';
+  f.forEach(function(d){
+    var lista=Number(d.lista)||0,oferta=Number(d.oferta)||0;
+    var hayOferta=oferta>0&&oferta!==lista;
+    var stockN=parseInt(d.stock)||0;
+    var cLabel=(d.color&&d.color!=='*n/a')?d.color:'Sin color';
+    html+='<div class="card"><div class="card-top"><div class="card-title">'+d.material+' - '+d.denom+'</div><span class="badge '+getBdg(d.stock)+'">'+getLbl(d.stock)+'</span></div><div class="card-meta"><b>'+d.marca+'</b> - '+d.present+'<br><span class="color-chip">'+getDot(d.color)+cLabel+'</span></div><div class="stock-line">Stock: <b>'+stockN+' u.</b></div><div class="prices"><div class="price-row"><span class="price-label">Precio unitario</span><span class="price-val">'+fmt(lista)+'</span></div>'+(hayOferta?'<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o mas</span></span><span class="price-val green">'+fmt(oferta)+'</span></div>':'')+'</div></div>';
+  });
+  html+='</div>';
+  document.getElementById('content').innerHTML=html;
 }
-
-async function load(){
-  try{
-    const r=await fetch(API);
-    if(!r.ok) throw new Error('error');
-    const json=await r.json();
-    DATA=json.map(normalize).filter(d=>d.material||d.denom);
-    populateFilters();
+fetch('https://script.google.com/macros/s/AKfycbyQqTFKvy-Q6fSF7XZdgAMTbypeC3xMv08ACBLXnsKczgtD_tWQr9ZSkrifeEyufDPY/exec')
+  .then(function(r){return r.json();})
+  .then(function(json){
+    DATA=json.map(function(row){
+      return{
+        marca:String(row['marca nombre']||''),
+        material:String(row['material nombre']||''),
+        present:String(row['presentacion nombre']||''),
+        color:String(row['color nombre']||''),
+        denom:String(row['denominacion nombre']||''),
+        lista:row['precio_lista']||0,
+        oferta:row['precio_oferta']||0,
+        stock:row['stock']!==undefined?row['stock']:0
+      };
+    }).filter(function(d){return d.material||d.denom;});
+    populate();
     render();
-    ['search','fil-material','fil-marca','fil-stock'].forEach(id=>{
+    ['search','fil-material','fil-marca','fil-stock'].forEach(function(id){
       document.getElementById(id).addEventListener('input',render);
     });
-  }catch(e){
-    document.getElementById('content').innerHTML='<div class="loading">No se pudieron cargar los datos. Intentá recargar la página.</div>';
-    document.getElementById('stats').innerHTML='<span>Error al cargar</span>';
-  }
-}
-
-load();
+  })
+  .catch(function(e){
+    document.getElementById('content').innerHTML='<div class="loading">No se pudieron cargar los datos. Recarga la pagina.<br><small style="color:red">'+e+'</small></div>';
+    document.getElementById('stats').innerHTML='<span>Error</span>';
+  });
 </script>
 </body>
 </html>
-
