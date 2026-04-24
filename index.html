@@ -91,7 +91,7 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
     <span class="site-title">Chulengo Estudio</span>
     
   </div>
-  <div class="promo-pill">Precio oferta disponible comprando 2 kg o más</div>
+  <div class="promo-pill">Precio oferta disponible comprando 2 kg o más de cualquier color, material o marca</div>
 </header>
 <div class="filters-bar">
   <div class="search-wrap">
@@ -172,7 +172,7 @@ function render(){
     var hayOferta=oferta>0&&oferta!==lista;
     var stockN=parseInt(d.stock)||0;
     var cLabel=(d.color&&d.color!=='*n/a')?d.color:'Sin color';
-    html+='<div class="card">'+(d.img?'<img class="card-img" src="'+d.img.split('/').pop()+'" loading="lazy" onerror="this.style.display=\'none\'">':'')+'<div class="card-top"><div class="card-title">'+d.material+' - '+d.denom+'</div><span class="badge '+getBdg(d.stock)+'">'+getLbl(d.stock)+'</span></div><div class="card-meta"><b>'+d.marca+'</b> - '+d.present+'<br><span class="color-chip">'+getDot(d.color)+cLabel+'</span></div><div class="stock-line">Stock: <b>'+stockN+' u.</b></div><div class="prices"><div class="price-row"><span class="price-label">Precio unitario</span><span class="price-val">'+fmt(lista)+'</span></div>'+(hayOferta?'<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o más</span></span><span class="price-val green">'+fmt(oferta)+'</span></div>':'')+'</div></div>';
+    html+='<div class="card">'+(d.img?'<img class="card-img" src="'+d.img.split('/').pop()+'" loading="lazy" onerror="this.style.display=\'none\'">':'')+'<div class="card-top"><div class="card-title">'+d.material+' - '+d.denom+'</div><span class="badge '+getBdg(d.stock)+'">'+getLbl(d.stock)+'</span></div><div class="card-meta"><b>'+d.marca+'</b> - '+d.present+'<br><span class="color-chip">'+getDot(d.color)+cLabel+'</span></div><div class="stock-line">Stock: <b>'+stockN+' u.</b></div><div class="prices"><div class="price-row"><span class="price-label">Precio unitario</span><span class="price-val">'+fmt(lista)+'</span></div>'+(hayOferta?'<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o más*</span></span><span class="price-val green">'+fmt(oferta)+'</span></div>':'')+'</div></div>';
   });
   html+='</div>';
   document.getElementById('content').innerHTML=html;
