@@ -81,6 +81,7 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 .card-img{width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:2px;background:#F5F2ED}
 .card-img-placeholder{width:100%;height:80px;border-radius:8px;margin-bottom:2px;background:#F5F2ED;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js"></script>
 </head>
 <body>
 <header class="site-header">
@@ -111,6 +112,7 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 <footer>Chulengo Estudio · Argentina · Chubut · Puerto Madryn · 2026</footer>
 <script>
 var DATA=[];
+var FUSE=null;
 var COLORS={'amarillo':'#FFD600','azul':'#1E88E5','blanco':'#E0E0E0','negro':'#212121','verde':'#43A047','rojo':'#E53935','naranja':'#FB8C00','rosa':'#E91E63','marron':'#6D4C41','violeta':'#8E24AA','gris':'#9E9E9E','plateado':'#B0BEC5','dorado':'#FFA000','celeste':'#4FC3F7','multicolor':'#CCCCCC','transparente':'#E3F2FD','surtido':'#CCCCCC'};
 function fmt(n){return new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(Number(n)||0);}
 function getSt(s){var n=parseInt(s);if(isNaN(n)||n<=0)return'out';if(n<=3)return'low';return'ok';}
@@ -187,6 +189,11 @@ fetch('https://script.google.com/macros/s/AKfycbzcF5kip6kEVhPini0KMyvWwEufDs1jQ8
       };
     }).filter(function(d){return d.material||d.denom;});
     populate();
+    FUSE = new Fuse(DATA, {
+      keys: ['denom','marca','material','color','present'],
+      threshold: 0.4,
+      includeScore: true
+    });
     render();
     ['search','fil-material','fil-marca','fil-stock'].forEach(function(id){
       document.getElementById(id).addEventListener('input',render);
