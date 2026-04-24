@@ -81,9 +81,13 @@ function cambiarQty(id, delta){
   carrito[id].qty+=delta;
   if(carrito[id].qty<=0){
     delete carrito[id];
-    // remove active class from card btn
-    var btn=document.getElementById('cart-btn-'+id);
-    if(btn){btn.textContent='+ Agregar al pedido';btn.className='btn-agregar';}
+    // find and reset ALL buttons that match this item
+    document.querySelectorAll('.btn-agregar').forEach(function(btn){
+      if(btn.dataset.cartid===id){
+        btn.textContent='+ Agregar al pedido';
+        btn.className='btn-agregar';
+      }
+    });
   }
   actualizarCarrito();
 }
@@ -97,8 +101,22 @@ function agregarAlCarrito(idx){
   } else {
     carrito[id]={material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,qty:1};
   }
-  var btn=document.getElementById('cart-btn-'+idx);
-  if(btn){btn.textContent='✓ En el pedido';btn.className='btn-agregar en-carrito';}
+  // update button text with quantity
+  document.querySelectorAll('.btn-agregar').forEach(function(btn){
+    if(btn.dataset.cartid===id){
+      btn.textContent='✓ '+carrito[id].qty+' en el pedido';
+      btn.className='btn-agregar en-carrito';
+    }
+  });
+  // update all buttons
+  Object.keys(carrito).forEach(function(id){
+    document.querySelectorAll('.btn-agregar').forEach(function(btn){
+      if(btn.dataset.cartid===id){
+        btn.textContent='✓ '+carrito[id].qty+' en el pedido';
+        btn.className='btn-agregar en-carrito';
+      }
+    });
+  });
   actualizarCarrito();
 }
 
@@ -620,7 +638,13 @@ function render(){
       if(hayOferta){inner+='<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o más*</span></span><span class="price-val green">'+fmtPeso(oferta)+'</span></div>';}
       inner+='</div>';
       if(isOut){inner+='<div class="notify-hint">👆 Tocá para que te avisemos</div>';}
-      else{inner+='<button class="btn-agregar" id="cart-btn-'+idx+'" onclick="event.stopPropagation();agregarAlCarrito('+idx+')">+ Agregar al pedido</button>';}
+      else{
+        var cartId=d.material+'-'+d.denom+'-'+d.marca;
+        var enCarrito=carrito[cartId];
+        var btnTxt=enCarrito?'✓ '+enCarrito.qty+' en el pedido':'+ Agregar al pedido';
+        var btnCls=enCarrito?'btn-agregar en-carrito':'btn-agregar';
+        inner+='<button class="'+btnCls+'" id="cart-btn-'+idx+'" data-cartid="'+cartId+'" onclick="event.stopPropagation();agregarAlCarrito('+idx+')">'+btnTxt+'</button>';
+      }
       card.innerHTML+=inner;
       grid.appendChild(card);
     });
@@ -833,9 +857,13 @@ function cambiarQty(id, delta){
   carrito[id].qty+=delta;
   if(carrito[id].qty<=0){
     delete carrito[id];
-    // remove active class from card btn
-    var btn=document.getElementById('cart-btn-'+id);
-    if(btn){btn.textContent='+ Agregar al pedido';btn.className='btn-agregar';}
+    // find and reset ALL buttons that match this item
+    document.querySelectorAll('.btn-agregar').forEach(function(btn){
+      if(btn.dataset.cartid===id){
+        btn.textContent='+ Agregar al pedido';
+        btn.className='btn-agregar';
+      }
+    });
   }
   actualizarCarrito();
 }
@@ -849,8 +877,13 @@ function agregarAlCarrito(idx){
   } else {
     carrito[id]={material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,qty:1};
   }
-  var btn=document.getElementById('cart-btn-'+idx);
-  if(btn){btn.textContent='✓ En el pedido';btn.className='btn-agregar en-carrito';}
+  // update button text with quantity
+  document.querySelectorAll('.btn-agregar').forEach(function(btn){
+    if(btn.dataset.cartid===id){
+      btn.textContent='✓ '+carrito[id].qty+' en el pedido';
+      btn.className='btn-agregar en-carrito';
+    }
+  });
   actualizarCarrito();
 }
 
