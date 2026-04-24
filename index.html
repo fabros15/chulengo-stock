@@ -81,8 +81,48 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 .filters-bar select:focus,.filters-bar input:focus{box-shadow:0 0 0 3px rgba(45,106,79,0.15)}
 
 .card-img{width:100%;height:130px;object-fit:cover;border-radius:8px;margin-bottom:4px}
+
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:16px;padding:1.5rem;max-width:380px;width:100%;animation:fadeUp 0.3s ease}
+.modal-img{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:1rem}
+.modal-title{font-size:1rem;font-weight:600;color:#1A1814;margin-bottom:4px}
+.modal-meta{font-size:0.82rem;color:#8A8479;margin-bottom:1rem;line-height:1.6}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:#8A8479;line-height:1}
+.modal-header{position:relative;margin-bottom:0.5rem}
+.btn-whatsapp{display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:14px 20px;font-size:1rem;font-weight:600;width:100%;cursor:pointer;text-decoration:none;margin-top:0.5rem;font-family:'DM Sans',sans-serif;transition:background 0.2s}
+.btn-whatsapp:hover{background:#1ebe5d}
+.btn-whatsapp svg{flex-shrink:0}
+.modal-tag{display:inline-block;background:#FEE2E2;color:#7F1D1D;font-size:0.72rem;font-weight:500;padding:3px 10px;border-radius:20px;margin-bottom:0.75rem}
+.card.out-of-stock{cursor:pointer;opacity:0.85;transition:opacity 0.2s,transform 0.2s,box-shadow 0.2s}
+.card.out-of-stock:hover{opacity:1;box-shadow:0 8px 24px rgba(0,0,0,0.13);transform:translateY(-4px) scale(1.02)}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js">
+function openModal(d) {
+  var img = document.getElementById('modal-img');
+  if(d.img) {
+    img.src = d.img.split('/').pop();
+    img.style.display = 'block';
+    img.onerror = function(){ this.style.display='none'; };
+  } else {
+    img.style.display = 'none';
+  }
+  document.getElementById('modal-title').textContent = d.material + ' - ' + d.denom;
+  document.getElementById('modal-meta').innerHTML = '<b>' + d.marca + '</b> · ' + d.present + ' · ' + (d.color && d.color !== '*n/a' ? d.color : 'Sin color');
+  var msg = 'Hola! 👋 Quisiera que me avisen cuando haya stock de: *' + d.material + ' - ' + d.denom + '* (' + d.marca + ' · ' + d.color + ' · ' + d.present + '). Gracias!';
+  document.getElementById('modal-wa').href = 'https://wa.me/5492804585359?text=' + encodeURIComponent(msg);
+  document.getElementById('modal-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeModalBtn() {
+  document.getElementById('modal-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+function closeModal(e) {
+  if(e.target === document.getElementById('modal-overlay')) closeModalBtn();
+}
+
+</script>
 </head>
 <body>
 <header class="site-header">
@@ -174,7 +214,7 @@ function render(){
     var hayOferta=oferta>0&&oferta!==lista;
     var stockN=parseInt(d.stock)||0;
     var cLabel=(d.color&&d.color!=='*n/a')?d.color:'Sin color';
-    html+='<div class="card">'+(d.img?'<img class="card-img" src="'+d.img.split('/').pop()+'" loading="lazy" onerror="this.style.display=\'none\'">':'')+'<div class="card-top"><div class="card-title">'+d.material+' - '+d.denom+'</div><span class="badge '+getBdg(d.stock)+'">'+getLbl(d.stock)+'</span></div><div class="card-meta"><b>'+d.marca+'</b> - '+d.present+'<br><span class="color-chip">'+getDot(d.color)+cLabel+'</span></div><div class="stock-line">Stock: <b>'+stockN+' u.</b></div><div class="prices"><div class="price-row"><span class="price-label">Precio unitario</span><span class="price-val">'+fmt(lista)+'</span></div>'+(hayOferta?'<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o más*</span></span><span class="price-val green">'+fmt(oferta)+'</span></div>':'')+'</div></div>';
+    html+='<div class="card'+(getSt(d.stock)==='out'?' out-of-stock':'')+'"+(getSt(d.stock)==='out'?' onclick="openModal(DATA['+f.indexOf(d)+'])"':'')+'>'+(d.img?'<img class="card-img" src="'+d.img.split('/').pop()+'" loading="lazy" onerror="this.style.display=\'none\'">':'')+'<div class="card-top"><div class="card-title">'+d.material+' - '+d.denom+'</div><span class="badge '+getBdg(d.stock)+'">'+getLbl(d.stock)+'</span></div><div class="card-meta"><b>'+d.marca+'</b> - '+d.present+'<br><span class="color-chip">'+getDot(d.color)+cLabel+'</span></div><div class="stock-line">Stock: <b>'+stockN+' u.</b></div><div class="prices"><div class="price-row"><span class="price-label">Precio unitario</span><span class="price-val">'+fmt(lista)+'</span></div>'+(hayOferta?'<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o más*</span></span><span class="price-val green">'+fmt(oferta)+'</span></div>':'')+'</div></div>';
   });
   html+='</div>';
   document.getElementById('content').innerHTML=html;
@@ -219,5 +259,22 @@ fetch('https://script.google.com/macros/s/AKfycbxSyk62NZrRKnGfgsYE0L1v5PdiFBOUp2
     document.getElementById('stats').innerHTML='<span>Error</span>';
   });
 </script>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    </div>
+    <img id="modal-img" class="modal-img" src="" alt="" style="display:none">
+    <span class="modal-tag">Sin stock</span>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-meta" id="modal-meta"></div>
+    <a class="btn-whatsapp" id="modal-wa" href="#" target="_blank">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.115.549 4.1 1.508 5.83L.057 23.077a.75.75 0 0 0 .916.953l5.453-1.427A11.933 11.933 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.715 9.715 0 0 1-4.951-1.355l-.355-.211-3.676.962.98-3.578-.231-.368A9.715 9.715 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
+      Avisarme cuando haya stock
+    </a>
+  </div>
+</div>
+
 </body>
 </html>
