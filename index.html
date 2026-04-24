@@ -68,7 +68,7 @@ function renderCarritoBody(){
       '<div class="carrito-item-controles">'+
         '<button class="ctrl-btn" onclick="cambiarQty(&quot;'+id+'&quot;,-1)">−</button>'+
         '<span class="ctrl-qty">'+item.qty+'</span>'+
-        '<button class="ctrl-btn" onclick="cambiarQty(&quot;'+id+'&quot;,1)">+</button>'+
+        '<button class="ctrl-btn" onclick="cambiarQty(&quot;'+id+'&quot;,1)" '+(item.qty>=item.stock?'style="opacity:0.4;cursor:not-allowed" title="Stock máximo alcanzado"':'')+'>+</button>'+
       '</div>'+
       '<div class="carrito-item-precio">'+fmtPeso(precio*item.qty)+'</div>'+
     '</div>';
@@ -78,6 +78,7 @@ function renderCarritoBody(){
 
 function cambiarQty(id, delta){
   if(!carrito[id])return;
+  if(delta>0 && carrito[id].qty>=carrito[id].stock) return;
   carrito[id].qty+=delta;
   if(carrito[id].qty<=0){
     delete carrito[id];
@@ -96,10 +97,22 @@ function agregarAlCarrito(idx){
   var d=FILTERED[idx];
   if(!d||getSt(d.stock)==='out')return;
   var id=d.material+'-'+d.denom+'-'+d.marca;
+  var stockDisp=parseInt(d.stock)||0;
   if(carrito[id]){
+    if(carrito[id].qty>=stockDisp){
+      // already at max, show feedback
+      document.querySelectorAll('.btn-agregar').forEach(function(btn){
+        if(btn.dataset.cartid===id){
+          var orig=btn.textContent;
+          btn.textContent='Stock máximo: '+stockDisp;
+          setTimeout(function(){btn.textContent='✓ '+carrito[id].qty+' en el pedido';},1500);
+        }
+      });
+      return;
+    }
     carrito[id].qty++;
   } else {
-    carrito[id]={material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,qty:1};
+    carrito[id]={material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,qty:1,stock:stockDisp};
   }
   // update button text with quantity
   document.querySelectorAll('.btn-agregar').forEach(function(btn){
@@ -844,7 +857,7 @@ function renderCarritoBody(){
       '<div class="carrito-item-controles">'+
         '<button class="ctrl-btn" onclick="cambiarQty(&quot;'+id+'&quot;,-1)">−</button>'+
         '<span class="ctrl-qty">'+item.qty+'</span>'+
-        '<button class="ctrl-btn" onclick="cambiarQty(&quot;'+id+'&quot;,1)">+</button>'+
+        '<button class="ctrl-btn" onclick="cambiarQty(&quot;'+id+'&quot;,1)" '+(item.qty>=item.stock?'style="opacity:0.4;cursor:not-allowed" title="Stock máximo alcanzado"':'')+'>+</button>'+
       '</div>'+
       '<div class="carrito-item-precio">'+fmtPeso(precio*item.qty)+'</div>'+
     '</div>';
@@ -854,6 +867,7 @@ function renderCarritoBody(){
 
 function cambiarQty(id, delta){
   if(!carrito[id])return;
+  if(delta>0 && carrito[id].qty>=carrito[id].stock) return;
   carrito[id].qty+=delta;
   if(carrito[id].qty<=0){
     delete carrito[id];
@@ -872,10 +886,22 @@ function agregarAlCarrito(idx){
   var d=FILTERED[idx];
   if(!d||getSt(d.stock)==='out')return;
   var id=d.material+'-'+d.denom+'-'+d.marca;
+  var stockDisp=parseInt(d.stock)||0;
   if(carrito[id]){
+    if(carrito[id].qty>=stockDisp){
+      // already at max, show feedback
+      document.querySelectorAll('.btn-agregar').forEach(function(btn){
+        if(btn.dataset.cartid===id){
+          var orig=btn.textContent;
+          btn.textContent='Stock máximo: '+stockDisp;
+          setTimeout(function(){btn.textContent='✓ '+carrito[id].qty+' en el pedido';},1500);
+        }
+      });
+      return;
+    }
     carrito[id].qty++;
   } else {
-    carrito[id]={material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,qty:1};
+    carrito[id]={material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,qty:1,stock:stockDisp};
   }
   // update button text with quantity
   document.querySelectorAll('.btn-agregar').forEach(function(btn){
