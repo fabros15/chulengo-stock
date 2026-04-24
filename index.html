@@ -66,9 +66,9 @@ function renderCarritoBody(){
         '<div class="carrito-item-sub">'+item.marca+' · '+item.present+(usaOferta?' · <span style="color:#2D6A4F;font-weight:600">precio oferta</span>':'')+'</div>'+
       '</div>'+
       '<div class="carrito-item-controles">'+
-        '<button class="ctrl-btn" onclick="cambiarQty(''+id+'',-1)">−</button>'+
+        '<button class="ctrl-btn" onclick="cambiarQty(&quot;'+id+'&quot;,-1)">−</button>'+
         '<span class="ctrl-qty">'+item.qty+'</span>'+
-        '<button class="ctrl-btn" onclick="cambiarQty(''+id+'',1)">+</button>'+
+        '<button class="ctrl-btn" onclick="cambiarQty(&quot;'+id+'&quot;,1)">+</button>'+
       '</div>'+
       '<div class="carrito-item-precio">'+fmtPeso(precio*item.qty)+'</div>'+
     '</div>';
@@ -818,9 +818,9 @@ function renderCarritoBody(){
         '<div class="carrito-item-sub">'+item.marca+' · '+item.present+(usaOferta?' · <span style="color:#2D6A4F;font-weight:600">precio oferta</span>':'')+'</div>'+
       '</div>'+
       '<div class="carrito-item-controles">'+
-        '<button class="ctrl-btn" onclick="cambiarQty(''+id+'',-1)">−</button>'+
+        '<button class="ctrl-btn" onclick="cambiarQty(&quot;'+id+'&quot;,-1)">−</button>'+
         '<span class="ctrl-qty">'+item.qty+'</span>'+
-        '<button class="ctrl-btn" onclick="cambiarQty(''+id+'',1)">+</button>'+
+        '<button class="ctrl-btn" onclick="cambiarQty(&quot;'+id+'&quot;,1)">+</button>'+
       '</div>'+
       '<div class="carrito-item-precio">'+fmtPeso(precio*item.qty)+'</div>'+
     '</div>';
