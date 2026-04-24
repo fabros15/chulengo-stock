@@ -77,6 +77,9 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 .price-val{transition:color 0.2s ease}
 .filters-bar select,.filters-bar input{transition:border-color 0.2s ease,box-shadow 0.2s ease}
 .filters-bar select:focus,.filters-bar input:focus{box-shadow:0 0 0 3px rgba(45,106,79,0.15)}
+
+.card-img{width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:2px;background:#F5F2ED}
+.card-img-placeholder{width:100%;height:80px;border-radius:8px;margin-bottom:2px;background:#F5F2ED;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
 </style>
 </head>
 <body>
@@ -162,12 +165,12 @@ function render(){
     var hayOferta=oferta>0&&oferta!==lista;
     var stockN=parseInt(d.stock)||0;
     var cLabel=(d.color&&d.color!=='*n/a')?d.color:'Sin color';
-    html+='<div class="card"><div class="card-top"><div class="card-title">'+d.material+' - '+d.denom+'</div><span class="badge '+getBdg(d.stock)+'">'+getLbl(d.stock)+'</span></div><div class="card-meta"><b>'+d.marca+'</b> - '+d.present+'<br><span class="color-chip">'+getDot(d.color)+cLabel+'</span></div><div class="stock-line">Stock: <b>'+stockN+' u.</b></div><div class="prices"><div class="price-row"><span class="price-label">Precio unitario</span><span class="price-val">'+fmt(lista)+'</span></div>'+(hayOferta?'<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o más</span></span><span class="price-val green">'+fmt(oferta)+'</span></div>':'')+'</div></div>';
+    html+='<div class="card">'+(d.img?'<img class="card-img" src="'+d.img+'" loading="lazy" onerror="this.style.display=\'none\'">':'')+'<div class="card-top"><div class="card-title">'+d.material+' - '+d.denom+'</div><span class="badge '+getBdg(d.stock)+'">'+getLbl(d.stock)+'</span></div><div class="card-meta"><b>'+d.marca+'</b> - '+d.present+'<br><span class="color-chip">'+getDot(d.color)+cLabel+'</span></div><div class="stock-line">Stock: <b>'+stockN+' u.</b></div><div class="prices"><div class="price-row"><span class="price-label">Precio unitario</span><span class="price-val">'+fmt(lista)+'</span></div>'+(hayOferta?'<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o más</span></span><span class="price-val green">'+fmt(oferta)+'</span></div>':'')+'</div></div>';
   });
   html+='</div>';
   document.getElementById('content').innerHTML=html;
 }
-fetch('https://script.google.com/macros/s/AKfycbyQqTFKvy-Q6fSF7XZdgAMTbypeC3xMv08ACBLXnsKczgtD_tWQr9ZSkrifeEyufDPY/exec')
+fetch('https://script.google.com/macros/s/AKfycbzcF5kip6kEVhPini0KMyvWwEufDs1jQ8_jA4bp9M2bWSKu-DUSSR1rRXD_anAEkemY/exec')
   .then(function(r){return r.json();})
   .then(function(json){
     DATA=json.map(function(row){
@@ -179,7 +182,8 @@ fetch('https://script.google.com/macros/s/AKfycbyQqTFKvy-Q6fSF7XZdgAMTbypeC3xMv0
         denom:String(row['denominacion nombre']||''),
         lista:row['precio_lista']||0,
         oferta:row['precio_oferta']||0,
-        stock:row['stock']!==undefined?row['stock']:0
+        stock:row['stock']!==undefined?row['stock']:0,
+        img:String(row['img_url']||'')
       };
     }).filter(function(d){return d.material||d.denom;});
     populate();
