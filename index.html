@@ -26,7 +26,7 @@ select:focus{border-color:#2D6A4F}
 .stats-bar b{color:#1A1814}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:1.5rem 2rem}
 .card{background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;display:flex;flex-direction:column;gap:7px;transition:box-shadow 0.15s,transform 0.15s}
-.card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.07);transform:translateY(-1px)}
+.card:hover{box-shadow:0 8px 24px rgba(0,0,0,0.13);transform:translateY(-4px) scale(1.02)}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .card-title{font-size:0.82rem;font-weight:600;line-height:1.4;flex:1}
 .badge{font-size:0.68rem;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap;font-family:'DM Mono',monospace}
@@ -55,6 +55,28 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
   .grid{grid-template-columns:1fr 1fr;gap:8px}
 }
 @media(max-width:400px){.grid{grid-template-columns:1fr}}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes countUp{from{opacity:0}to{opacity:1}}
+.card{animation:fadeUp 0.4s ease both}
+.card:nth-child(1){animation-delay:0.03s}
+.card:nth-child(2){animation-delay:0.06s}
+.card:nth-child(3){animation-delay:0.09s}
+.card:nth-child(4){animation-delay:0.12s}
+.card:nth-child(5){animation-delay:0.15s}
+.card:nth-child(6){animation-delay:0.18s}
+.card:nth-child(7){animation-delay:0.21s}
+.card:nth-child(8){animation-delay:0.24s}
+.card:nth-child(9){animation-delay:0.27s}
+.card:nth-child(10){animation-delay:0.30s}
+.card:nth-child(11){animation-delay:0.33s}
+.card:nth-child(12){animation-delay:0.36s}
+.stats-bar b{transition:all 0.4s ease}
+.badge{transition:transform 0.2s ease}
+.card:hover .badge{transform:scale(1.08)}
+.price-val{transition:color 0.2s ease}
+.filters-bar select,.filters-bar input{transition:border-color 0.2s ease,box-shadow 0.2s ease}
+.filters-bar select:focus,.filters-bar input:focus{box-shadow:0 0 0 3px rgba(45,106,79,0.15)}
 </style>
 </head>
 <body>
@@ -62,7 +84,7 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
   <div class="header-top">
     <img src="CHULENGO_LOGOO.png" alt="Logo" class="logo">
     <span class="site-title">Chulengo Estudio</span>
-    <span class="site-sub">stock de filamentos</span>
+    
   </div>
   <div class="promo-pill">Precio oferta disponible comprando 2 kg o más</div>
 </header>
@@ -83,7 +105,7 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 </div>
 <div class="stats-bar" id="stats"><span>Cargando datos...</span></div>
 <div id="content"><div class="loading"><div class="spinner"></div>Cargando stock...</div></div>
-<footer>Precios en pesos argentinos - Actualizado automaticamente - Chulengo Estudio</footer>
+<footer>Chulengo Estudio · Argentina · Chubut · Puerto Madryn · 2026</footer>
 <script>
 var DATA=[];
 var COLORS={'amarillo':'#FFD600','azul':'#1E88E5','blanco':'#E0E0E0','negro':'#212121','verde':'#43A047','rojo':'#E53935','naranja':'#FB8C00','rosa':'#E91E63','marron':'#6D4C41','violeta':'#8E24AA','gris':'#9E9E9E','plateado':'#B0BEC5','dorado':'#FFA000','celeste':'#4FC3F7','multicolor':'#CCCCCC','transparente':'#E3F2FD','surtido':'#CCCCCC'};
@@ -105,6 +127,15 @@ function populate(){
   mats.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;fm.appendChild(o);});
   marcas.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;fb.appendChild(o);});
 }
+function animateCount(el, target) {
+  var start = 0, duration = 600, step = Math.ceil(target / 20);
+  var timer = setInterval(function() {
+    start += step;
+    if (start >= target) { start = target; clearInterval(timer); }
+    el.textContent = start;
+  }, duration / 20);
+}
+
 function render(){
   var q=document.getElementById('search').value.toLowerCase();
   var mat=document.getElementById('fil-material').value;
@@ -119,7 +150,11 @@ function render(){
   });
   var ok=0,low=0,out=0;
   f.forEach(function(d){var s=getSt(d.stock);if(s==='ok')ok++;else if(s==='low')low++;else out++;});
-  document.getElementById('stats').innerHTML='<span>Mostrando <b>'+f.length+'</b> productos</span><span><b>'+ok+'</b> disponibles</span><span><b>'+low+'</b> poco stock</span><span><b>'+out+'</b> sin stock</span>';
+  document.getElementById('stats').innerHTML='<span>Mostrando <b id="scnt">0</b> productos</span><span><b id="sok">0</b> disponibles</span><span><b id="slow">0</b> poco stock</span><span><b id="sout">0</b> sin stock</span>';
+  animateCount(document.getElementById('scnt'), f.length);
+  animateCount(document.getElementById('sok'), ok);
+  animateCount(document.getElementById('slow'), low);
+  animateCount(document.getElementById('sout'), out);
   if(!f.length){document.getElementById('content').innerHTML='<div class="grid"><div class="empty">No se encontraron productos.</div></div>';return;}
   var html='<div class="grid">';
   f.forEach(function(d){
