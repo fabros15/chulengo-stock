@@ -5,7 +5,131 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Chulengo Estudio</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js">
+// ==================== CARRITO ====================
+var carrito = {};
+
+function kgTotal(){
+  var kg=0;
+  Object.keys(carrito).forEach(function(id){
+    var item=carrito[id];
+    var present=(item.present||'').toLowerCase();
+    if(present.includes('kg')){
+      var match=present.match(/([\d.]+)\s*kg/);
+      var kgs=match?parseFloat(match[1]):1;
+      kg+=kgs*item.qty;
+    }
+  });
+  return kg;
+}
+
+function precioItem(item){
+  var usarOferta=kgTotal()>=2;
+  var precio=usarOferta&&item.oferta&&item.oferta!==item.lista?item.oferta:item.lista;
+  return Number(precio)||0;
+}
+
+function actualizarCarrito(){
+  var total=0;
+  var count=0;
+  Object.keys(carrito).forEach(function(id){
+    var item=carrito[id];
+    count+=item.qty;
+    total+=precioItem(item)*item.qty;
+  });
+  var flotante=document.getElementById('carrito-flotante');
+  flotante.className='carrito-flotante'+(count>0?' visible':'');
+  document.getElementById('carrito-count').textContent=count;
+  document.getElementById('carrito-total').textContent=fmtPeso(total);
+  var kg=kgTotal();
+  var ofertaBanner=document.getElementById('oferta-banner');
+  ofertaBanner.className='oferta-banner'+(kg>=2?' visible':'');
+  renderCarritoBody();
+  actualizarWA(total);
+}
+
+function renderCarritoBody(){
+  var body=document.getElementById('carrito-body');
+  var keys=Object.keys(carrito);
+  if(!keys.length){
+    body.innerHTML='<div class="carrito-vacio">Tu pedido está vacío.<br>Agregá productos desde el stock.</div>';
+    return;
+  }
+  var html='';
+  keys.forEach(function(id){
+    var item=carrito[id];
+    var precio=precioItem(item);
+    var usaOferta=kgTotal()>=2&&item.oferta&&item.oferta!==item.lista;
+    html+='<div class="carrito-item">'+
+      '<div class="carrito-item-info">'+
+        '<div class="carrito-item-nombre">'+item.material+' - '+item.denom+'</div>'+
+        '<div class="carrito-item-sub">'+item.marca+' · '+item.present+(usaOferta?' · <span style="color:#2D6A4F;font-weight:600">precio oferta</span>':'')+'</div>'+
+      '</div>'+
+      '<div class="carrito-item-controles">'+
+        '<button class="ctrl-btn" onclick="cambiarQty(''+id+'',-1)">−</button>'+
+        '<span class="ctrl-qty">'+item.qty+'</span>'+
+        '<button class="ctrl-btn" onclick="cambiarQty(''+id+'',1)">+</button>'+
+      '</div>'+
+      '<div class="carrito-item-precio">'+fmtPeso(precio*item.qty)+'</div>'+
+    '</div>';
+  });
+  body.innerHTML=html;
+}
+
+function cambiarQty(id, delta){
+  if(!carrito[id])return;
+  carrito[id].qty+=delta;
+  if(carrito[id].qty<=0){
+    delete carrito[id];
+    // remove active class from card btn
+    var btn=document.getElementById('cart-btn-'+id);
+    if(btn){btn.textContent='+ Agregar al pedido';btn.className='btn-agregar';}
+  }
+  actualizarCarrito();
+}
+
+function agregarAlCarrito(idx){
+  var d=FILTERED[idx];
+  if(!d||getSt(d.stock)==='out')return;
+  var id=d.material+'-'+d.denom+'-'+d.marca;
+  if(carrito[id]){
+    carrito[id].qty++;
+  } else {
+    carrito[id]={material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,qty:1};
+  }
+  var btn=document.getElementById('cart-btn-'+idx);
+  if(btn){btn.textContent='✓ En el pedido';btn.className='btn-agregar en-carrito';}
+  actualizarCarrito();
+}
+
+function actualizarWA(total){
+  var keys=Object.keys(carrito);
+  if(!keys.length)return;
+  var kg=kgTotal();
+  var usaOferta=kg>=2;
+  var msg='Hola! 👋 Quiero hacer el siguiente pedido:\n\n';
+  keys.forEach(function(id){
+    var item=carrito[id];
+    var precio=precioItem(item);
+    msg+='• '+item.qty+'x '+item.material+' - '+item.denom+' ('+item.marca+') — '+new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(precio)+' c/u\n';
+  });
+  msg+='\n';
+  if(usaOferta)msg+='✅ Precio oferta aplicado ('+kg.toFixed(1)+' kg en total)\n';
+  msg+='💰 Total: '+new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(total)+'\n';
+  msg+='\n¿Hay stock disponible y cuándo puedo pasar a retirarlo? ¡Gracias!';
+  document.getElementById('btn-pedir').href='https://wa.me/'+WA+'?text='+encodeURIComponent(msg);
+}
+
+function abrirCarrito(){
+  document.getElementById('carrito-panel').classList.add('open');
+  document.getElementById('overlay-carrito').classList.add('open');
+}
+function cerrarCarrito(){
+  document.getElementById('carrito-panel').classList.remove('open');
+  document.getElementById('overlay-carrito').classList.remove('open');
+}
+
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;max-width:100%}
 html{overflow-x:hidden;width:100%}
@@ -135,6 +259,43 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
   .row2,.row3{grid-template-columns:1fr}
   .insumo-item{grid-template-columns:1fr 1fr 36px}
 }
+
+/* ==================== CARRITO ==================== */
+.btn-agregar{margin-top:6px;width:100%;padding:7px;border:1.5px solid #2D6A4F;border-radius:8px;background:transparent;color:#2D6A4F;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.btn-agregar:hover{background:#2D6A4F;color:#fff}
+.btn-agregar.en-carrito{background:#2D6A4F;color:#fff;border-color:#2D6A4F}
+.carrito-flotante{position:fixed;bottom:1.5rem;right:1.5rem;z-index:200;display:none}
+.carrito-flotante.visible{display:block}
+.carrito-btn{background:#1A1814;color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,0.25);transition:transform 0.2s}
+.carrito-btn:hover{transform:scale(1.05)}
+.carrito-count{background:#E53935;color:#fff;border-radius:50%;width:22px;height:22px;font-size:0.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.carrito-panel{position:fixed;bottom:0;right:0;width:100%;max-width:420px;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -4px 30px rgba(0,0,0,0.15);z-index:300;transform:translateY(100%);transition:transform 0.3s ease;max-height:85vh;display:flex;flex-direction:column}
+.carrito-panel.open{transform:translateY(0)}
+.carrito-header{padding:1rem 1.25rem;border-bottom:1px solid #E2DDD6;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.carrito-header h3{font-size:1rem;font-weight:600}
+.carrito-cerrar{background:none;border:none;font-size:1.3rem;cursor:pointer;color:#8A8479;padding:4px}
+.carrito-body{overflow-y:auto;flex:1;padding:1rem 1.25rem}
+.carrito-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F5F2ED}
+.carrito-item:last-child{border:none}
+.carrito-item-info{flex:1;min-width:0}
+.carrito-item-nombre{font-size:0.82rem;font-weight:600;color:#1A1814;line-height:1.3}
+.carrito-item-sub{font-size:0.74rem;color:#8A8479;margin-top:2px}
+.carrito-item-precio{font-family:'DM Mono',monospace;font-size:0.82rem;font-weight:500;color:#1A1814;text-align:right;flex-shrink:0}
+.carrito-item-controles{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.ctrl-btn{width:28px;height:28px;border-radius:50%;border:1px solid #E2DDD6;background:#F5F2ED;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:600;color:#1A1814;transition:all 0.15s}
+.ctrl-btn:hover{background:#1A1814;color:#fff;border-color:#1A1814}
+.ctrl-qty{font-family:'DM Mono',monospace;font-size:0.88rem;font-weight:500;min-width:20px;text-align:center}
+.carrito-footer{padding:1rem 1.25rem;border-top:1px solid #E2DDD6;flex-shrink:0}
+.oferta-banner{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:8px 12px;font-size:0.78rem;color:#1E3A8A;margin-bottom:1rem;display:none}
+.oferta-banner.visible{display:block}
+.carrito-total{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.carrito-total-lbl{font-size:0.9rem;font-weight:600}
+.carrito-total-val{font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:600;color:#1A1814}
+.btn-pedir{display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:14px;font-size:1rem;font-weight:600;width:100%;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.2s;text-decoration:none}
+.btn-pedir:hover{background:#1ebe5d}
+.carrito-vacio{text-align:center;padding:2rem;color:#8A8479;font-size:0.9rem}
+.overlay-carrito{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:250}
+.overlay-carrito.open{display:block}
 </style>
 </head>
 <body>
@@ -459,6 +620,7 @@ function render(){
       if(hayOferta){inner+='<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o más*</span></span><span class="price-val green">'+fmtPeso(oferta)+'</span></div>';}
       inner+='</div>';
       if(isOut){inner+='<div class="notify-hint">👆 Tocá para que te avisemos</div>';}
+      else{inner+='<button class="btn-agregar" id="cart-btn-'+idx+'" onclick="event.stopPropagation();agregarAlCarrito('+idx+')">+ Agregar al pedido</button>';}
       card.innerHTML+=inner;
       grid.appendChild(card);
     });
@@ -595,6 +757,159 @@ function calcular(){
   
 }
 calcElec();
+
+// ==================== CARRITO ====================
+var carrito = {};
+
+function kgTotal(){
+  var kg=0;
+  Object.keys(carrito).forEach(function(id){
+    var item=carrito[id];
+    var present=(item.present||'').toLowerCase();
+    if(present.includes('kg')){
+      var match=present.match(/([\d.]+)\s*kg/);
+      var kgs=match?parseFloat(match[1]):1;
+      kg+=kgs*item.qty;
+    }
+  });
+  return kg;
+}
+
+function precioItem(item){
+  var usarOferta=kgTotal()>=2;
+  var precio=usarOferta&&item.oferta&&item.oferta!==item.lista?item.oferta:item.lista;
+  return Number(precio)||0;
+}
+
+function actualizarCarrito(){
+  var total=0;
+  var count=0;
+  Object.keys(carrito).forEach(function(id){
+    var item=carrito[id];
+    count+=item.qty;
+    total+=precioItem(item)*item.qty;
+  });
+  var flotante=document.getElementById('carrito-flotante');
+  flotante.className='carrito-flotante'+(count>0?' visible':'');
+  document.getElementById('carrito-count').textContent=count;
+  document.getElementById('carrito-total').textContent=fmtPeso(total);
+  var kg=kgTotal();
+  var ofertaBanner=document.getElementById('oferta-banner');
+  ofertaBanner.className='oferta-banner'+(kg>=2?' visible':'');
+  renderCarritoBody();
+  actualizarWA(total);
+}
+
+function renderCarritoBody(){
+  var body=document.getElementById('carrito-body');
+  var keys=Object.keys(carrito);
+  if(!keys.length){
+    body.innerHTML='<div class="carrito-vacio">Tu pedido está vacío.<br>Agregá productos desde el stock.</div>';
+    return;
+  }
+  var html='';
+  keys.forEach(function(id){
+    var item=carrito[id];
+    var precio=precioItem(item);
+    var usaOferta=kgTotal()>=2&&item.oferta&&item.oferta!==item.lista;
+    html+='<div class="carrito-item">'+
+      '<div class="carrito-item-info">'+
+        '<div class="carrito-item-nombre">'+item.material+' - '+item.denom+'</div>'+
+        '<div class="carrito-item-sub">'+item.marca+' · '+item.present+(usaOferta?' · <span style="color:#2D6A4F;font-weight:600">precio oferta</span>':'')+'</div>'+
+      '</div>'+
+      '<div class="carrito-item-controles">'+
+        '<button class="ctrl-btn" onclick="cambiarQty(''+id+'',-1)">−</button>'+
+        '<span class="ctrl-qty">'+item.qty+'</span>'+
+        '<button class="ctrl-btn" onclick="cambiarQty(''+id+'',1)">+</button>'+
+      '</div>'+
+      '<div class="carrito-item-precio">'+fmtPeso(precio*item.qty)+'</div>'+
+    '</div>';
+  });
+  body.innerHTML=html;
+}
+
+function cambiarQty(id, delta){
+  if(!carrito[id])return;
+  carrito[id].qty+=delta;
+  if(carrito[id].qty<=0){
+    delete carrito[id];
+    // remove active class from card btn
+    var btn=document.getElementById('cart-btn-'+id);
+    if(btn){btn.textContent='+ Agregar al pedido';btn.className='btn-agregar';}
+  }
+  actualizarCarrito();
+}
+
+function agregarAlCarrito(idx){
+  var d=FILTERED[idx];
+  if(!d||getSt(d.stock)==='out')return;
+  var id=d.material+'-'+d.denom+'-'+d.marca;
+  if(carrito[id]){
+    carrito[id].qty++;
+  } else {
+    carrito[id]={material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,qty:1};
+  }
+  var btn=document.getElementById('cart-btn-'+idx);
+  if(btn){btn.textContent='✓ En el pedido';btn.className='btn-agregar en-carrito';}
+  actualizarCarrito();
+}
+
+function actualizarWA(total){
+  var keys=Object.keys(carrito);
+  if(!keys.length)return;
+  var kg=kgTotal();
+  var usaOferta=kg>=2;
+  var msg='Hola! 👋 Quiero hacer el siguiente pedido:\n\n';
+  keys.forEach(function(id){
+    var item=carrito[id];
+    var precio=precioItem(item);
+    msg+='• '+item.qty+'x '+item.material+' - '+item.denom+' ('+item.marca+') — '+new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(precio)+' c/u\n';
+  });
+  msg+='\n';
+  if(usaOferta)msg+='✅ Precio oferta aplicado ('+kg.toFixed(1)+' kg en total)\n';
+  msg+='💰 Total: '+new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(total)+'\n';
+  msg+='\n¿Hay stock disponible y cuándo puedo pasar a retirarlo? ¡Gracias!';
+  document.getElementById('btn-pedir').href='https://wa.me/'+WA+'?text='+encodeURIComponent(msg);
+}
+
+function abrirCarrito(){
+  document.getElementById('carrito-panel').classList.add('open');
+  document.getElementById('overlay-carrito').classList.add('open');
+}
+function cerrarCarrito(){
+  document.getElementById('carrito-panel').classList.remove('open');
+  document.getElementById('overlay-carrito').classList.remove('open');
+}
+
 </script>
+
+<!-- CARRITO FLOTANTE -->
+<div class="overlay-carrito" id="overlay-carrito" onclick="cerrarCarrito()"></div>
+<div class="carrito-flotante" id="carrito-flotante">
+  <button class="carrito-btn" onclick="abrirCarrito()">
+    🛒 Mi pedido <span class="carrito-count" id="carrito-count">0</span>
+  </button>
+</div>
+<div class="carrito-panel" id="carrito-panel">
+  <div class="carrito-header">
+    <h3>Mi pedido</h3>
+    <button class="carrito-cerrar" onclick="cerrarCarrito()">✕</button>
+  </div>
+  <div class="carrito-body" id="carrito-body">
+    <div class="carrito-vacio">Tu pedido está vacío.<br>Agregá productos desde el stock.</div>
+  </div>
+  <div class="carrito-footer">
+    <div class="oferta-banner" id="oferta-banner">🎉 Estás comprando 2 kg o más — se aplica <b>precio oferta</b> automáticamente!</div>
+    <div class="carrito-total">
+      <span class="carrito-total-lbl">Total</span>
+      <span class="carrito-total-val" id="carrito-total">$ 0</span>
+    </div>
+    <a class="btn-pedir" id="btn-pedir" href="#" target="_blank">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.115.549 4.1 1.508 5.83L.057 23.077a.75.75 0 0 0 .916.953l5.453-1.427A11.933 11.933 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.715 9.715 0 0 1-4.951-1.355l-.355-.211-3.676.962.98-3.578-.231-.368A9.715 9.715 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
+      Enviar pedido por WhatsApp
+    </a>
+  </div>
+</div>
+
 </body>
 </html>
