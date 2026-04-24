@@ -13,7 +13,7 @@ body{font-family:'DM Sans',sans-serif;background:#F5F2ED;color:#1A1814;min-heigh
 .site-title{font-family:'DM Mono',monospace;font-size:1.25rem;font-weight:500}
 .site-sub{font-size:0.8rem;color:#9CA3AF;font-family:'DM Mono',monospace}
 .logo{width:40px;height:40px;border-radius:8px;object-fit:cover}
-.promo-pill{display:inline-flex;align-items:center;gap:6px;background:#1D4ED8;color:#fff;font-size:0.72rem;font-weight:500;padding:4px 12px;border-radius:20px}
+.promo-pill{display:inline-flex;align-items:center;gap:8px;background:#1D4ED8;color:#fff;font-size:0.95rem;font-weight:500;padding:8px 18px;border-radius:20px}
 .promo-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:#93C5FD;display:inline-block}
 .filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.875rem 2rem;display:flex;gap:10px;flex-wrap:wrap}
 .search-wrap{position:relative;flex:1;min-width:180px}
@@ -64,7 +64,7 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
     <span class="site-title">Chulengo Estudio</span>
     <span class="site-sub">stock de filamentos</span>
   </div>
-  <div class="promo-pill">Precio oferta disponible comprando 2 kg o mas</div>
+  <div class="promo-pill">Precio oferta disponible comprando 2 kg o más</div>
 </header>
 <div class="filters-bar">
   <div class="search-wrap">
@@ -127,7 +127,7 @@ function render(){
     var hayOferta=oferta>0&&oferta!==lista;
     var stockN=parseInt(d.stock)||0;
     var cLabel=(d.color&&d.color!=='*n/a')?d.color:'Sin color';
-    html+='<div class="card"><div class="card-top"><div class="card-title">'+d.material+' - '+d.denom+'</div><span class="badge '+getBdg(d.stock)+'">'+getLbl(d.stock)+'</span></div><div class="card-meta"><b>'+d.marca+'</b> - '+d.present+'<br><span class="color-chip">'+getDot(d.color)+cLabel+'</span></div><div class="stock-line">Stock: <b>'+stockN+' u.</b></div><div class="prices"><div class="price-row"><span class="price-label">Precio unitario</span><span class="price-val">'+fmt(lista)+'</span></div>'+(hayOferta?'<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o mas</span></span><span class="price-val green">'+fmt(oferta)+'</span></div>':'')+'</div></div>';
+    html+='<div class="card"><div class="card-top"><div class="card-title">'+d.material+' - '+d.denom+'</div><span class="badge '+getBdg(d.stock)+'">'+getLbl(d.stock)+'</span></div><div class="card-meta"><b>'+d.marca+'</b> - '+d.present+'<br><span class="color-chip">'+getDot(d.color)+cLabel+'</span></div><div class="stock-line">Stock: <b>'+stockN+' u.</b></div><div class="prices"><div class="price-row"><span class="price-label">Precio unitario</span><span class="price-val">'+fmt(lista)+'</span></div>'+(hayOferta?'<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o más</span></span><span class="price-val green">'+fmt(oferta)+'</span></div>':'')+'</div></div>';
   });
   html+='</div>';
   document.getElementById('content').innerHTML=html;
