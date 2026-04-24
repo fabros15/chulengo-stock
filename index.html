@@ -347,7 +347,7 @@
 </footer>
 
 <script>
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRx4-8cfJmOKQwDxnJ4P54OOG2F4NdW7SEVm2F-ThhKxlVs4RQK_NhQ6BYWNu7Qba3s8EYaPeAUT4F9/pub?gid=746700416&single=true&output=csv';
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJimysdaKWdqUCglvXMj5OEdMELC0yuMGeX7DezSRFX9DYtu3kt2xR0ONO7UOxwE0F4T8zJ09oVAkL/pub?gid=471425697&single=true&output=csv';
 
 const COLOR_MAP = {
   "amarillo":"#FFD600","azul":"#1E88E5","blanco":"#F0F0F0","negro":"#212121",
@@ -425,10 +425,11 @@ function render() {
   const stk = document.getElementById('fil-stock').value;
 
   const filtered = allData.filter(d => {
-    const nombre = (d.nombre_mostrado || '').toLowerCase();
+    const nombre = (d.nombre || '').toLowerCase();
     const color = (d.color || '').toLowerCase();
     const denom = (d.denominacion || '').toLowerCase();
-    if (q && !nombre.includes(q) && !color.includes(q) && !denom.includes(q)) return false;
+    const marca = (d.marca || '').toLowerCase();
+    if (q && !nombre.includes(q) && !color.includes(q) && !denom.includes(q) && !marca.includes(q)) return false;
     if (mat && d.material !== mat) return false;
     if (marca && d.marca !== marca) return false;
     if (stk && stockStatus(d.stock) !== stk) return false;
@@ -454,19 +455,19 @@ function render() {
   }
 
   grid.innerHTML = '<div class="products-grid">' + filtered.map(d => {
-    const lista = parseMoney(d.precio_lista);
-    const oferta = parseMoney(d.precio_oferta);
+    const lista = parseMoney(d.lista);
+    const oferta = parseMoney(d.oferta);
     const hayOferta = oferta > 0 && oferta !== lista;
     const stockNum = parseInt(d.stock) || 0;
 
     return `<div class="card">
       <div class="card-header">
-        <div class="card-title">${d.material || ''} · ${d.denominacion || d.nombre_mostrado || ''}</div>
+        <div class="card-title">${d.material} · ${d.denominacion}</div>
         <span class="status-badge ${stockClass(d.stock)}">${stockLabel(d.stock)}</span>
       </div>
       <div class="card-meta">
-        <b>${d.marca || ''}</b> · ${d.presentacion || ''}<br>
-        <span class="color-chip">${colorDot(d.color)}${d.color && d.color !== '*n/a' ? d.color : 'Sin color específico'}</span>
+        <b>${d.marca}</b> · ${d.presentacion}<br>
+        <span class="color-chip">${colorDot(d.color)}${d.color ? d.color : 'Sin color específico'}</span>
       </div>
       <div class="stock-line">Stock: <b>${stockNum} u.</b></div>
       <div class="prices">
@@ -483,30 +484,47 @@ function render() {
   }).join('') + '</div>';
 }
 
-function loadData() {
-  Papa.parse(CSV_URL, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
-    complete: function(results) {
-      allData = results.data.filter(r => r.Nombre_mostrado || r.material || r.Material);
-      // normalize keys to lowercase
-      allData = allData.map(row => {
-        const n = {};
-        Object.keys(row).forEach(k => n[k.toLowerCase().trim()] = (row[k]||'').trim());
-        return n;
-      });
-      populateFilters(allData);
-      render();
-      ['search','fil-material','fil-marca','fil-stock'].forEach(id => {
-        document.getElementById(id).addEventListener('input', render);
-      });
-    },
-    error: function() {
-      document.getElementById('main-content').innerHTML =
-        '<div class="state-msg"><div class="icon">⚠</div>No se pudieron cargar los datos. Intentá recargar la página.</div>';
-      document.getElementById('stats-bar').innerHTML = '<span>Error al cargar</span>';
-    }
+async function loadData() {
+  const proxies = [
+    'https://corsproxy.io/?' + encodeURIComponent(CSV_URL),
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(CSV_URL),
+    'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(CSV_URL)
+  ];
+  let text = null;
+  for (const url of proxies) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) { text = await res.text(); if (text && text.includes(',')) break; }
+    } catch(e) { continue; }
+  }
+  if (!text) {
+    document.getElementById('main-content').innerHTML =
+      '<div class="state-msg"><div class="icon">⚠</div>No se pudieron cargar los datos. Intentá recargar la página.</div>';
+    document.getElementById('stats-bar').innerHTML = '<span>Error al cargar</span>';
+    return;
+  }
+  const results = Papa.parse(text, { header: true, skipEmptyLines: true });
+  allData = results.data.map(row => {
+    const n = {};
+    Object.keys(row).forEach(k => n[k.toLowerCase().trim()] = (row[k]||'').trim());
+    // map to standard keys
+    return {
+      nombre:    (n['marca nombre']||'') + ' ' + (n['material nombre']||'') + ' - ' + (n['denominacion nombre'] || n['denominacion'] || ''),
+      marca:     n['marca nombre'] || '',
+      material:  n['material nombre'] || '',
+      presentacion: n['presentacion nombre'] || '',
+      color:     n['color nombre'] || '',
+      denominacion: n['denominacion nombre'] || n['denominacion'] || '',
+      stock:     n['stock'] || '0',
+      lista:     n['precio_lista'] || '0',
+      oferta:    n['precio_oferta'] || '0',
+      semaforo:  n['semaforo'] || '',
+    };
+  }).filter(r => r.material);
+  populateFilters(allData);
+  render();
+  ['search','fil-material','fil-marca','fil-stock'].forEach(id => {
+    document.getElementById(id).addEventListener('input', render);
   });
 }
 
