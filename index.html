@@ -143,15 +143,17 @@ function animateCount(el, target) {
 }
 
 function render(){
-  var q=document.getElementById('search').value.toLowerCase();
+  var q=document.getElementById('search').value;
   var mat=document.getElementById('fil-material').value;
   var marca=document.getElementById('fil-marca').value;
   var stk=document.getElementById('fil-stock').value;
-  var f=DATA.filter(function(d){
-    if(q&&(d.denom+' '+d.color+' '+d.marca+' '+d.material).toLowerCase().indexOf(q)===-1)return false;
+  var pool=DATA;
+  if(q.trim()&&FUSE){pool=FUSE.search(q.trim()).map(function(r){return r.item;});}
+  var f=pool.filter(function(d){
     if(mat&&d.material!==mat)return false;
     if(marca&&d.marca!==marca)return false;
-    if(stk==='instock'&&getSt(d.stock)==='out')return false;if(stk&&stk!=='instock'&&getSt(d.stock)!==stk)return false;
+    if(stk==='instock'&&getSt(d.stock)==='out')return false;
+    if(stk&&stk!=='instock'&&getSt(d.stock)!==stk)return false;
     return true;
   });
   f.sort(function(a,b){
@@ -195,9 +197,17 @@ fetch('https://script.google.com/macros/s/AKfycbxSyk62NZrRKnGfgsYE0L1v5PdiFBOUp2
     }).filter(function(d){return d.material||d.denom;});
     populate();
     FUSE = new Fuse(DATA, {
-      keys: ['denom','marca','material','color','present'],
-      threshold: 0.4,
-      includeScore: true
+      keys: [
+        {name:'denom', weight: 2},
+        {name:'marca', weight: 1.5},
+        {name:'material', weight: 1.5},
+        {name:'color', weight: 1},
+        {name:'present', weight: 0.5}
+      ],
+      threshold: 0.45,
+      distance: 100,
+      includeScore: true,
+      ignoreLocation: true
     });
     render();
     ['search','fil-material','fil-marca','fil-stock'].forEach(function(id){
