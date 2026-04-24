@@ -120,18 +120,15 @@ function dot(c){
 }
 
 function normalize(row){
-  // build a clean lowercase key map
-  const r={};
-  Object.keys(row).forEach(k=>{r[k.toLowerCase().trim()]=(row[k]||'').trim();});
   return {
-    marca:     r['marca nombre']    || r['marca']    || '',
-    material:  r['material nombre'] || r['material'] || '',
-    present:   r['presentacion nombre'] || r['presentacion'] || '',
-    color:     r['color nombre']    || r['color']    || '',
-    denom:     r['denominacion nombre'] || r['denominacion'] || '',
-    lista:     r['precio_lista']    || '0',
-    oferta:    r['precio_oferta']   || '0',
-    stock:     r['stock']           || '0',
+    marca:    String(row['marca nombre']    || row['marca']    || ''),
+    material: String(row['material nombre'] || row['material'] || ''),
+    present:  String(row['presentacion nombre'] || row['presentacion'] || ''),
+    color:    String(row['color nombre']    || row['color']    || ''),
+    denom:    String(row['denominacion nombre'] || row['denominacion'] || ''),
+    lista:    row['precio_lista']  || 0,
+    oferta:   row['precio_oferta'] || 0,
+    stock:    row['stock'] !== undefined ? row['stock'] : 0,
   };
 }
 
@@ -231,3 +228,4 @@ load();
 </script>
 </body>
 </html>
+
