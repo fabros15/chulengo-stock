@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chulengo Estudio — Stock</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F2ED;
+    --surface: #FFFFFF;
+    --border: #E2DDD6;
+    --text: #1A1814;
+    --muted: #8A8479;
+    --accent: #2D6A4F;
+    --accent-light: #E8F5EE;
+    --accent-text: #1B4332;
+    --warn: #B45309;
+    --warn-light: #FEF3C7;
+    --warn-text: #78350F;
+    --danger: #991B1B;
+    --danger-light: #FEE2E2;
+    --danger-text: #7F1D1D;
+    --promo: #1D4ED8;
+    --promo-light: #EFF6FF;
+    --promo-text: #1E3A8A;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .site-header {
+    background: var(--text);
+    color: #fff;
+    padding: 2rem 2rem 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-top {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+  }
+  .site-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+  .site-subtitle {
+    font-size: 0.8rem;
+    color: #9CA3AF;
+    font-family: 'DM Mono', monospace;
+  }
+  .promo-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--promo);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-top: 0.5rem;
+  }
+  .promo-pill::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #93C5FD;
+  }
+
+  /* FILTERS */
+  .filters-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.875rem 2rem;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 180px;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+  }
+  .search-input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .filter-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+  }
+  .filter-select:focus { border-color: var(--accent); }
+
+  /* STATS BAR */
+  .stats-bar {
+    padding: 0.6rem 2rem;
+    display: flex;
+    gap: 1.25rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    flex-wrap: wrap;
+  }
+  .stats-bar strong { color: var(--text); }
+
+  /* LOADING / ERROR */
+  .state-msg {
+    text-align: center;
+    padding: 5rem 2rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .state-msg .icon { font-size: 2rem; margin-bottom: 0.75rem; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* GRID */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    padding: 1.5rem 2rem;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1rem 0.875rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    transform: translateY(-1px);
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .card-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text);
+    flex: 1;
+  }
+  .status-badge {
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+  }
+  .s-ok { background: var(--accent-light); color: var(--accent-text); }
+  .s-low { background: var(--warn-light); color: var(--warn-text); }
+  .s-out { background: var(--danger-light); color: var(--danger-text); }
+
+  .card-meta {
+    font-size: 0.76rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .card-meta b { color: var(--text); font-weight: 500; }
+
+  .color-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+  .color-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.12);
+    flex-shrink: 0;
+  }
+
+  .stock-line {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .stock-line b { color: var(--text); }
+
+  .prices {
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    margin-top: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .price-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .price-tag {
+    font-size: 0.65rem;
+    background: var(--promo-light);
+    color: var(--promo-text);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .price-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .price-value.is-oferta { color: var(--accent); }
+
+  /* EMPTY */
+  .empty-state {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 4rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    border-top: 1px solid var(--border);
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 600px) {
+    .site-header, .filters-bar, .stats-bar, .products-grid { padding-left: 1rem; padding-right: 1rem; }
+    .products-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  }
+  @media (max-width: 400px) {
+    .products-grid { grid-template-columns: 1fr; }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-top">
+    <span class="site-title">Chulengo Estudio</span>
+    <span class="site-subtitle">stock de filamentos</span>
+  </div>
+  <div class="promo-pill">Precio oferta disponible comprando 2 kg o más</div>
+</header>
+
+<div class="filters-bar">
+  <div class="search-wrap">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input class="search-input" type="text" id="search" placeholder="Buscar por nombre, color, denominación...">
+  </div>
+  <select class="filter-select" id="fil-material"><option value="">Todos los materiales</option></select>
+  <select class="filter-select" id="fil-marca"><option value="">Todas las marcas</option></select>
+  <select class="filter-select" id="fil-stock">
+    <option value="">Todo el stock</option>
+    <option value="ok">Disponible</option>
+    <option value="low">Poco stock</option>
+    <option value="out">Sin stock</option>
+  </select>
+</div>
+
+<div class="stats-bar" id="stats-bar">
+  <span>Cargando datos...</span>
+</div>
+
+<div id="main-content">
+  <div class="state-msg">
+    <div class="spinner"></div>
+    Cargando stock...
+  </div>
+</div>
+
+<footer>
+  Precios en pesos argentinos &middot; Actualizado automáticamente desde planilla &middot; Chulengo Estudio
+</footer>
+
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRx4-8cfJmOKQwDxnJ4P54OOG2F4NdW7SEVm2F-ThhKxlVs4RQK_NhQ6BYWNu7Qba3s8EYaPeAUT4F9/pub?gid=746700416&single=true&output=csv';
+
+const COLOR_MAP = {
+  "amarillo":"#FFD600","azul":"#1E88E5","blanco":"#F0F0F0","negro":"#212121",
+  "verde":"#43A047","rojo":"#E53935","naranja":"#FB8C00","rosa":"#E91E63",
+  "marron":"#6D4C41","marrón":"#6D4C41","violeta":"#8E24AA","gris":"#9E9E9E",
+  "plateado":"#B0BEC5","dorado":"#FFA000","surtido":"#CCCCCC","celeste":"#4FC3F7",
+  "turquesa":"#26C6DA","beige":"#D7CCC8","crema":"#FFF8E1"
+};
+
+let allData = [];
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim().toLowerCase());
+  return lines.slice(1).map(line => {
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let c of line) {
+      if (c === '"') { inQ = !inQ; }
+      else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else { cur += c; }
+    }
+    cols.push(cur.trim());
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (cols[i] || '').replace(/"/g,'').trim());
+    return obj;
+  }).filter(r => r.nombre_mostrado || r.material);
+}
+
+function parseMoney(s) {
+  if (!s) return 0;
+  return parseFloat(s.replace(/[^0-9.,]/g,'').replace(',','.')) || 0;
+}
+
+function fmt(n) {
+  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+}
+
+function stockStatus(s) {
+  const n = parseInt(s) || 0;
+  if (n <= 0) return 'out';
+  if (n <= 3) return 'low';
+  return 'ok';
+}
+function stockLabel(s) {
+  const st = stockStatus(s);
+  return st === 'out' ? 'Sin stock' : st === 'low' ? 'Poco stock' : 'Disponible';
+}
+function stockClass(s) {
+  return 's-' + stockStatus(s);
+}
+
+function colorDot(colorStr) {
+  if (!colorStr || colorStr === '*n/a') return '';
+  const key = colorStr.toLowerCase();
+  const hex = COLOR_MAP[key];
+  if (!hex) return '';
+  return `<span class="color-dot" style="background:${hex}"></span>`;
+}
+
+function populateFilters(data) {
+  const mats = [...new Set(data.map(d => d.material).filter(Boolean))].sort();
+  const marcas = [...new Set(data.map(d => d.marca).filter(Boolean))].sort();
+  const ms = document.getElementById('fil-material');
+  const mb = document.getElementById('fil-marca');
+  mats.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; ms.appendChild(o); });
+  marcas.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; mb.appendChild(o); });
+}
+
+function render() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const mat = document.getElementById('fil-material').value;
+  const marca = document.getElementById('fil-marca').value;
+  const stk = document.getElementById('fil-stock').value;
+
+  const filtered = allData.filter(d => {
+    const nombre = (d.nombre_mostrado || '').toLowerCase();
+    const color = (d.color || '').toLowerCase();
+    const denom = (d.denominacion || '').toLowerCase();
+    if (q && !nombre.includes(q) && !color.includes(q) && !denom.includes(q)) return false;
+    if (mat && d.material !== mat) return false;
+    if (marca && d.marca !== marca) return false;
+    if (stk && stockStatus(d.stock) !== stk) return false;
+    return true;
+  });
+
+  const total = filtered.length;
+  const ok = filtered.filter(d => stockStatus(d.stock) === 'ok').length;
+  const low = filtered.filter(d => stockStatus(d.stock) === 'low').length;
+  const out = filtered.filter(d => stockStatus(d.stock) === 'out').length;
+
+  document.getElementById('stats-bar').innerHTML =
+    `<span>Mostrando <strong>${total}</strong> productos</span>` +
+    `<span><strong>${ok}</strong> disponibles</span>` +
+    `<span><strong>${low}</strong> poco stock</span>` +
+    `<span><strong>${out}</strong> sin stock</span>`;
+
+  const grid = document.getElementById('main-content');
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="products-grid"><div class="empty-state">No se encontraron productos con esos filtros.</div></div>';
+    return;
+  }
+
+  grid.innerHTML = '<div class="products-grid">' + filtered.map(d => {
+    const lista = parseMoney(d.precio_lista);
+    const oferta = parseMoney(d.precio_oferta);
+    const hayOferta = oferta > 0 && oferta !== lista;
+    const stockNum = parseInt(d.stock) || 0;
+
+    return `<div class="card">
+      <div class="card-header">
+        <div class="card-title">${d.material || ''} · ${d.denominacion || d.nombre_mostrado || ''}</div>
+        <span class="status-badge ${stockClass(d.stock)}">${stockLabel(d.stock)}</span>
+      </div>
+      <div class="card-meta">
+        <b>${d.marca || ''}</b> · ${d.presentacion || ''}<br>
+        <span class="color-chip">${colorDot(d.color)}${d.color && d.color !== '*n/a' ? d.color : 'Sin color específico'}</span>
+      </div>
+      <div class="stock-line">Stock: <b>${stockNum} u.</b></div>
+      <div class="prices">
+        <div class="price-row">
+          <span class="price-label">Precio unitario</span>
+          <span class="price-value">${lista > 0 ? fmt(lista) : '—'}</span>
+        </div>
+        ${hayOferta ? `<div class="price-row">
+          <span class="price-label">Oferta <span class="price-tag">2 kg o más</span></span>
+          <span class="price-value is-oferta">${fmt(oferta)}</span>
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function loadData() {
+  Papa.parse(CSV_URL, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results) {
+      allData = results.data.filter(r => r.Nombre_mostrado || r.material || r.Material);
+      // normalize keys to lowercase
+      allData = allData.map(row => {
+        const n = {};
+        Object.keys(row).forEach(k => n[k.toLowerCase().trim()] = (row[k]||'').trim());
+        return n;
+      });
+      populateFilters(allData);
+      render();
+      ['search','fil-material','fil-marca','fil-stock'].forEach(id => {
+        document.getElementById(id).addEventListener('input', render);
+      });
+    },
+    error: function() {
+      document.getElementById('main-content').innerHTML =
+        '<div class="state-msg"><div class="icon">⚠</div>No se pudieron cargar los datos. Intentá recargar la página.</div>';
+      document.getElementById('stats-bar').innerHTML = '<span>Error al cargar</span>';
+    }
+  });
+}
+
+loadData();
+</script>
+</body>
+</html>
