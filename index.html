@@ -5,31 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Chulengo Estudio — Stock</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;max-width:100%} html{overflow-x:hidden;width:100%} body{overflow-x:hidden;width:100%;position:relative;-webkit-overflow-scrolling:touch}
-body{font-family:'DM Sans',sans-serif;background:#F5F2ED;color:#1A1814;min-height:100vh}
+*{box-sizing:border-box;margin:0;padding:0;max-width:100%}
+html{overflow-x:hidden;width:100%}
+body{font-family:'DM Sans',sans-serif;background:#F5F2ED;color:#1A1814;min-height:100vh;overflow-x:hidden;width:100%;position:relative;-webkit-overflow-scrolling:touch}
 .site-header{background:#1A1814;color:#fff;padding:1.5rem 1rem;position:-webkit-sticky;position:sticky;top:0;z-index:100;width:100%;left:0}
 .header-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:0.5rem}
 .site-title{font-family:'DM Mono',monospace;font-size:1.25rem;font-weight:500}
-.site-sub{font-size:0.8rem;color:#9CA3AF;font-family:'DM Mono',monospace}
 .logo{width:40px;height:40px;border-radius:8px;object-fit:cover}
 .promo-pill{display:inline-flex;align-items:center;gap:8px;background:#1D4ED8;color:#fff;font-size:0.95rem;font-weight:500;padding:8px 18px;border-radius:20px}
-.promo-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:#93C5FD;display:inline-block}
+.promo-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:#93C5FD;display:inline-block;flex-shrink:0}
 .filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.875rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
 .search-wrap{position:relative;flex:1;min-width:180px}
 .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#8A8479;pointer-events:none}
-input[type=text]{width:100%;padding:8px 12px 8px 34px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:'DM Sans',sans-serif;background:#F5F2ED;color:#1A1814;outline:none}
-input[type=text]:focus{border-color:#2D6A4F}
-select{padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-family:'DM Sans',sans-serif;background:#F5F2ED;color:#1A1814;cursor:pointer;outline:none}
-select:focus{border-color:#2D6A4F}
-.stats-bar{padding:0.6rem 2rem;display:flex;gap:1.25rem;font-size:0.78rem;color:#8A8479;font-family:'DM Mono',monospace;border-bottom:1px solid #E2DDD6;flex-wrap:wrap}
+input[type=text]{width:100%;padding:8px 12px 8px 34px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:'DM Sans',sans-serif;background:#F5F2ED;color:#1A1814;outline:none;transition:border-color 0.2s,box-shadow 0.2s}
+input[type=text]:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.15)}
+select{padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-family:'DM Sans',sans-serif;background:#F5F2ED;color:#1A1814;cursor:pointer;outline:none;transition:border-color 0.2s,box-shadow 0.2s}
+select:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.15)}
+.stats-bar{padding:0.6rem 1rem;display:flex;gap:1.25rem;font-size:0.78rem;color:#8A8479;font-family:'DM Mono',monospace;border-bottom:1px solid #E2DDD6;flex-wrap:wrap}
 .stats-bar b{color:#1A1814}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:1.5rem 2rem}
-.card{background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;display:flex;flex-direction:column;gap:7px;transition:box-shadow 0.15s,transform 0.15s}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:1.5rem 1rem}
+.card{background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;display:flex;flex-direction:column;gap:7px;transition:box-shadow 0.2s,transform 0.2s;animation:fadeUp 0.4s ease both}
 .card:hover{box-shadow:0 8px 24px rgba(0,0,0,0.13);transform:translateY(-4px) scale(1.02)}
+.card.out-of-stock{cursor:pointer;opacity:0.82}
+.card.out-of-stock:hover{opacity:1}
+.card-img{width:100%;height:130px;object-fit:cover;border-radius:8px;margin-bottom:4px}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .card-title{font-size:0.82rem;font-weight:600;line-height:1.4;flex:1}
-.badge{font-size:0.68rem;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap;font-family:'DM Mono',monospace}
+.badge{font-size:0.68rem;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap;font-family:'DM Mono',monospace;transition:transform 0.2s}
+.card:hover .badge{transform:scale(1.08)}
 .b-ok{background:#E8F5EE;color:#1B4332}
 .b-low{background:#FEF3C7;color:#78350F}
 .b-out{background:#FEE2E2;color:#7F1D1D}
@@ -48,94 +53,38 @@ select:focus{border-color:#2D6A4F}
 .empty{grid-column:1/-1;text-align:center;padding:4rem;color:#8A8479;font-size:0.9rem}
 .loading{text-align:center;padding:5rem 2rem;color:#8A8479}
 .spinner{width:32px;height:32px;border:2px solid #E2DDD6;border-top-color:#2D6A4F;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 1rem}
-@keyframes spin{to{transform:rotate(360deg)}}
 footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-family:'DM Mono',monospace;border-top:1px solid #E2DDD6;margin-top:1rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.card:nth-child(1){animation-delay:0.03s}.card:nth-child(2){animation-delay:0.06s}.card:nth-child(3){animation-delay:0.09s}.card:nth-child(4){animation-delay:0.12s}.card:nth-child(5){animation-delay:0.15s}.card:nth-child(6){animation-delay:0.18s}.card:nth-child(7){animation-delay:0.21s}.card:nth-child(8){animation-delay:0.24s}.card:nth-child(9){animation-delay:0.27s}.card:nth-child(10){animation-delay:0.30s}.card:nth-child(11){animation-delay:0.33s}.card:nth-child(12){animation-delay:0.36s}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:999;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:16px;padding:1.5rem;max-width:380px;width:100%;animation:fadeUp 0.3s ease;position:relative}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:#8A8479;line-height:1;padding:4px}
+.modal-img{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:1rem}
+.modal-tag{display:inline-block;background:#FEE2E2;color:#7F1D1D;font-size:0.72rem;font-weight:500;padding:3px 10px;border-radius:20px;margin-bottom:0.75rem}
+.modal-title{font-size:1rem;font-weight:600;color:#1A1814;margin-bottom:6px}
+.modal-meta{font-size:0.82rem;color:#8A8479;margin-bottom:1.25rem;line-height:1.6}
+.modal-meta b{color:#1A1814}
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:14px 20px;font-size:1rem;font-weight:600;width:100%;cursor:pointer;text-decoration:none;font-family:'DM Sans',sans-serif;transition:background 0.2s}
+.btn-wa:hover{background:#1ebe5d}
 @media(max-width:600px){
-  .site-header,.filters-bar,.stats-bar,.grid{padding-left:0.75rem;padding-right:0.75rem}
   .grid{grid-template-columns:1fr;gap:8px}
   .filters-bar{flex-direction:column}
   .filters-bar select,.search-wrap{width:100%}
-  input[type=text]{width:100%}
 }
-
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes countUp{from{opacity:0}to{opacity:1}}
-.card{animation:fadeUp 0.4s ease both}
-.card:nth-child(1){animation-delay:0.03s}
-.card:nth-child(2){animation-delay:0.06s}
-.card:nth-child(3){animation-delay:0.09s}
-.card:nth-child(4){animation-delay:0.12s}
-.card:nth-child(5){animation-delay:0.15s}
-.card:nth-child(6){animation-delay:0.18s}
-.card:nth-child(7){animation-delay:0.21s}
-.card:nth-child(8){animation-delay:0.24s}
-.card:nth-child(9){animation-delay:0.27s}
-.card:nth-child(10){animation-delay:0.30s}
-.card:nth-child(11){animation-delay:0.33s}
-.card:nth-child(12){animation-delay:0.36s}
-.stats-bar b{transition:all 0.4s ease}
-.badge{transition:transform 0.2s ease}
-.card:hover .badge{transform:scale(1.08)}
-.price-val{transition:color 0.2s ease}
-.filters-bar select,.filters-bar input{transition:border-color 0.2s ease,box-shadow 0.2s ease}
-.filters-bar select:focus,.filters-bar input:focus{box-shadow:0 0 0 3px rgba(45,106,79,0.15)}
-
-.card-img{width:100%;height:130px;object-fit:cover;border-radius:8px;margin-bottom:4px}
-
-.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:1rem}
-.modal-overlay.active{display:flex}
-.modal{background:#fff;border-radius:16px;padding:1.5rem;max-width:380px;width:100%;animation:fadeUp 0.3s ease}
-.modal-img{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:1rem}
-.modal-title{font-size:1rem;font-weight:600;color:#1A1814;margin-bottom:4px}
-.modal-meta{font-size:0.82rem;color:#8A8479;margin-bottom:1rem;line-height:1.6}
-.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:#8A8479;line-height:1}
-.modal-header{position:relative;margin-bottom:0.5rem}
-.btn-whatsapp{display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:14px 20px;font-size:1rem;font-weight:600;width:100%;cursor:pointer;text-decoration:none;margin-top:0.5rem;font-family:'DM Sans',sans-serif;transition:background 0.2s}
-.btn-whatsapp:hover{background:#1ebe5d}
-.btn-whatsapp svg{flex-shrink:0}
-.modal-tag{display:inline-block;background:#FEE2E2;color:#7F1D1D;font-size:0.72rem;font-weight:500;padding:3px 10px;border-radius:20px;margin-bottom:0.75rem}
-.card.out-of-stock{cursor:pointer;opacity:0.85;transition:opacity 0.2s,transform 0.2s,box-shadow 0.2s}
-.card.out-of-stock:hover{opacity:1;box-shadow:0 8px 24px rgba(0,0,0,0.13);transform:translateY(-4px) scale(1.02)}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js">
-var LAST_FILTERED = [];
-function openModal(idx) {
-  var d = LAST_FILTERED[idx];
-  if(!d) return;
-  var img = document.getElementById('modal-img');
-  if(d.img) {
-    img.src = d.img.split('/').pop();
-    img.style.display = 'block';
-    img.onerror = function(){ this.style.display='none'; };
-  } else {
-    img.style.display = 'none';
-  }
-  document.getElementById('modal-title').textContent = d.material + ' - ' + d.denom;
-  document.getElementById('modal-meta').innerHTML = '<b>' + d.marca + '</b> · ' + d.present + ' · ' + (d.color && d.color !== '*n/a' ? d.color : 'Sin color');
-  var msg = 'Hola! 👋 Quisiera que me avisen cuando haya stock de: *' + d.material + ' - ' + d.denom + '* (' + d.marca + ' · ' + d.color + ' · ' + d.present + '). Gracias!';
-  document.getElementById('modal-wa').href = 'https://wa.me/5492804585359?text=' + encodeURIComponent(msg);
-  document.getElementById('modal-overlay').classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-function closeModalBtn() {
-  document.getElementById('modal-overlay').classList.remove('active');
-  document.body.style.overflow = '';
-}
-function closeModal(e) {
-  if(e.target === document.getElementById('modal-overlay')) closeModalBtn();
-}
-
-</script>
 </head>
 <body>
+
 <header class="site-header">
   <div class="header-top">
     <img src="CHULENGO_LOGOO.png" alt="Logo" class="logo">
     <span class="site-title">Chulengo Estudio</span>
-    
   </div>
   <div class="promo-pill">Precio oferta disponible comprando 2 kg o más de cualquier color, material o marca</div>
 </header>
+
 <div class="filters-bar">
   <div class="search-wrap">
     <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -151,18 +100,53 @@ function closeModal(e) {
     <option value="out">Sin stock</option>
   </select>
 </div>
+
 <div class="stats-bar" id="stats"><span>Cargando datos...</span></div>
 <div id="content"><div class="loading"><div class="spinner"></div>Cargando stock...</div></div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <button class="modal-close" id="modal-close">✕</button>
+    <img id="modal-img" class="modal-img" src="" alt="" style="display:none">
+    <span class="modal-tag">Sin stock</span>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-meta" id="modal-meta"></div>
+    <a class="btn-wa" id="modal-wa" href="#" target="_blank">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.115.549 4.1 1.508 5.83L.057 23.077a.75.75 0 0 0 .916.953l5.453-1.427A11.933 11.933 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.715 9.715 0 0 1-4.951-1.355l-.355-.211-3.676.962.98-3.578-.231-.368A9.715 9.715 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
+      Avisarme cuando haya stock
+    </a>
+  </div>
+</div>
+
 <footer>Chulengo Estudio · Argentina · Chubut · Puerto Madryn · 2026</footer>
+
 <script>
-var DATA=[];
-var FUSE=null;
-var COLORS={'amarillo':'#FFD600','azul':'#1E88E5','blanco':'#E0E0E0','negro':'#212121','verde':'#43A047','rojo':'#E53935','naranja':'#FB8C00','rosa':'#E91E63','marron':'#6D4C41','violeta':'#8E24AA','gris':'#9E9E9E','plateado':'#B0BEC5','dorado':'#FFA000','celeste':'#4FC3F7','multicolor':'#CCCCCC','transparente':'#E3F2FD','surtido':'#CCCCCC'};
+var DATA = [];
+var FILTERED = [];
+var FUSE = null;
+var WA = '5492804585359';
+
+var COLORS = {
+  'amarillo':'#FFD600','azul':'#1E88E5','blanco':'#E0E0E0','negro':'#212121',
+  'verde':'#43A047','rojo':'#E53935','naranja':'#FB8C00','rosa':'#E91E63',
+  'marron':'#6D4C41','violeta':'#8E24AA','gris':'#9E9E9E','plateado':'#B0BEC5',
+  'dorado':'#FFA000','celeste':'#4FC3F7','multicolor':'#CCCCCC','transparente':'#E3F2FD','surtido':'#CCCCCC'
+};
+
 function fmt(n){return new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(Number(n)||0);}
 function getSt(s){var n=parseInt(s);if(isNaN(n)||n<=0)return'out';if(n<=3)return'low';return'ok';}
-function getLbl(s){var t=getSt(s);return t==='out'?'Sin stock':t==='low'?'Poco stock':'Disponible';}
+function getLbl(s){return{out:'Sin stock',low:'Poco stock',ok:'Disponible'}[getSt(s)];}
 function getBdg(s){return'b-'+getSt(s);}
 function getDot(c){if(!c||c==='*n/a')return'';var h=COLORS[c.toLowerCase()];return h?'<span class="cdot" style="background:'+h+'"></span>':'';}
+
+function animateCount(el,target){
+  if(!el)return;
+  var start=0,steps=20,inc=Math.ceil(target/steps),timer=setInterval(function(){
+    start+=inc;if(start>=target){start=target;clearInterval(timer);}
+    el.textContent=start;
+  },600/steps);
+}
+
 function populate(){
   var mats=[],marcas=[],seen={};
   DATA.forEach(function(d){
@@ -176,22 +160,16 @@ function populate(){
   mats.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;fm.appendChild(o);});
   marcas.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;fb.appendChild(o);});
 }
-function animateCount(el, target) {
-  var start = 0, duration = 600, step = Math.ceil(target / 20);
-  var timer = setInterval(function() {
-    start += step;
-    if (start >= target) { start = target; clearInterval(timer); }
-    el.textContent = start;
-  }, duration / 20);
-}
 
 function render(){
   var q=document.getElementById('search').value;
   var mat=document.getElementById('fil-material').value;
   var marca=document.getElementById('fil-marca').value;
   var stk=document.getElementById('fil-stock').value;
+
   var pool=DATA;
   if(q.trim()&&FUSE){pool=FUSE.search(q.trim()).map(function(r){return r.item;});}
+
   var f=pool.filter(function(d){
     if(mat&&d.material!==mat)return false;
     if(marca&&d.marca!==marca)return false;
@@ -199,48 +177,110 @@ function render(){
     if(stk&&stk!=='instock'&&getSt(d.stock)!==stk)return false;
     return true;
   });
+
   f.sort(function(a,b){
-    var order={'ok':0,'low':1,'out':2};
-    return order[getSt(a.stock)] - order[getSt(b.stock)];
-  });
-  var ok=0,low=0,out=0;
-  f.forEach(function(d){var s=getSt(d.stock);if(s==='ok')ok++;else if(s==='low')low++;else out++;});
-  document.getElementById('stats').innerHTML='<span>Mostrando <b id="scnt">0</b> productos</span><span><b id="sok">0</b> disponibles</span><span><b id="slow">0</b> poco stock</span>';
-  animateCount(document.getElementById('scnt'), f.length);
-  animateCount(document.getElementById('sok'), ok);
-  animateCount(document.getElementById('slow'), low);
-  animateCount(document.getElementById('sout'), out);
-  if(!f.length){document.getElementById('content').innerHTML='<div class="grid"><div class="empty">No se encontraron productos.</div></div>';return;}
-  LAST_FILTERED = f;
-  document.getElementById('content').innerHTML='<div class="grid"></div>';
-  f.forEach(function(d, idx){
-    var lista=Number(d.lista)||0,oferta=Number(d.oferta)||0;
-    var hayOferta=oferta>0&&oferta!==lista;
-    var stockN=parseInt(d.stock)||0;
-    var cLabel=(d.color&&d.color!=='*n/a')?d.color:'Sin color';
-    var isOut=getSt(d.stock)==='out';
-    var div=document.createElement('div');
-    div.className='card'+(isOut?' out-of-stock':'');
-    if(isOut){div.setAttribute('onclick','openModal('+idx+')');}
-    if(d.img){
-      var im=document.createElement('img');
-      im.className='card-img';
-      im.src=d.img.split('/').pop();
-      im.loading='lazy';
-      im.onerror=function(){this.style.display='none';};
-      div.appendChild(im);
-    }
-    var inner='<div class="card-top"><div class="card-title">'+d.material+' - '+d.denom+'</div><span class="badge '+getBdg(d.stock)+'">'+getLbl(d.stock)+'</span></div>';
-    inner+='<div class="card-meta"><b>'+d.marca+'</b> - '+d.present+'<br><span class="color-chip">'+getDot(d.color)+cLabel+'</span></div>';
-    inner+='<div class="stock-line">Stock: <b>'+stockN+' u.</b></div>';
-    inner+='<div class="prices"><div class="price-row"><span class="price-label">Precio unitario</span><span class="price-val">'+fmt(lista)+'</span></div>';
-    if(hayOferta){inner+='<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o más*</span></span><span class="price-val green">'+fmt(oferta)+'</span></div>';}
-    inner+='</div>';
-    div.innerHTML+=inner;
-    document.querySelector('#content .grid').appendChild(div);
+    return({'ok':0,'low':1,'out':2}[getSt(a.stock)])-({'ok':0,'low':1,'out':2}[getSt(b.stock)]);
   });
 
+  FILTERED = f;
+
+  var ok=0,low=0,out=0;
+  f.forEach(function(d){var s=getSt(d.stock);if(s==='ok')ok++;else if(s==='low')low++;else out++;});
+
+  document.getElementById('stats').innerHTML=
+    '<span>Mostrando <b id="scnt">0</b> productos</span>'+
+    '<span><b id="sok">0</b> disponibles</span>'+
+    '<span><b id="slow">0</b> poco stock</span>';
+  animateCount(document.getElementById('scnt'),f.length);
+  animateCount(document.getElementById('sok'),ok);
+  animateCount(document.getElementById('slow'),low);
+
+  var grid=document.createElement('div');
+  grid.className='grid';
+
+  if(!f.length){
+    var empty=document.createElement('div');
+    empty.className='empty';
+    empty.textContent='No se encontraron productos.';
+    grid.appendChild(empty);
+  } else {
+    f.forEach(function(d,idx){
+      var card=document.createElement('div');
+      var isOut=getSt(d.stock)==='out';
+      card.className='card'+(isOut?' out-of-stock':'');
+      if(isOut){
+        card.addEventListener('click',function(){openModal(idx);});
+      }
+
+      if(d.img){
+        var im=document.createElement('img');
+        im.className='card-img';
+        im.src=d.img.split('/').pop();
+        im.loading='lazy';
+        im.onerror=function(){this.style.display='none';};
+        card.appendChild(im);
+      }
+
+      var colorLabel=(d.color&&d.color!=='*n/a')?d.color:'Sin color';
+      var lista=Number(d.lista)||0,oferta=Number(d.oferta)||0;
+      var hayOferta=oferta>0&&oferta!==lista;
+      var stockN=parseInt(d.stock)||0;
+
+      var inner=
+        '<div class="card-top">'+
+          '<div class="card-title">'+d.material+' - '+d.denom+'</div>'+
+          '<span class="badge '+getBdg(d.stock)+'">'+getLbl(d.stock)+'</span>'+
+        '</div>'+
+        '<div class="card-meta"><b>'+d.marca+'</b> · '+d.present+'<br>'+
+          '<span class="color-chip">'+getDot(d.color)+colorLabel+'</span>'+
+        '</div>'+
+        '<div class="stock-line">Stock: <b>'+stockN+' u.</b></div>'+
+        '<div class="prices">'+
+          '<div class="price-row"><span class="price-label">Precio unitario</span><span class="price-val">'+fmt(lista)+'</span></div>'+
+          (hayOferta?'<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o más*</span></span><span class="price-val green">'+fmt(oferta)+'</span></div>':'')+
+        '</div>';
+
+      if(isOut){
+        inner+='<div style="margin-top:6px;font-size:0.72rem;color:#1D4ED8;font-weight:500">👆 Tocá para que te avisemos</div>';
+      }
+
+      card.innerHTML+=inner;
+      grid.appendChild(card);
+    });
+  }
+
+  var content=document.getElementById('content');
+  content.innerHTML='';
+  content.appendChild(grid);
 }
+
+function openModal(idx){
+  var d=FILTERED[idx];
+  if(!d)return;
+  var img=document.getElementById('modal-img');
+  if(d.img){
+    img.src=d.img.split('/').pop();
+    img.style.display='block';
+    img.onerror=function(){this.style.display='none';};
+  } else {
+    img.style.display='none';
+  }
+  document.getElementById('modal-title').textContent=d.material+' - '+d.denom;
+  document.getElementById('modal-meta').innerHTML='<b>'+d.marca+'</b> · '+d.present+' · '+(d.color&&d.color!=='*n/a'?d.color:'Sin color');
+  var msg='Hola! 👋 Quisiera que me avisen cuando haya stock de: *'+d.material+' - '+d.denom+'* ('+d.marca+' · '+d.color+' · '+d.present+'). Gracias!';
+  document.getElementById('modal-wa').href='https://wa.me/'+WA+'?text='+encodeURIComponent(msg);
+  document.getElementById('modal-overlay').style.display='flex';
+  document.body.style.overflow='hidden';
+}
+
+document.getElementById('modal-close').addEventListener('click',function(){
+  document.getElementById('modal-overlay').style.display='none';
+  document.body.style.overflow='';
+});
+document.getElementById('modal-overlay').addEventListener('click',function(e){
+  if(e.target===this){this.style.display='none';document.body.style.overflow='';}
+});
+
 fetch('https://script.google.com/macros/s/AKfycbxSyk62NZrRKnGfgsYE0L1v5PdiFBOUp2pBU1OnZ2ij3Mzjb1Qi_VAg8RGOImvbHR1m/exec')
   .then(function(r){return r.json();})
   .then(function(json){
@@ -257,46 +297,20 @@ fetch('https://script.google.com/macros/s/AKfycbxSyk62NZrRKnGfgsYE0L1v5PdiFBOUp2
         img:String(row['imagen']||'')
       };
     }).filter(function(d){return d.material||d.denom;});
-    populate();
-    FUSE = new Fuse(DATA, {
-      keys: [
-        {name:'denom', weight: 2},
-        {name:'marca', weight: 1.5},
-        {name:'material', weight: 1.5},
-        {name:'color', weight: 1},
-        {name:'present', weight: 0.5}
-      ],
-      threshold: 0.45,
-      distance: 100,
-      includeScore: true,
-      ignoreLocation: true
+    FUSE=new Fuse(DATA,{
+      keys:[{name:'denom',weight:2},{name:'marca',weight:1.5},{name:'material',weight:1.5},{name:'color',weight:1}],
+      threshold:0.45,ignoreLocation:true,includeScore:true
     });
+    populate();
     render();
     ['search','fil-material','fil-marca','fil-stock'].forEach(function(id){
       document.getElementById(id).addEventListener('input',render);
     });
   })
   .catch(function(e){
-    document.getElementById('content').innerHTML='<div class="loading">No se pudieron cargar los datos. Recarga la pagina.<br><small style="color:red">'+e+'</small></div>';
-    document.getElementById('stats').innerHTML='<span>Error</span>';
+    document.getElementById('content').innerHTML='<div class="loading">No se pudieron cargar los datos. Recargá la página.</div>';
+    document.getElementById('stats').innerHTML='<span>Error al cargar</span>';
   });
 </script>
-
-<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
-  <div class="modal" id="modal">
-    <div class="modal-header">
-      <button class="modal-close" onclick="closeModalBtn()">✕</button>
-    </div>
-    <img id="modal-img" class="modal-img" src="" alt="" style="display:none">
-    <span class="modal-tag">Sin stock</span>
-    <div class="modal-title" id="modal-title"></div>
-    <div class="modal-meta" id="modal-meta"></div>
-    <a class="btn-whatsapp" id="modal-wa" href="#" target="_blank">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.115.549 4.1 1.508 5.83L.057 23.077a.75.75 0 0 0 .916.953l5.453-1.427A11.933 11.933 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.715 9.715 0 0 1-4.951-1.355l-.355-.211-3.676.962.98-3.578-.231-.368A9.715 9.715 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
-      Avisarme cuando haya stock
-    </a>
-  </div>
-</div>
-
 </body>
 </html>
