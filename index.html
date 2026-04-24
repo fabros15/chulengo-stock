@@ -2,20 +2,20 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Chulengo Estudio — Stock</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0;max-width:100%} html{overflow-x:hidden} body{overflow-x:hidden;width:100vw;position:relative}
 body{font-family:'DM Sans',sans-serif;background:#F5F2ED;color:#1A1814;min-height:100vh}
-.site-header{background:#1A1814;color:#fff;padding:1.5rem 2rem;position:sticky;top:0;z-index:100}
+.site-header{background:#1A1814;color:#fff;padding:1.5rem 1rem;position:sticky;top:0;z-index:100;width:100%}
 .header-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:0.5rem}
 .site-title{font-family:'DM Mono',monospace;font-size:1.25rem;font-weight:500}
 .site-sub{font-size:0.8rem;color:#9CA3AF;font-family:'DM Mono',monospace}
 .logo{width:40px;height:40px;border-radius:8px;object-fit:cover}
 .promo-pill{display:inline-flex;align-items:center;gap:8px;background:#1D4ED8;color:#fff;font-size:0.95rem;font-weight:500;padding:8px 18px;border-radius:20px}
 .promo-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:#93C5FD;display:inline-block}
-.filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.875rem 2rem;display:flex;gap:10px;flex-wrap:wrap}
+.filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.875rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
 .search-wrap{position:relative;flex:1;min-width:180px}
 .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#8A8479;pointer-events:none}
 input[type=text]{width:100%;padding:8px 12px 8px 34px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:'DM Sans',sans-serif;background:#F5F2ED;color:#1A1814;outline:none}
@@ -51,10 +51,12 @@ select:focus{border-color:#2D6A4F}
 @keyframes spin{to{transform:rotate(360deg)}}
 footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-family:'DM Mono',monospace;border-top:1px solid #E2DDD6;margin-top:1rem}
 @media(max-width:600px){
-  .site-header,.filters-bar,.stats-bar,.grid{padding-left:1rem;padding-right:1rem}
-  .grid{grid-template-columns:1fr 1fr;gap:8px}
+  .site-header,.filters-bar,.stats-bar,.grid{padding-left:0.75rem;padding-right:0.75rem}
+  .grid{grid-template-columns:1fr;gap:8px}
+  .filters-bar{flex-direction:column}
+  .filters-bar select,.search-wrap{width:100%}
+  input[type=text]{width:100%}
 }
-@media(max-width:400px){.grid{grid-template-columns:1fr}}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes countUp{from{opacity:0}to{opacity:1}}
