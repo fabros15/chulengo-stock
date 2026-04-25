@@ -503,7 +503,7 @@ select:focus{border-color:#2D6A4F}
 .producto-back{background:none;border:none;font-size:1.4rem;cursor:pointer;color:#1A1814;padding:4px;line-height:1}
 .producto-header-title{font-size:0.95rem;font-weight:600;color:#1A1814;flex:1}
 .producto-img{width:100%;height:220px;object-fit:cover}
-.producto-img-placeholder{width:100%;height:180px;background:linear-gradient(135deg,#F5F2ED,#E2DDD6);display:flex;align-items:center;justify-content:center;font-size:3.5rem}
+.producto-img-placeholder{width:100%;height:180px;background:linear-gradient(135deg,#F5F2ED,#E2DDD6);display:flex;align-items:center;justify-content:center;font-size:3.5rem;margin-bottom:0}
 .producto-body{padding:1.25rem}
 .producto-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.875rem}
 .producto-badge{font-size:0.72rem;font-weight:600;padding:4px 10px;border-radius:20px}
@@ -527,7 +527,7 @@ select:focus{border-color:#2D6A4F}
 .uso-item{border-radius:8px;padding:8px 10px;font-size:0.76rem;display:flex;align-items:flex-start;gap:7px;line-height:1.4}
 .uso-item.bueno{background:#F0FDF4;color:#166534;border:1px solid #BBF7D0}
 .uso-item.malo{background:#FEF2F2;color:#7F1D1D;border:1px solid #FECACA}
-.alerta-box{border-radius:10px;padding:10px 14px;font-size:0.8rem;margin-bottom:0.875rem;display:flex;gap:9px;align-items:flex-start;line-height:1.5}
+.alerta-box{border-radius:10px;padding:10px 14px;font-size:0.8rem;margin-bottom:0.875rem;display:flex;gap:9px;align-items:flex-start;line-height:1.5;word-break:break-word}
 .alerta-box.warn{background:#FEF3C7;border:1px solid #FDE68A;color:#78350F}
 .alerta-box.tip{background:#EFF6FF;border:1px solid #BFDBFE;color:#1E3A8A}
 .alerta-box.success{background:#F0FDF4;border:1px solid #BBF7D0;color:#166534}
@@ -998,7 +998,7 @@ var FICHAS = {
     desc: 'El PETG combina la facilidad de impresión del PLA con la resistencia del ABS. Aguanta bien el calor, la humedad y los golpes. Es semi-transparente en su versión natural y tiene muy buena adhesión entre capas. Ideal para piezas que van a tener uso real.',
     alertas: [
       {tipo:'success', texto:'✅ Mucho más resistente al calor que el PLA: aguanta hasta ~80 °C. Apto para uso exterior moderado.'},
-      {tipo:'tip', texto:'💡 Es algo más "pegajoso" al imprimir — puede dejar hilos entre piezas. Se regula bien ajustando la retracción.'}
+      {tipo:'tip', texto:'💡 Es algo más pegajoso al imprimir, puede dejar hilos entre piezas. Se regula bien ajustando la retracción.'}
     ],
     usos: [
       {ok:true, txt:'Uso exterior moderado'},
@@ -1096,11 +1096,53 @@ var FICHAS = {
   }
 };
 
-function getFicha(material){
+var FICHAS_MARCA = {
+  'PLA|GST3D': {
+    specs:[
+      {l:'Temp. boquilla',v:'220–250 °C'},
+      {l:'Temp. cama',v:'40–60 °C'},
+      {l:'Temp. deformación',v:'~50–55 °C'},
+      {l:'Resistencia tracción',v:'~50 MPa'},
+      {l:'Diámetro',v:'1,75 mm'},
+      {l:'Retracción',v:'Baja'},
+    ]
+  },
+  'PLA Seda|GST3D': {
+    specs:[
+      {l:'Temp. boquilla',v:'220–250 °C'},
+      {l:'Temp. cama',v:'40–60 °C'},
+      {l:'Temp. deformación',v:'~50 °C'},
+      {l:'Acabado',v:'Sedoso/metálico'},
+      {l:'Diámetro',v:'1,75 mm'},
+      {l:'Retracción',v:'Baja'},
+    ]
+  }
+};
+
+function getFicha(material, marca){
   if(!material)return null;
   var m=material.trim();
+  var b=(marca||'').trim();
+  // Buscar ficha específica de marca primero
+  if(b){
+    var key=m+'|'+b;
+    if(FICHAS_MARCA[key]){
+      // Mezclar ficha base con override de marca
+      var base=FICHAS[m]||null;
+      if(!base){
+        var keys=Object.keys(FICHAS);
+        for(var i=0;i<keys.length;i++){
+          if(m.toLowerCase().includes(keys[i].toLowerCase())||keys[i].toLowerCase().includes(m.toLowerCase())){base=FICHAS[keys[i]];break;}
+        }
+      }
+      if(base){
+        var override=FICHAS_MARCA[key];
+        return Object.assign({},base,override);
+      }
+    }
+  }
+  // Ficha genérica por material
   if(FICHAS[m])return FICHAS[m];
-  // Buscar por palabra clave
   var keys=Object.keys(FICHAS);
   for(var i=0;i<keys.length;i++){
     if(m.toLowerCase().includes(keys[i].toLowerCase())||keys[i].toLowerCase().includes(m.toLowerCase()))
@@ -1114,7 +1156,7 @@ var productoActual = null;
 
 function abrirProducto(d){
   productoActual = d;
-  var ficha = getFicha(d.material);
+  var ficha = getFicha(d.material, d.marca);
   var lista=Number(d.lista)||0, oferta=Number(d.oferta)||0;
   var hayOferta=oferta>0&&oferta!==lista;
   var isOut=getSt(d.stock)==='out';
@@ -1275,7 +1317,7 @@ function render(){
     f.forEach(function(d,idx){
       var card=document.createElement('div');
       var isOut=getSt(d.stock)==='out';
-      var tieneFicha=!!getFicha(d.material);
+      var tieneFicha=!!getFicha(d.material,d.marca);
       card.className='card'+(isOut?' out-of-stock':'')+(tieneFicha?' con-ficha':'');
       // Click: sin stock abre modal de aviso, con stock abre panel de producto
       if(isOut){
@@ -1303,7 +1345,7 @@ function render(){
         var stockDisp=parseInt(d.stock)||0;
         var dataStr=encodeURIComponent(JSON.stringify({material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,stock:stockDisp}));
         inner+='<button class="'+btnCls+'" data-cartid="'+cartId+'" data-item="'+dataStr+'" onclick="event.stopPropagation();agregarItem(this)">'+btnTxt+'</button>';
-        if(getFicha(d.material)){inner+='<div class="ver-ficha-hint">👆 Tocá la card para ver ficha técnica</div>';}
+        if(getFicha(d.material,d.marca)){inner+='<div class="ver-ficha-hint">👆 Tocá la card para ver ficha técnica</div>';}
       }
       card.innerHTML+=inner;
       grid.appendChild(card);
