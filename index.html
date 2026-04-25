@@ -126,16 +126,16 @@ function actualizarWA(total){
   if(!keys.length)return;
   var kg=kgTotal();
   var usaOferta=kg>=2;
-  var msg='Hola! 👋 Quiero hacer el siguiente pedido:\n\n';
+  var msg='Hola! Quiero hacer el siguiente pedido:\n\n';
   keys.forEach(function(id){
     var item=carrito[id];
     var precio=precioItem(item);
     msg+='• '+item.qty+'x '+item.material+' - '+item.denom+' ('+item.marca+') — '+new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(precio)+' c/u\n';
   });
   msg+='\n';
-  if(usaOferta)msg+='✅ Precio oferta aplicado ('+kg.toFixed(1)+' kg en total)\n';
-  msg+='💰 Total: '+new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(total)+'\n';
-  msg+='\n¿Hay stock disponible y cuándo puedo pasar a retirarlo? ¡Gracias!';
+  if(usaOferta)msg+='* Precio oferta aplicado ('+kg.toFixed(1)+' kg en total)\n';
+  msg+='Total: '+new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(total)+'\n';
+  msg+='\n¿Hay stock disponible y cuándo puedo pasar a retirarlo? Gracias!';
   document.getElementById('btn-pedir').href='https://wa.me/'+WA+'?text='+encodeURIComponent(msg);
 }
 
@@ -160,7 +160,7 @@ body{font-family:'DM Sans',sans-serif;background:#F5F2ED;color:#1A1814;min-heigh
 .logo{width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0}
 /* NAV TABS */
 .nav-tabs{display:flex;gap:4px}
-.nav-tab{padding:6px 16px;border-radius:20px;font-size:0.82rem;font-weight:500;cursor:pointer;border:none;background:transparent;color:#9CA3AF;transition:all 0.2s;font-family:'DM Sans',sans-serif}
+.nav-tab{padding:8px 20px;border-radius:20px;font-size:0.95rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:#9CA3AF;transition:all 0.2s;font-family:'DM Sans',sans-serif}
 .nav-tab.active{background:#fff;color:#1A1814}
 .nav-tab:hover:not(.active){color:#fff}
 /* PROMO */
@@ -325,8 +325,8 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
     <span class="site-title">Chulengo Estudio</span>
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('stock',this)">Stock</button>
-    <button class="nav-tab" onclick="showPage('calc',this)">Calculadora 3D</button>
+    <button class="nav-tab active" onclick="showPage('stock',this)">🛒 Ver productos</button>
+    <button class="nav-tab" onclick="showPage('calc',this)">🧮 Calculadora de costos</button>
   </div>
 </header>
 
@@ -664,7 +664,7 @@ function openModal(idx){
   else{img.style.display='none';}
   document.getElementById('modal-title').textContent=d.material+' - '+d.denom;
   document.getElementById('modal-meta').innerHTML='<b>'+d.marca+'</b> · '+d.present+' · '+(d.color&&d.color!=='*n/a'?d.color:'Sin color');
-  var msg='Hola! 👋 Quisiera que me avisen cuando haya stock de: *'+d.material+' - '+d.denom+'* ('+d.marca+' · '+d.color+' · '+d.present+'). Gracias!';
+  var msg='Hola! Quisiera que me avisen cuando haya stock de: *'+d.material+' - '+d.denom+'* ('+d.marca+' · '+d.color+' · '+d.present+'). Gracias!';
   document.getElementById('modal-wa').href='https://wa.me/'+WA+'?text='+encodeURIComponent(msg);
   document.getElementById('modal-overlay').classList.add('open');
   document.body.style.overflow='hidden';
@@ -935,16 +935,16 @@ function actualizarWA(total){
   if(!keys.length)return;
   var kg=kgTotal();
   var usaOferta=kg>=2;
-  var msg='Hola! 👋 Quiero hacer el siguiente pedido:\n\n';
+  var msg='Hola! Quiero hacer el siguiente pedido:\n\n';
   keys.forEach(function(id){
     var item=carrito[id];
     var precio=precioItem(item);
     msg+='• '+item.qty+'x '+item.material+' - '+item.denom+' ('+item.marca+') — '+new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(precio)+' c/u\n';
   });
   msg+='\n';
-  if(usaOferta)msg+='✅ Precio oferta aplicado ('+kg.toFixed(1)+' kg en total)\n';
-  msg+='💰 Total: '+new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(total)+'\n';
-  msg+='\n¿Hay stock disponible y cuándo puedo pasar a retirarlo? ¡Gracias!';
+  if(usaOferta)msg+='* Precio oferta aplicado ('+kg.toFixed(1)+' kg en total)\n';
+  msg+='Total: '+new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(total)+'\n';
+  msg+='\n¿Hay stock disponible y cuándo puedo pasar a retirarlo? Gracias!';
   document.getElementById('btn-pedir').href='https://wa.me/'+WA+'?text='+encodeURIComponent(msg);
 }
 
