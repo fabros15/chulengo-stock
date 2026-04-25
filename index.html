@@ -682,15 +682,55 @@ function openModal(idx){
 document.getElementById('modal-close').addEventListener('click',function(){document.getElementById('modal-overlay').classList.remove('open');document.body.style.overflow='';});
 document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this){this.classList.remove('open');document.body.style.overflow='';}});
 
-fetch('https://script.google.com/macros/s/AKfycbxSyk62NZrRKnGfgsYE0L1v5PdiFBOUp2pBU1OnZ2ij3Mzjb1Qi_VAg8RGOImvbHR1m/exec')
-  .then(function(r){return r.json();})
-  .then(function(json){
-    DATA=json.map(function(row){return{marca:String(row['marca nombre']||''),material:String(row['material nombre']||''),present:String(row['presentacion nombre']||''),color:String(row['color nombre']||''),denom:String(row['denominacion nombre']||''),lista:row['precio_lista']||0,oferta:row['precio_oferta']||0,stock:row['stock']!==undefined?row['stock']:0,img:String(row['imagen']||'')};}).filter(function(d){return d.material||d.denom;});
-    FUSE=new Fuse(DATA,{keys:[{name:'denom',weight:2},{name:'marca',weight:1.5},{name:'material',weight:1.5},{name:'color',weight:1}],threshold:0.45,ignoreLocation:true,includeScore:true});
-    populate();render();
-    ['search','fil-material','fil-marca','fil-stock'].forEach(function(id){document.getElementById(id).addEventListener('input',render);});
-  })
-  .catch(function(){document.getElementById('content').innerHTML='<div class="loading">No se pudieron cargar los datos. Recargá la página.</div>';document.getElementById('stats').innerHTML='<span>Error al cargar</span>';});
+var API_URL='https://script.google.com/macros/s/AKfycbxSyk62NZrRKnGfgsYE0L1v5PdiFBOUp2pBU1OnZ2ij3Mzjb1Qi_VAg8RGOImvbHR1m/exec';
+var CACHE_KEY='chulengo_stock_v1';
+var CACHE_TTL=5*60*1000; // 5 minutos
+
+function procesarDatos(json){
+  DATA=json.map(function(row){return{marca:String(row['marca nombre']||''),material:String(row['material nombre']||''),present:String(row['presentacion nombre']||''),color:String(row['color nombre']||''),denom:String(row['denominacion nombre']||''),lista:row['precio_lista']||0,oferta:row['precio_oferta']||0,stock:row['stock']!==undefined?row['stock']:0,img:String(row['imagen']||'')};}).filter(function(d){return d.material||d.denom;});
+  FUSE=new Fuse(DATA,{keys:[{name:'denom',weight:2},{name:'marca',weight:1.5},{name:'material',weight:1.5},{name:'color',weight:1}],threshold:0.45,ignoreLocation:true,includeScore:true});
+  populate();render();
+  ['search','fil-material','fil-marca','fil-stock'].forEach(function(id){
+    document.getElementById(id).addEventListener('input',render);
+  });
+}
+
+function cargarDesdeAPI(){
+  return fetch(API_URL)
+    .then(function(r){return r.json();})
+    .then(function(json){
+      try{
+        sessionStorage.setItem(CACHE_KEY,JSON.stringify({t:Date.now(),d:json}));
+      }catch(e){}
+      return json;
+    });
+}
+
+// Intentar cargar desde caché primero
+var cached=null;
+try{
+  var raw=sessionStorage.getItem(CACHE_KEY);
+  if(raw){
+    var obj=JSON.parse(raw);
+    if(Date.now()-obj.t < CACHE_TTL) cached=obj.d;
+  }
+}catch(e){}
+
+if(cached){
+  // Carga instantánea desde caché
+  procesarDatos(cached);
+  // Actualizar en segundo plano silenciosamente
+  cargarDesdeAPI().then(function(json){
+    procesarDatos(json);
+  }).catch(function(){});
+} else {
+  cargarDesdeAPI()
+    .then(procesarDatos)
+    .catch(function(){
+      document.getElementById('content').innerHTML='<div class="loading">No se pudieron cargar los datos. Recargá la página.</div>';
+      document.getElementById('stats').innerHTML='<span>Error al cargar</span>';
+    });
+}
 
 // ==================== CALCULADORA ====================
 var costoMinImp=0, costoMinElec=0;
