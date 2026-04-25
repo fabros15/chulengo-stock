@@ -1250,8 +1250,7 @@ function abrirProducto(d){
     body.appendChild(div('ficha-desc', ficha.desc));
 
     ficha.alertas.forEach(function(a){
-      var ab=div('alerta-box '+a.tipo);
-      ab.appendChild(span('',a.texto));
+      var ab=div('alerta-box '+a.tipo, a.texto);
       body.appendChild(ab);
     });
 
