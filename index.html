@@ -82,37 +82,28 @@ function cambiarQty(id, delta){
   carrito[id].qty+=delta;
   if(carrito[id].qty<=0){
     delete carrito[id];
-    // find and reset ALL buttons that match this item
-    document.querySelectorAll('.btn-agregar').forEach(function(btn){
-      if(btn.dataset.cartid===id){
-        btn.textContent='+ Agregar al pedido';
-        btn.className='btn-agregar';
-      }
+    document.querySelectorAll('[data-cartid="'+id+'"]').forEach(function(btn){
+      btn.textContent='+ Agregar al pedido';
+      btn.className='btn-agregar';
     });
   }
   actualizarCarrito();
 }
 
-function agregarAlCarrito(idx){
-  var d=FILTERED[idx];
-  if(!d||getSt(d.stock)==='out')return;
-  var id=d.material+'-'+d.denom+'-'+d.marca;
-  var stockDisp=parseInt(d.stock)||0;
+function agregarItem(btn){
+  var id=btn.dataset.cartid;
+  var d=JSON.parse(decodeURIComponent(btn.dataset.item));
+  var stockDisp=d.stock||0;
   if(carrito[id]){
     if(carrito[id].qty>=stockDisp){
-      // already at max, show feedback
-      document.querySelectorAll('.btn-agregar').forEach(function(btn){
-        if(btn.dataset.cartid===id){
-          var orig=btn.textContent;
-          btn.textContent='Stock máximo: '+stockDisp;
-          setTimeout(function(){btn.textContent='✓ '+carrito[id].qty+' en el pedido';},1500);
-        }
-      });
+      var orig=btn.textContent;
+      btn.textContent='Stock máximo: '+stockDisp;
+      setTimeout(function(){btn.textContent='✓ '+carrito[id].qty+' en el pedido';},1500);
       return;
     }
     carrito[id].qty++;
   } else {
-    carrito[id]={material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,qty:1,stock:stockDisp};
+    carrito[id]={material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:d.lista,oferta:d.oferta,qty:1,stock:stockDisp};
   }
   // update button text with quantity
   document.querySelectorAll('.btn-agregar').forEach(function(btn){
@@ -121,13 +112,10 @@ function agregarAlCarrito(idx){
       btn.className='btn-agregar en-carrito';
     }
   });
-  // update all buttons
   Object.keys(carrito).forEach(function(id){
-    document.querySelectorAll('.btn-agregar').forEach(function(btn){
-      if(btn.dataset.cartid===id){
-        btn.textContent='✓ '+carrito[id].qty+' en el pedido';
-        btn.className='btn-agregar en-carrito';
-      }
+    document.querySelectorAll('[data-cartid="'+id+'"]').forEach(function(btn){
+      btn.textContent='✓ '+carrito[id].qty+' en el pedido';
+      btn.className='btn-agregar en-carrito';
     });
   });
   actualizarCarrito();
@@ -656,7 +644,9 @@ function render(){
         var enCarrito=carrito[cartId];
         var btnTxt=enCarrito?'✓ '+enCarrito.qty+' en el pedido':'+ Agregar al pedido';
         var btnCls=enCarrito?'btn-agregar en-carrito':'btn-agregar';
-        inner+='<button class="'+btnCls+'" id="cart-btn-'+idx+'" data-cartid="'+cartId+'" onclick="event.stopPropagation();agregarAlCarrito('+idx+')">'+btnTxt+'</button>';
+        var stockDisp=parseInt(d.stock)||0;
+        var dataStr=encodeURIComponent(JSON.stringify({material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,stock:stockDisp}));
+        inner+='<button class="'+btnCls+'" data-cartid="'+cartId+'" data-item="'+dataStr+'" onclick="event.stopPropagation();agregarItem(this)">'+btnTxt+'</button>';
       }
       card.innerHTML+=inner;
       grid.appendChild(card);
@@ -911,45 +901,32 @@ function cambiarQty(id, delta){
   carrito[id].qty+=delta;
   if(carrito[id].qty<=0){
     delete carrito[id];
-    // find and reset ALL buttons that match this item
-    document.querySelectorAll('.btn-agregar').forEach(function(btn){
-      if(btn.dataset.cartid===id){
-        btn.textContent='+ Agregar al pedido';
-        btn.className='btn-agregar';
-      }
+    document.querySelectorAll('[data-cartid="'+id+'"]').forEach(function(btn){
+      btn.textContent='+ Agregar al pedido';
+      btn.className='btn-agregar';
     });
   }
   actualizarCarrito();
 }
 
-function agregarAlCarrito(idx){
-  var d=FILTERED[idx];
-  if(!d||getSt(d.stock)==='out')return;
-  var id=d.material+'-'+d.denom+'-'+d.marca;
-  var stockDisp=parseInt(d.stock)||0;
+function agregarItem(btn){
+  var id=btn.dataset.cartid;
+  var d=JSON.parse(decodeURIComponent(btn.dataset.item));
+  var stockDisp=d.stock||0;
   if(carrito[id]){
     if(carrito[id].qty>=stockDisp){
-      // already at max, show feedback
-      document.querySelectorAll('.btn-agregar').forEach(function(btn){
-        if(btn.dataset.cartid===id){
-          var orig=btn.textContent;
-          btn.textContent='Stock máximo: '+stockDisp;
-          setTimeout(function(){btn.textContent='✓ '+carrito[id].qty+' en el pedido';},1500);
-        }
-      });
+      var orig=btn.textContent;
+      btn.textContent='Stock máximo: '+stockDisp;
+      setTimeout(function(){btn.textContent='✓ '+carrito[id].qty+' en el pedido';},1500);
       return;
     }
     carrito[id].qty++;
   } else {
-    carrito[id]={material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,qty:1,stock:stockDisp};
+    carrito[id]={material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:d.lista,oferta:d.oferta,qty:1,stock:stockDisp};
   }
-  // update button text with quantity
-  document.querySelectorAll('.btn-agregar').forEach(function(btn){
-    if(btn.dataset.cartid===id){
-      btn.textContent='✓ '+carrito[id].qty+' en el pedido';
-      btn.className='btn-agregar en-carrito';
-    }
-  });
+  // update button
+  btn.textContent='✓ '+carrito[id].qty+' en el pedido';
+  btn.className='btn-agregar en-carrito';
   actualizarCarrito();
 }
 
