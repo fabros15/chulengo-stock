@@ -160,9 +160,8 @@ function abrirPDFModal(){
 function cerrarPDFModal(){
   document.getElementById('pdf-modal-overlay').classList.remove('open');
 }
-document.getElementById('pdf-modal-overlay').addEventListener('click',function(e){
-  if(e.target===this) cerrarPDFModal();
-});
+var pdfOverlay=document.getElementById('pdf-modal-overlay');
+if(pdfOverlay){pdfOverlay.addEventListener('click',function(e){if(e.target===this)cerrarPDFModal();});}
 
 function previewLogo(input){
   var file=input.files[0];
@@ -1207,9 +1206,8 @@ function abrirPDFModal(){
 function cerrarPDFModal(){
   document.getElementById('pdf-modal-overlay').classList.remove('open');
 }
-document.getElementById('pdf-modal-overlay').addEventListener('click',function(e){
-  if(e.target===this) cerrarPDFModal();
-});
+var pdfOverlay=document.getElementById('pdf-modal-overlay');
+if(pdfOverlay){pdfOverlay.addEventListener('click',function(e){if(e.target===this)cerrarPDFModal();});}
 
 function previewLogo(input){
   var file=input.files[0];
