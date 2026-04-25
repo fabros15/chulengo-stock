@@ -614,10 +614,8 @@ function render(){
   FILTERED=f;
   var ok=0,low=0;
   f.forEach(function(d){var s=getSt(d.stock);if(s==='ok')ok++;else if(s==='low')low++;});
-  document.getElementById('stats').innerHTML='<span>Mostrando <b id="scnt">0</b> productos</span><span><b id="sok">0</b> disponibles</span><span><b id="slow">0</b> poco stock</span>';
+  document.getElementById('stats').innerHTML='<span>Mostrando <b id="scnt">0</b> productos</span>';
   animCount(document.getElementById('scnt'),f.length);
-  animCount(document.getElementById('sok'),ok);
-  animCount(document.getElementById('slow'),low);
   var grid=document.createElement('div');
   grid.className='grid';
   if(!f.length){var e=document.createElement('div');e.className='empty';e.textContent='No se encontraron productos.';grid.appendChild(e);}
