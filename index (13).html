@@ -321,7 +321,7 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 
 <header class="site-header">
   <div class="header-top">
-    <img src="CHULENGO_LOGOO.png" alt="Logo" class="logo">
+    <img src="img/CHULENGO_LOGOO.png" alt="Logo" class="logo">
     <span class="site-title">Chulengo Estudio</span>
   </div>
   <div class="nav-tabs">
@@ -627,7 +627,7 @@ function render(){
       var isOut=getSt(d.stock)==='out';
       card.className='card'+(isOut?' out-of-stock':'');
       if(isOut){card.addEventListener('click',function(){openModal(idx);});}
-      if(d.img){var im=document.createElement('img');im.className='card-img';im.src=d.img.split('/').pop();im.loading='lazy';im.onerror=function(){this.style.display='none';};card.appendChild(im);}
+      if(d.img){var im=document.createElement('img');im.className='card-img';im.src='img/'+d.img.split('/').pop();im.loading='lazy';im.onerror=function(){this.style.display='none';};card.appendChild(im);}
       var lista=Number(d.lista)||0,oferta=Number(d.oferta)||0;
       var hayOferta=oferta>0&&oferta!==lista;
       var stockN=parseInt(d.stock)||0;
@@ -660,7 +660,7 @@ function render(){
 function openModal(idx){
   var d=FILTERED[idx];if(!d)return;
   var img=document.getElementById('modal-img');
-  if(d.img){img.src=d.img.split('/').pop();img.style.display='block';img.onerror=function(){this.style.display='none';};}
+  if(d.img){img.src='img/'+d.img.split('/').pop();img.style.display='block';img.onerror=function(){this.style.display='none';};}
   else{img.style.display='none';}
   document.getElementById('modal-title').textContent=d.material+' - '+d.denom;
   document.getElementById('modal-meta').innerHTML='<b>'+d.marca+'</b> · '+d.present+' · '+(d.color&&d.color!=='*n/a'?d.color:'Sin color');
