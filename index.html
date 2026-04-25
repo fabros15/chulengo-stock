@@ -236,7 +236,7 @@ function generarPDF(sendWA){
   var nro='P-'+Date.now().toString().slice(-6);
   var fecha=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
 
-  var jsPDF=window.jspdf?.jsPDF||window.jsPDF;var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  var jsPDF=window.jspdf&&window.jspdf.jsPDF?window.jspdf.jsPDF:window.jsPDF;if(!jsPDF){alert('Error: no se pudo cargar la librería PDF. Recargá la página.');return;}var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   var w=210, h=297;
   var rgb1=hexToRgb(color1);
   var rgb2=hexToRgb(color2);
@@ -1294,7 +1294,7 @@ function generarPDF(sendWA){
   var nro='P-'+Date.now().toString().slice(-6);
   var fecha=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
 
-  var jsPDF=window.jspdf?.jsPDF||window.jsPDF;var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  var jsPDF=window.jspdf&&window.jspdf.jsPDF?window.jspdf.jsPDF:window.jsPDF;if(!jsPDF){alert('Error: no se pudo cargar la librería PDF. Recargá la página.');return;}var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   var w=210, h=297;
   var rgb1=hexToRgb(color1);
   var rgb2=hexToRgb(color2);
