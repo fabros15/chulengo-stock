@@ -497,14 +497,14 @@ select:focus{border-color:#2D6A4F}
 /* ==================== PRODUCTO PANEL ==================== */
 .producto-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;animation:fadeIn 0.2s ease}
 .producto-overlay.open{display:block}
-.producto-panel{position:fixed;top:0;right:0;height:100%;width:100%;max-width:520px;background:#fff;z-index:1001;overflow-y:auto;transform:translateX(100%);transition:transform 0.32s cubic-bezier(.4,0,.2,1);isolation:isolate}
+.producto-panel{position:fixed;top:0;right:0;height:100%;width:100%;max-width:520px;background:#fff;z-index:1001;overflow-y:auto;overflow-x:hidden;transform:translateX(100%);transition:transform 0.32s cubic-bezier(.4,0,.2,1);isolation:isolate}
 .producto-panel.open{transform:translateX(0)}
 .producto-header{position:sticky;top:0;background:#fff;z-index:10;padding:1rem 1.25rem;border-bottom:1px solid #E2DDD6;display:flex;align-items:center;gap:10px}
 .producto-back{background:none;border:none;font-size:1.4rem;cursor:pointer;color:#1A1814;padding:4px;line-height:1}
 .producto-header-title{font-size:0.95rem;font-weight:600;color:#1A1814;flex:1}
 .producto-img{width:100%;height:220px;object-fit:cover}
 .producto-img-placeholder{width:100%;height:180px;background:linear-gradient(135deg,#F5F2ED,#E2DDD6);display:flex;align-items:center;justify-content:center;font-size:3.5rem;margin-bottom:0}
-.producto-body{padding:1.25rem}
+.producto-body{padding:1.25rem;padding-bottom:5rem}
 .producto-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.875rem}
 .producto-badge{font-size:0.72rem;font-weight:600;padding:4px 10px;border-radius:20px}
 .pb-mat{background:#EFF6FF;color:#1E3A8A}
@@ -1332,8 +1332,12 @@ function actualizarBtnFicha(){
 
 function cerrarProducto(){
   document.getElementById('producto-overlay').classList.remove('open');
-  document.getElementById('producto-panel').classList.remove('open');
+  var panel=document.getElementById('producto-panel');
+  panel.classList.remove('open');
   document.body.style.overflow='';
+  setTimeout(function(){
+    while(panel.firstChild){panel.removeChild(panel.firstChild);}
+  },350);
 }
 
 function populate(){
