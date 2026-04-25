@@ -1154,6 +1154,13 @@ function getFicha(material, marca){
 // ==================== PANEL PRODUCTO ====================
 var productoActual = null;
 
+function mk(tag,cls,txt){
+  var e=document.createElement(tag);
+  if(cls)e.className=cls;
+  if(txt!==undefined)e.textContent=String(txt);
+  return e;
+}
+
 function abrirProducto(d){
   productoActual = d;
   var ficha = getFicha(d.material, d.marca);
@@ -1165,26 +1172,14 @@ function abrirProducto(d){
   var cartId=d.material+'-'+d.denom+'-'+d.marca;
   var enCarrito=carrito[cartId];
   var panel=document.getElementById('producto-panel');
-  // Limpiar completamente el panel
   while(panel.firstChild){panel.removeChild(panel.firstChild);}
-  panel.className='producto-panel';
-
-  function el(tag,cls,txt){
-    var e=document.createElement(tag);
-    if(cls)e.className=cls;
-    if(txt!==undefined)e.textContent=txt;
-    return e;
-  }
-  function div(cls,txt){return el('div',cls,txt);}
-  function span(cls,txt){return el('span',cls,txt);}
 
   // Header
-  var hdr=div('producto-header');
-  var btnBack=el('button','producto-back');
-  btnBack.textContent='←';
+  var hdr=mk('div','producto-header');
+  var btnBack=mk('button','producto-back','←');
   btnBack.onclick=cerrarProducto;
   hdr.appendChild(btnBack);
-  hdr.appendChild(span('producto-header-title', d.material+' · '+d.marca));
+  hdr.appendChild(mk('span','producto-header-title',d.material+' · '+d.marca));
   panel.appendChild(hdr);
 
   // Imagen
@@ -1192,87 +1187,79 @@ function abrirProducto(d){
     var img=document.createElement('img');
     img.className='producto-img';
     img.src='img/'+d.img.split('/').pop();
-    var phFallback=div('producto-img-placeholder');
-    phFallback.textContent=ficha?ficha.emoji:'📦';
-    phFallback.style.display='none';
-    img.onerror=function(){this.style.display='none';phFallback.style.display='flex';};
+    var phf=mk('div','producto-img-placeholder',ficha?ficha.emoji:'');
+    phf.style.display='none';
+    img.onerror=function(){this.style.display='none';phf.style.display='flex';};
     panel.appendChild(img);
-    panel.appendChild(phFallback);
+    panel.appendChild(phf);
   } else {
-    var phEmpty=div('producto-img-placeholder');
-    phEmpty.textContent=ficha?ficha.emoji:'📦';
-    panel.appendChild(phEmpty);
+    panel.appendChild(mk('div','producto-img-placeholder',ficha?ficha.emoji:''));
   }
 
-  // Body
-  var body=div('producto-body');
+  // Body container
+  var body=mk('div','producto-body');
 
   // Badges
-  var badges=div('producto-badges');
-  badges.appendChild(span('producto-badge pb-mat', d.material));
-  badges.appendChild(span('producto-badge pb-marca', d.marca));
+  var badges=mk('div','producto-badges');
+  badges.appendChild(mk('span','producto-badge pb-mat',d.material));
+  badges.appendChild(mk('span','producto-badge pb-marca',d.marca));
   if(d.color&&d.color!=='*n/a'){
-    var bc=span('producto-badge pb-color');
-    bc.innerHTML=getDot(d.color)+' ';
-    bc.appendChild(document.createTextNode(cLabel));
+    var bc=mk('span','producto-badge pb-color');
+    bc.innerHTML=getDot(d.color);
+    bc.appendChild(document.createTextNode(' '+cLabel));
     badges.appendChild(bc);
   }
   body.appendChild(badges);
-
-  body.appendChild(div('producto-nombre', d.material+' - '+d.denom));
-  body.appendChild(div('producto-sub', d.marca+' · '+d.present));
+  body.appendChild(mk('div','producto-nombre',d.material+' - '+d.denom));
+  body.appendChild(mk('div','producto-sub',d.marca+' · '+d.present));
 
   // Precios
-  var precios=div('producto-precios');
-  var pi1=div('pp-item');
-  pi1.appendChild(div('pp-lbl','Precio unitario'));
-  pi1.appendChild(div('pp-val',fmtPeso(lista)));
+  var precios=mk('div','producto-precios');
+  var pi1=mk('div','pp-item');
+  pi1.appendChild(mk('div','pp-lbl','Precio unitario'));
+  pi1.appendChild(mk('div','pp-val',fmtPeso(lista)));
   precios.appendChild(pi1);
   if(hayOferta){
-    var pi2=div('pp-item');
-    pi2.appendChild(div('pp-lbl','Precio oferta'));
-    var pv2=div('pp-val oferta',fmtPeso(oferta));
-    pi2.appendChild(pv2);
-    pi2.appendChild(div('pp-tag','2 kg o más'));
+    var pi2=mk('div','pp-item');
+    pi2.appendChild(mk('div','pp-lbl','Precio oferta'));
+    pi2.appendChild(mk('div','pp-val oferta',fmtPeso(oferta)));
+    pi2.appendChild(mk('div','pp-tag','2 kg o mas'));
     precios.appendChild(pi2);
   }
   body.appendChild(precios);
 
-  // Stock badge
-  var stColors={ok:'background:#F0FDF4;color:#166534',low:'background:#FEF3C7;color:#78350F',out:'background:#FEF2F2;color:#7F1D1D'};
-  var sb=span('producto-stock-badge', getLbl(d.stock)+(isOut?'':' · '+stockN+' u.'));
-  sb.style.cssText=stColors[getSt(d.stock)];
+  // Stock
+  var stMap={ok:'background:#F0FDF4;color:#166534',low:'background:#FEF3C7;color:#78350F',out:'background:#FEF2F2;color:#7F1D1D'};
+  var sb=mk('span','producto-stock-badge',getLbl(d.stock)+(isOut?'':' · '+stockN+' u.'));
+  sb.setAttribute('style',stMap[getSt(d.stock)]);
   body.appendChild(sb);
 
-  // Ficha técnica
+  // Ficha
   if(ficha){
-    body.appendChild(div('ficha-titulo','Sobre este material'));
-    body.appendChild(div('ficha-desc', ficha.desc));
+    body.appendChild(mk('div','ficha-titulo','Sobre este material'));
+    body.appendChild(mk('div','ficha-desc',ficha.desc));
 
     ficha.alertas.forEach(function(a){
-      var ab=div('alerta-box '+a.tipo, a.texto);
-      body.appendChild(ab);
+      body.appendChild(mk('div','alerta-box '+a.tipo, a.texto));
     });
 
-    body.appendChild(div('ficha-titulo','Para qué sirve'));
-    var ugrid=div('usos-grid');
+    body.appendChild(mk('div','ficha-titulo','Para que sirve'));
+    var ugrid=mk('div','usos-grid');
     ficha.usos.forEach(function(u){
-      var ui=div('uso-item '+(u.ok?'bueno':'malo'));
-      ui.textContent=(u.ok?'✅':'❌')+' '+u.txt;
-      ugrid.appendChild(ui);
+      ugrid.appendChild(mk('div','uso-item '+(u.ok?'bueno':'malo'),(u.ok?'SI ':'NO ')+u.txt));
     });
     body.appendChild(ugrid);
 
-    var ftags=div('ficha-tags');
-    ficha.tags.forEach(function(t){ftags.appendChild(span('ficha-tag',t));});
+    var ftags=mk('div','ficha-tags');
+    ficha.tags.forEach(function(t){ftags.appendChild(mk('span','ficha-tag',t));});
     body.appendChild(ftags);
 
-    body.appendChild(div('ficha-titulo','Especificaciones técnicas'));
-    var sgrid=div('specs-grid');
+    body.appendChild(mk('div','ficha-titulo','Especificaciones tecnicas'));
+    var sgrid=mk('div','specs-grid');
     ficha.specs.forEach(function(s){
-      var sc=div('spec-cell');
-      sc.appendChild(div('spec-lbl',s.l));
-      sc.appendChild(div('spec-val',s.v));
+      var sc=mk('div','spec-cell');
+      sc.appendChild(mk('div','spec-lbl',s.l));
+      sc.appendChild(mk('div','spec-val',s.v));
       sgrid.appendChild(sc);
     });
     body.appendChild(sgrid);
@@ -1281,10 +1268,10 @@ function abrirProducto(d){
   panel.appendChild(body);
 
   // Footer
-  var footer=div('producto-footer');
+  var footer=mk('div','producto-footer');
   footer.id='producto-footer';
   if(isOut){
-    var msg='Hola! Quisiera que me avisen cuando haya stock de: *'+d.material+' - '+d.denom+'* ('+d.marca+' · '+d.color+' · '+d.present+'). Gracias!';
+    var msg='Hola! Quisiera que me avisen cuando haya stock de: '+d.material+' - '+d.denom+' ('+d.marca+' '+d.present+'). Gracias!';
     var lnk=document.createElement('a');
     lnk.className='btn-ficha-agregar';
     lnk.style.cssText='display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none';
@@ -1293,22 +1280,20 @@ function abrirProducto(d){
     lnk.textContent='Avisarme cuando haya stock';
     footer.appendChild(lnk);
   } else {
-    var btnCls='btn-ficha-agregar'+(enCarrito?' en-carrito':'');
     var stockDisp=parseInt(d.stock)||0;
     var dataStr=encodeURIComponent(JSON.stringify({material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,stock:stockDisp}));
-    var btnC=el('button','btn-ficha-agregar'+(enCarrito?' en-carrito':''));
+    var btnC=mk('button','btn-ficha-agregar'+(enCarrito?' en-carrito':''),enCarrito?'+ '+enCarrito.qty+' en el pedido':'+ Agregar al pedido');
     btnC.id='btn-ficha-carrito';
     btnC.dataset.cartid=cartId;
     btnC.dataset.item=dataStr;
-    btnC.textContent=enCarrito?'✓ '+enCarrito.qty+' en el pedido':'+ Agregar al pedido';
     btnC.onclick=function(){agregarItem(this);actualizarBtnFicha();};
     footer.appendChild(btnC);
-    var waMsg='Hola! Me interesa: *'+d.material+' - '+d.denom+'* ('+d.marca+' · '+d.present+'). Querés que te consulte?';
+    var waMsg='Hola! Me interesa: '+d.material+' - '+d.denom+' ('+d.marca+' '+d.present+'). Me podrias dar mas info?';
     var waLnk=document.createElement('a');
     waLnk.className='btn-ficha-wa';
     waLnk.href='https://wa.me/'+WA+'?text='+encodeURIComponent(waMsg);
     waLnk.target='_blank';
-    waLnk.textContent='💬';
+    waLnk.textContent='WA';
     footer.appendChild(waLnk);
   }
   panel.appendChild(footer);
