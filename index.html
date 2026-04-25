@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>CHULENGO ESTUDIO</title>
+<title>Chulengo Estudio</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1387,59 +1387,6 @@ function cerrarProducto(){
     });
     body.appendChild(ugrid);
 
-    var ftags=mk('div','ficha-tags');
-    ficha.tags.forEach(function(t){ftags.appendChild(mk('span','ficha-tag',t));});
-    body.appendChild(ftags);
-
-    body.appendChild(mk('div','ficha-titulo','Especificaciones tecnicas'));
-    var sgrid=mk('div','specs-grid');
-    ficha.specs.forEach(function(s){
-      var sc=mk('div','spec-cell');
-      sc.appendChild(mk('div','spec-lbl',s.l));
-      sc.appendChild(mk('div','spec-val',s.v));
-      sgrid.appendChild(sc);
-    });
-    body.appendChild(sgrid);
-  }
-
-  panel.appendChild(body);
-
-  // Footer
-  var footer=mk('div','producto-footer');
-  footer.id='producto-footer';
-  if(isOut){
-    var msg='Hola! Quisiera que me avisen cuando haya stock de: '+d.material+' - '+d.denom+' ('+d.marca+' '+d.present+'). Gracias!';
-    var lnk=document.createElement('a');
-    lnk.className='btn-ficha-agregar';
-    lnk.style.cssText='display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none';
-    lnk.href='https://wa.me/'+WA+'?text='+encodeURIComponent(msg);
-    lnk.target='_blank';
-    lnk.textContent='Avisarme cuando haya stock';
-    footer.appendChild(lnk);
-  } else {
-    var stockDisp=parseInt(d.stock)||0;
-    var dataStr=encodeURIComponent(JSON.stringify({material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,stock:stockDisp}));
-    var btnC=mk('button','btn-ficha-agregar'+(enCarrito?' en-carrito':''),enCarrito?'+ '+enCarrito.qty+' en el pedido':'+ Agregar al pedido');
-    btnC.id='btn-ficha-carrito';
-    btnC.dataset.cartid=cartId;
-    btnC.dataset.item=dataStr;
-    btnC.onclick=function(){agregarItem(this);actualizarBtnFicha();};
-    footer.appendChild(btnC);
-    var waMsg='Hola! Me interesa: '+d.material+' - '+d.denom+' ('+d.marca+' '+d.present+'). Me podrias dar mas info?';
-    var waLnk=document.createElement('a');
-    waLnk.className='btn-ficha-wa';
-    waLnk.href='https://wa.me/'+WA+'?text='+encodeURIComponent(waMsg);
-    waLnk.target='_blank';
-    waLnk.textContent='WA';
-    footer.appendChild(waLnk);
-  }
-  panel.appendChild(footer);
-
-  document.getElementById('producto-overlay').classList.add('open');
-  panel.classList.add('open');
-  document.body.style.overflow='hidden';
-  document.body.classList.add('panel-open');
-}
 
 function actualizarBtnFicha(){
   var btn=document.getElementById('btn-ficha-carrito');
