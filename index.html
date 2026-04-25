@@ -988,7 +988,7 @@ var FICHAS = {
     desc: 'El PETG combina la facilidad de impresión del PLA con la resistencia del ABS. Aguanta bien el calor, la humedad y los golpes. Es semi-transparente en su versión natural y tiene muy buena adhesión entre capas. Ideal para piezas que van a tener uso real.',
     alertas: [
       {tipo:'success', texto:'[OK] Mucho más resistente al calor que el PLA: aguanta hasta ~80 °C. Apto para uso exterior moderado.'},
-      {tipo:'tip', texto:'[tip] Es algo más pegajoso al imprimir, puede dejar hilos entre piezas. Se regula bien ajustando la retracción.'}
+      {tipo:'tip', texto:'[tip] Es algo pegajoso al imprimir y puede dejar hilos. Se regula ajustando la retraccion.'}
     ],
     usos: [
       {ok:true, txt:'Uso exterior moderado'},
@@ -1010,11 +1010,10 @@ var FICHAS = {
   },
   'ABS': {
     emoji: '🟡',
-    desc: 'El ABS (Acrilonitrilo Butadieno Estireno) es un plástico técnico muy resistente al impacto y al calor. Se usa mucho en la industria y es el mismo material de los Legos. Requiere más cuidado al imprimir: necesita cama caliente y ambiente cerrado para evitar que se agriete.',
+    desc: 'El ABS (Acrilonitrilo Butadieno Estireno) es un plastico tecnico muy resistente al impacto y al calor. Se usa mucho en la industria y es el mismo material de los Legos. Requiere mas cuidado al imprimir: necesita cama caliente y ambiente cerrado para evitar que se agriete. Si se agrieta, subi la temperatura y cerra el ambiente para evitar corrientes de aire.',
     alertas: [
-      {tipo:'warn', texto:'[!] Desprende vapores durante la impresión. Imprimí en un espacio ventilado o con caja cerrada.'},
-      {tipo:'success', texto:'[OK] Aguanta hasta ~100 °C. Perfecto para piezas que van a estar bajo el sol, en el auto o en ambientes calurosos.'},
-      {tipo:'tip', texto:'[tip] Si se agrieta al imprimir, subí la temperatura y cerrá el ambiente para evitar corrientes de aire.'}
+      {tipo:'warn', texto:'[!] Desprende vapores durante la impresion. Imprimi en un espacio ventilado o con caja cerrada.'},
+      {tipo:'success', texto:'[OK] Aguanta hasta ~100 C. Perfecto para piezas que van a estar bajo el sol, en el auto o en ambientes calurosos.'}
     ],
     usos: [
       {ok:true, txt:'Piezas para el auto'},
@@ -1299,94 +1298,6 @@ function cerrarProducto(){
   document.querySelector('.nav-tab').classList.add('active');
   document.body.classList.remove('panel-open');
 }
-  productoActual = d;
-  var ficha = getFicha(d.material, d.marca);
-  var lista=Number(d.lista)||0, oferta=Number(d.oferta)||0;
-  var hayOferta=oferta>0&&oferta!==lista;
-  var isOut=getSt(d.stock)==='out';
-  var stockN=parseInt(d.stock)||0;
-  var cLabel=(d.color&&d.color!=='*n/a')?d.color:'Sin color';
-  var cartId=d.material+'-'+d.denom+'-'+d.marca;
-  var enCarrito=carrito[cartId];
-  var panel=document.getElementById('producto-panel');
-  while(panel.firstChild){panel.removeChild(panel.firstChild);}
-
-  // Header
-  var hdr=mk('div','producto-header');
-  var btnBack=mk('button','producto-back','←');
-  btnBack.onclick=cerrarProducto;
-  hdr.appendChild(btnBack);
-  hdr.appendChild(mk('span','producto-header-title',d.material+' · '+d.marca));
-  panel.appendChild(hdr);
-
-  // Imagen
-  if(d.img){
-    var img=document.createElement('img');
-    img.className='producto-img';
-    img.src='img/'+d.img.split('/').pop();
-    var phf=mk('div','producto-img-placeholder',ficha?ficha.emoji:'');
-    phf.style.display='none';
-    img.onerror=function(){this.style.display='none';phf.style.display='flex';};
-    panel.appendChild(img);
-    panel.appendChild(phf);
-  } else {
-    panel.appendChild(mk('div','producto-img-placeholder',ficha?ficha.emoji:''));
-  }
-
-  // Body container
-  var body=mk('div','producto-body');
-
-  // Badges
-  var badges=mk('div','producto-badges');
-  badges.appendChild(mk('span','producto-badge pb-mat',d.material));
-  badges.appendChild(mk('span','producto-badge pb-marca',d.marca));
-  if(d.color&&d.color!=='*n/a'){
-    var bc=mk('span','producto-badge pb-color');
-    bc.innerHTML=getDot(d.color);
-    bc.appendChild(document.createTextNode(' '+cLabel));
-    badges.appendChild(bc);
-  }
-  body.appendChild(badges);
-  body.appendChild(mk('div','producto-nombre',d.material+' - '+d.denom));
-  body.appendChild(mk('div','producto-sub',d.marca+' · '+d.present));
-
-  // Precios
-  var precios=mk('div','producto-precios');
-  var pi1=mk('div','pp-item');
-  pi1.appendChild(mk('div','pp-lbl','Precio unitario'));
-  pi1.appendChild(mk('div','pp-val',fmtPeso(lista)));
-  precios.appendChild(pi1);
-  if(hayOferta){
-    var pi2=mk('div','pp-item');
-    pi2.appendChild(mk('div','pp-lbl','Precio oferta'));
-    pi2.appendChild(mk('div','pp-val oferta',fmtPeso(oferta)));
-    pi2.appendChild(mk('div','pp-tag','2 kg o mas'));
-    precios.appendChild(pi2);
-  }
-  body.appendChild(precios);
-
-  // Stock
-  var stMap={ok:'background:#F0FDF4;color:#166534',low:'background:#FEF3C7;color:#78350F',out:'background:#FEF2F2;color:#7F1D1D'};
-  var sb=mk('span','producto-stock-badge',getLbl(d.stock)+(isOut?'':' · '+stockN+' u.'));
-  sb.setAttribute('style',stMap[getSt(d.stock)]);
-  body.appendChild(sb);
-
-  // Ficha
-  if(ficha){
-    body.appendChild(mk('div','ficha-titulo','Sobre este material'));
-    body.appendChild(mk('div','ficha-desc',ficha.desc));
-
-    ficha.alertas.forEach(function(a){
-      body.appendChild(mk('div','alerta-box '+a.tipo, a.texto));
-    });
-
-    body.appendChild(mk('div','ficha-titulo','Para que sirve'));
-    var ugrid=mk('div','usos-grid');
-    ficha.usos.forEach(function(u){
-      ugrid.appendChild(mk('div','uso-item '+(u.ok?'bueno':'malo'),(u.ok?'SI ':'NO ')+u.txt));
-    });
-    body.appendChild(ugrid);
-
 
 function actualizarBtnFicha(){
   var btn=document.getElementById('btn-ficha-carrito');
