@@ -266,60 +266,49 @@ function generarPDF(sendWA){
   doc.setFont('helvetica','normal');
   var contactX=pdfLogoBase64?46:14;
   var contactY=28;
-  // Icono WA (círculo verde + letra W simplificado como texto unicode)
+  doc.setFontSize(8);
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(255,255,255);
   if(tel){
-    // Dibujar mini ícono WA: círculo blanco pequeño con "W"
-    doc.setFillColor(255,255,255);
-    doc.circle(contactX+2, contactY-1.5, 2.2, 'F');
-    doc.setTextColor(37,211,102);
+    // Pill "WA" + número
+    doc.setFillColor(37,211,102);
+    doc.roundedRect(contactX, contactY-3.2, 6, 4, 1, 1, 'F');
+    doc.setTextColor(255,255,255);
     doc.setFontSize(5.5);
     doc.setFont('helvetica','bold');
-    doc.text('WA', contactX+0.8, contactY-0.5);
-    doc.setTextColor(255,255,255);
+    doc.text('WA', contactX+1, contactY-0.6);
     doc.setFontSize(8);
     doc.setFont('helvetica','normal');
-    doc.text(tel, contactX+6, contactY);
+    doc.text(tel, contactX+8, contactY);
     contactY+=5;
   }
   if(email){
-    // Mini ícono email: sobre simplificado
-    doc.setFillColor(255,255,255);
-    doc.roundedRect(contactX+0.2, contactY-3, 4, 2.8, 0.3, 0.3, 'F');
-    doc.setDrawColor(rgb1[0],rgb1[1],rgb1[2]);
-    doc.setLineWidth(0.3);
-    doc.line(contactX+0.2, contactY-3, contactX+2.2, contactY-1.8);
-    doc.line(contactX+4.2, contactY-3, contactX+2.2, contactY-1.8);
-    doc.setTextColor(255,255,255);
+    // Pill "@" + email
+    doc.setFillColor(255,255,255,0.25);
+    doc.setFillColor(180,210,255);
+    doc.roundedRect(contactX, contactY-3.2, 6, 4, 1, 1, 'F');
+    doc.setTextColor(rgb1[0],rgb1[1],rgb1[2]);
+    doc.setFontSize(7);
+    doc.setFont('helvetica','bold');
+    doc.text('@', contactX+1.8, contactY-0.5);
     doc.setFontSize(8);
     doc.setFont('helvetica','normal');
-    doc.text(email, contactX+6, contactY);
+    doc.setTextColor(255,255,255);
+    doc.text(email, contactX+8, contactY);
     contactY+=5;
   }
   if(web){
-    // Detectar si es instagram
     var esIG=web.toLowerCase().includes('instagram')||web.startsWith('@');
-    if(esIG){
-      // Mini ícono IG: cuadrado redondeado con círculo interior
-      doc.setFillColor(255,255,255);
-      doc.roundedRect(contactX+0.2, contactY-3, 3.8, 3.8, 0.8, 0.8, 'F');
-      doc.setDrawColor(193,53,132);
-      doc.setLineWidth(0.4);
-      doc.circle(contactX+2.1, contactY-1.1, 1.1, 'S');
-      doc.setFillColor(193,53,132);
-      doc.circle(contactX+3.3, contactY-2.5, 0.35, 'F');
-    } else {
-      // Mini ícono web: círculo con líneas
-      doc.setFillColor(255,255,255);
-      doc.circle(contactX+2, contactY-1.2, 2.2, 'F');
-      doc.setDrawColor(rgb1[0],rgb1[1],rgb1[2]);
-      doc.setLineWidth(0.3);
-      doc.line(contactX+2, contactY-3.4, contactX+2, contactY+1);
-      doc.line(contactX-0.2, contactY-1.2, contactX+4.2, contactY-1.2);
-    }
+    // Pill "IG" o "Web"
+    doc.setFillColor(esIG?193:100, esIG?53:100, esIG?132:255);
+    doc.roundedRect(contactX, contactY-3.2, 6, 4, 1, 1, 'F');
     doc.setTextColor(255,255,255);
+    doc.setFontSize(5.5);
+    doc.setFont('helvetica','bold');
+    doc.text(esIG?'IG':'Web', contactX+(esIG?1.2:0.5), contactY-0.6);
     doc.setFontSize(8);
     doc.setFont('helvetica','normal');
-    doc.text(web, contactX+6, contactY);
+    doc.text(web, contactX+8, contactY);
   }
 
   // PRESUPUESTO label top right
