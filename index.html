@@ -527,10 +527,10 @@ select:focus{border-color:#2D6A4F}
 .uso-item{border-radius:8px;padding:8px 10px;font-size:0.76rem;display:flex;align-items:flex-start;gap:7px;line-height:1.4}
 .uso-item.bueno{background:#F0FDF4;color:#166534;border:1px solid #BBF7D0}
 .uso-item.malo{background:#FEF2F2;color:#7F1D1D;border:1px solid #FECACA}
-.alerta-box{border-radius:10px;padding:10px 14px;font-size:0.8rem;margin-bottom:0.875rem;display:flex;gap:9px;align-items:flex-start;line-height:1.5;word-break:break-word}
-.alerta-box.warn{background:#FEF3C7;border:1px solid #FDE68A;color:#78350F}
-.alerta-box.tip{background:#EFF6FF;border:1px solid #BFDBFE;color:#1E3A8A}
-.alerta-box.success{background:#F0FDF4;border:1px solid #BBF7D0;color:#166534}
+.alerta-box{border-radius:6px;padding:10px 14px;font-size:0.8rem;margin-bottom:0.875rem;line-height:1.6;border-left:4px solid;word-break:break-word;display:block}
+.alerta-box.warn{background:#FEF3C7;border-color:#F59E0B;color:#78350F}
+.alerta-box.tip{background:#EFF6FF;border-color:#3B82F6;color:#1E3A8A}
+.alerta-box.success{background:#F0FDF4;border-color:#22C55E;color:#166534}
 .specs-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#E2DDD6;border:1px solid #E2DDD6;border-radius:10px;overflow:hidden;margin-bottom:1rem}
 .spec-cell{background:#fff;padding:8px 10px}
 .spec-lbl{font-size:0.7rem;color:#8A8479;margin-bottom:2px}
@@ -922,8 +922,8 @@ var FICHAS = {
     emoji: '🟢',
     desc: 'El PLA (Ácido Poliláctico) es el filamento más popular para impresión 3D. De origen vegetal (maíz o caña de azúcar), es fácil de imprimir, no produce olores fuertes y da muy buenos resultados en la mayoría de los proyectos. Es la mejor opción para empezar.',
     alertas: [
-      {tipo:'warn', texto:'⚠️ No apto para uso exterior prolongado: el calor del sol (desde ~50°C) lo puede deformar. Para piezas que van al aire libre, preferí PETG o ABS.'},
-      {tipo:'success', texto:'✅ Ideal para interiores, decoración, maquetas, figuras, prototipos y piezas de uso diario.'}
+      {tipo:'warn', texto:'[!] No apto para uso exterior prolongado: el calor del sol (desde ~50°C) lo puede deformar. Para piezas que van al aire libre, preferí PETG o ABS.'},
+      {tipo:'success', texto:'[OK] Ideal para interiores, decoración, maquetas, figuras, prototipos y piezas de uso diario.'}
     ],
     usos: [
       {ok:true, txt:'Figuras y decoración'},
@@ -947,8 +947,8 @@ var FICHAS = {
     emoji: '✨',
     desc: 'El PLA Seda tiene las mismas propiedades base del PLA pero con un acabado metálico y brillante que imita la seda. Perfecto para piezas decorativas, trofeos, regalos personalizados y cualquier proyecto donde la estética sea lo principal.',
     alertas: [
-      {tipo:'warn', texto:'⚠️ Misma limitación que el PLA: evitá dejarlo expuesto al sol o en ambientes calurosos.'},
-      {tipo:'tip', texto:'💡 El acabado sedoso oculta mejor las líneas de capa que el PLA común. Ideal para piezas que se van a regalar o exhibir.'}
+      {tipo:'warn', texto:'[!] Misma limitación que el PLA: evitá dejarlo expuesto al sol o en ambientes calurosos.'},
+      {tipo:'tip', texto:'[tip] El acabado sedoso oculta mejor las líneas de capa que el PLA común. Ideal para piezas que se van a regalar o exhibir.'}
     ],
     usos: [
       {ok:true, txt:'Trofeos y regalos'},
@@ -972,8 +972,8 @@ var FICHAS = {
     emoji: '🎨',
     desc: 'El PLA ART (también llamado PLA+ o PLA de alta calidad) tiene mejores propiedades mecánicas que el PLA estándar: más resistente, menos frágil y mejor acabado superficial. Perfecto cuando necesitás algo más robusto sin perder la facilidad de impresión del PLA.',
     alertas: [
-      {tipo:'warn', texto:'⚠️ Sigue siendo sensible al calor del sol, igual que el PLA estándar.'},
-      {tipo:'success', texto:'✅ Mejor resistencia al impacto y a la flexión que el PLA común. Buena opción para piezas funcionales de interior.'}
+      {tipo:'warn', texto:'[!] Sigue siendo sensible al calor del sol, igual que el PLA estándar.'},
+      {tipo:'success', texto:'[OK] Mejor resistencia al impacto y a la flexión que el PLA común. Buena opción para piezas funcionales de interior.'}
     ],
     usos: [
       {ok:true, txt:'Piezas funcionales'},
@@ -997,8 +997,8 @@ var FICHAS = {
     emoji: '🔵',
     desc: 'El PETG combina la facilidad de impresión del PLA con la resistencia del ABS. Aguanta bien el calor, la humedad y los golpes. Es semi-transparente en su versión natural y tiene muy buena adhesión entre capas. Ideal para piezas que van a tener uso real.',
     alertas: [
-      {tipo:'success', texto:'✅ Mucho más resistente al calor que el PLA: aguanta hasta ~80 °C. Apto para uso exterior moderado.'},
-      {tipo:'tip', texto:'💡 Es algo más pegajoso al imprimir, puede dejar hilos entre piezas. Se regula bien ajustando la retracción.'}
+      {tipo:'success', texto:'[OK] Mucho más resistente al calor que el PLA: aguanta hasta ~80 °C. Apto para uso exterior moderado.'},
+      {tipo:'tip', texto:'[tip] Es algo más pegajoso al imprimir, puede dejar hilos entre piezas. Se regula bien ajustando la retracción.'}
     ],
     usos: [
       {ok:true, txt:'Uso exterior moderado'},
@@ -1022,9 +1022,9 @@ var FICHAS = {
     emoji: '🟡',
     desc: 'El ABS (Acrilonitrilo Butadieno Estireno) es un plástico técnico muy resistente al impacto y al calor. Se usa mucho en la industria y es el mismo material de los Legos. Requiere más cuidado al imprimir: necesita cama caliente y ambiente cerrado para evitar que se agriete.',
     alertas: [
-      {tipo:'warn', texto:'⚠️ Desprende vapores durante la impresión. Imprimí en un espacio ventilado o con caja cerrada.'},
-      {tipo:'success', texto:'✅ Aguanta hasta ~100 °C. Perfecto para piezas que van a estar bajo el sol, en el auto o en ambientes calurosos.'},
-      {tipo:'tip', texto:'💡 Si se agrieta al imprimir, subí la temperatura y cerrá el ambiente para evitar corrientes de aire.'}
+      {tipo:'warn', texto:'[!] Desprende vapores durante la impresión. Imprimí en un espacio ventilado o con caja cerrada.'},
+      {tipo:'success', texto:'[OK] Aguanta hasta ~100 °C. Perfecto para piezas que van a estar bajo el sol, en el auto o en ambientes calurosos.'},
+      {tipo:'tip', texto:'[tip] Si se agrieta al imprimir, subí la temperatura y cerrá el ambiente para evitar corrientes de aire.'}
     ],
     usos: [
       {ok:true, txt:'Piezas para el auto'},
@@ -1048,8 +1048,8 @@ var FICHAS = {
     emoji: '⚪',
     desc: 'El Nylon es uno de los materiales más resistentes disponibles para impresión 3D doméstica. Es flexible, muy duro y aguanta el desgaste. Se usa para engranajes, bisagras, piezas industriales y todo lo que necesite resistir esfuerzos mecánicos reales. Requiere experiencia para imprimir bien.',
     alertas: [
-      {tipo:'warn', texto:'⚠️ Absorbe humedad del ambiente (higroscópico). Guardá el rollo en bolsa hermética con silica gel cuando no lo uses — la humedad arruina la impresión.'},
-      {tipo:'tip', texto:'💡 Si el filamento crepita o burbujea al imprimir, está húmedo. Secalo en horno a 60–70 °C durante 4–6 horas.'}
+      {tipo:'warn', texto:'[!] Absorbe humedad del ambiente (higroscópico). Guardá el rollo en bolsa hermética con silica gel cuando no lo uses — la humedad arruina la impresión.'},
+      {tipo:'tip', texto:'[tip] Si el filamento crepita o burbujea al imprimir, está húmedo. Secalo en horno a 60–70 °C durante 4–6 horas.'}
     ],
     usos: [
       {ok:true, txt:'Engranajes y poleas'},
@@ -1073,8 +1073,8 @@ var FICHAS = {
     emoji: '🔩',
     desc: 'El PC/ABS es una mezcla de Policarbonato y ABS que combina lo mejor de ambos: la rigidez y resistencia al calor del PC con la facilidad de impresión del ABS. Es un material técnico para aplicaciones exigentes donde el PLA o PETG no son suficientes.',
     alertas: [
-      {tipo:'warn', texto:'⚠️ Requiere temperaturas altas y ambiente cerrado. No recomendado para impresoras sin caja o sin cama que llegue a 100 °C+.'},
-      {tipo:'success', texto:'✅ Excelente para piezas de ingeniería, carcasas de electrónica y todo lo que necesite resistencia mecánica y térmica al mismo tiempo.'}
+      {tipo:'warn', texto:'[!] Requiere temperaturas altas y ambiente cerrado. No recomendado para impresoras sin caja o sin cama que llegue a 100 °C+.'},
+      {tipo:'success', texto:'[OK] Excelente para piezas de ingeniería, carcasas de electrónica y todo lo que necesite resistencia mecánica y térmica al mismo tiempo.'}
     ],
     usos: [
       {ok:true, txt:'Carcasas electrónica'},
