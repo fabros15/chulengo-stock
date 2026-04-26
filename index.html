@@ -458,7 +458,9 @@ select:focus{border-color:#2D6A4F}
 .card:hover{box-shadow:0 8px 24px rgba(0,0,0,0.13);transform:translateY(-4px) scale(1.02)}
 .card.out-of-stock{cursor:pointer;opacity:0.82}
 .card.out-of-stock:hover{opacity:1}
-.card-img{width:100%;height:130px;object-fit:cover;border-radius:8px;margin-bottom:4px}
+.card-img-wrap{position:relative;height:130px;margin-bottom:4px;border-radius:8px;background:#F0EDE8}
+.card-img-wrap::before{content:'Sin foto';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#A09890;font-size:0.75rem;font-family:'DM Sans',sans-serif;border-radius:8px}
+.card-img{width:100%;height:130px;object-fit:cover;border-radius:8px;display:block;position:relative;z-index:1}
 .card-img[style*="visibility:hidden"]{background:#F0EDE8}
 .card-img-ph{display:flex;align-items:center;justify-content:center;background:#F0EDE8;color:#A09890;font-size:0.75rem;border-radius:8px;margin-bottom:4px;height:130px}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
@@ -1399,13 +1401,20 @@ function render(){
         card.addEventListener('click',function(){abrirProducto(d);});
       }
       if(d.img){
+        var wrap=document.createElement('div');
+        wrap.className='card-img-wrap';
+        var sinFoto=document.createElement('div');
+        sinFoto.className='card-img-ph';
+        sinFoto.textContent='Sin foto';
+        wrap.appendChild(sinFoto);
         var im=document.createElement('img');
         im.className='card-img';
+        im.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:8px';
         im.alt='';
-        im.onerror=function(){this.style.visibility='hidden';};
-        card.appendChild(im);
-        im.src='img/'+d.img.split('/').pop();
-        if(im.complete && im.naturalWidth===0) im.onerror();
+        im.onerror=function(){this.onerror=null;this.src='img/placeholder.png';};
+        wrap.appendChild(im);
+        card.appendChild(wrap);
+        im.src='img/'+d.img.split('/').pop()+'?v=1';
       }
       var lista=Number(d.lista)||0,oferta=Number(d.oferta)||0;
       var hayOferta=oferta>0&&oferta!==lista;
@@ -1631,6 +1640,17 @@ function calcular(){
   
 }
 calcElec();
+
+// Fix imágenes rotas - verificar después del render
+function fixBrokenImages(){
+  document.querySelectorAll('.card-img-wrap img').forEach(function(im){
+    if(im.complete && im.naturalWidth===0){
+      im.style.display='none';
+    }
+  });
+}
+window.addEventListener('load', fixBrokenImages);
+setTimeout(fixBrokenImages, 2000);
 
 // Bloquear e, E, +, - en todos los inputs numéricos y forzar valores >= 0
 document.addEventListener('keydown', function(e){
