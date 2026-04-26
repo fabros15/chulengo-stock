@@ -517,7 +517,7 @@ select:focus{border-color:#2D6A4F}
 .ficha-stock{display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;font-weight:600;margin-bottom:1.25rem;padding:5px 12px;border-radius:20px}
 .ftitulo{font-size:0.78rem;font-weight:700;color:#1A1814;text-transform:uppercase;letter-spacing:0.06em;margin:1.25rem 0 0.75rem;padding-bottom:6px;border-bottom:2px solid #E2DDD6}
 .fdesc{font-size:0.85rem;color:#4B4640;line-height:1.75;margin-bottom:1rem}
-.falerta{border-radius:6px;padding:10px 14px;font-size:0.82rem;margin-bottom:0.75rem;line-height:1.6;border-left:4px solid}
+.falerta{display:block;width:100%;box-sizing:border-box;border-radius:6px;padding:10px 14px;font-size:0.82rem;margin-bottom:0.75rem;line-height:1.6;border-left:4px solid;word-wrap:break-word;overflow-wrap:break-word}
 .falerta.warn{background:#FEF3C7;border-color:#F59E0B;color:#78350F}
 .falerta.tip{background:#EFF6FF;border-color:#3B82F6;color:#1E3A8A}
 .falerta.success{background:#F0FDF4;border-color:#22C55E;color:#166534}
@@ -910,60 +910,60 @@ function animCount(el,target){if(!el)return;var s=0,inc=Math.ceil(target/20),t=s
 var FICHAS = {
   'PLA': {
     emoji: '🟢',
-    desc: 'El PLA (Ácido Poliláctico) es el filamento más popular para impresión 3D. De origen vegetal (maíz o caña de azúcar), es fácil de imprimir, no produce olores fuertes y da muy buenos resultados en la mayoría de los proyectos. Es la mejor opción para empezar.',
+    desc: 'El PLA es el filamento mas popular para impresion 3D. De origen vegetal, es facil de imprimir, no produce olores fuertes y da muy buenos resultados. La mejor opcion para empezar.',
     alertas: [
-      {tipo:'warn', texto:'[!] No apto para uso exterior prolongado: el calor del sol (desde ~50°C) lo puede deformar. Para piezas que van al aire libre, preferí PETG o ABS.'},
-      {tipo:'success', texto:'[OK] Ideal para interiores, decoración, maquetas, figuras, prototipos y piezas de uso diario.'}
+      {tipo:'warn', texto:'No apto para uso exterior: el calor del sol lo puede deformar desde los 50 grados. Para piezas al aire libre usa PETG o ABS.'},
+      {tipo:'success', texto:'Ideal para interiores, decoracion, figuras, maquetas y prototipos de todo tipo.'}
     ],
     usos: [
-      {ok:true, txt:'Figuras y decoración'},
+      {ok:true, txt:'Figuras y decoracion'},
       {ok:true, txt:'Maquetas y prototipos'},
       {ok:true, txt:'Piezas de interior'},
       {ok:true, txt:'Juguetes y accesorios'},
       {ok:false, txt:'Exterior o bajo el sol'},
       {ok:false, txt:'Piezas con mucho calor'},
     ],
-    tags:['Fácil de imprimir','Sin olor fuerte','Biodegradable','Alta definición','Colores vivos'],
+    tags:['Facil de imprimir','Sin olor fuerte','Biodegradable','Alta definicion','Colores vivos'],
     specs:[
-      {l:'Temp. impresión',v:'190–220 °C'},
-      {l:'Temp. cama',v:'20–60 °C'},
-      {l:'Temp. deformación',v:'~50–55 °C'},
-      {l:'Resistencia tracción',v:'~50 MPa'},
-      {l:'Diámetro',v:'1,75 mm'},
-      {l:'Retracción',v:'Baja'},
+      {l:'Temp. boquilla',v:'190-220 C'},
+      {l:'Temp. cama',v:'20-60 C'},
+      {l:'Temp. deformacion',v:'~50-55 C'},
+      {l:'Resistencia traccion',v:'~50 MPa'},
+      {l:'Diametro',v:'1,75 mm'},
+      {l:'Retraccion',v:'Baja'},
     ]
   },
   'PLA Seda': {
     emoji: '✨',
-    desc: 'El PLA Seda tiene las mismas propiedades base del PLA pero con un acabado metálico y brillante que imita la seda. Perfecto para piezas decorativas, trofeos, regalos personalizados y cualquier proyecto donde la estética sea lo principal.',
+    desc: 'El PLA Seda tiene las mismas propiedades del PLA pero con un acabado metalico y brillante. El acabado sedoso oculta mejor las lineas de capa. Perfecto para trofeos, regalos y piezas decorativas.',
     alertas: [
-      {tipo:'warn', texto:'[!] Misma limitación que el PLA: evitá dejarlo expuesto al sol o en ambientes calurosos.'},
-      {tipo:'tip', texto:'[tip] El acabado sedoso oculta mejor las líneas de capa que el PLA común. Ideal para piezas que se van a regalar o exhibir.'}
+      {tipo:'warn', texto:'Misma limitacion que el PLA: evita dejarlo expuesto al sol o en ambientes calurosos.'},
+      {tipo:'success', texto:'Ideal para trofeos, regalos, joyeria y piezas de exhibicion con efecto premium.'}
     ],
     usos: [
       {ok:true, txt:'Trofeos y regalos'},
       {ok:true, txt:'Figuras decorativas'},
-      {ok:true, txt:'Joyería y accesorios'},
-      {ok:true, txt:'Piezas de exhibición'},
+      {ok:true, txt:'Joyeria y accesorios'},
+      {ok:true, txt:'Piezas de exhibicion'},
       {ok:false, txt:'Exterior o bajo el sol'},
-      {ok:false, txt:'Uso funcional/mecánico'},
+      {ok:false, txt:'Uso funcional mecanico'},
     ],
-    tags:['Acabado metálico','Alto brillo','Fácil de imprimir','Efecto premium'],
+    tags:['Acabado metalico','Alto brillo','Facil de imprimir','Efecto premium'],
     specs:[
-      {l:'Temp. impresión',v:'200–230 °C'},
-      {l:'Temp. cama',v:'25–60 °C'},
-      {l:'Temp. deformación',v:'~50 °C'},
-      {l:'Acabado',v:'Sedoso/metálico'},
-      {l:'Diámetro',v:'1,75 mm'},
-      {l:'Retracción',v:'Baja'},
+      {l:'Temp. boquilla',v:'200-230 C'},
+      {l:'Temp. cama',v:'25-60 C'},
+      {l:'Temp. deformacion',v:'~50 C'},
+      {l:'Acabado',v:'Sedoso metalico'},
+      {l:'Diametro',v:'1,75 mm'},
+      {l:'Retraccion',v:'Baja'},
     ]
   },
   'PLA ART': {
     emoji: '🎨',
-    desc: 'El PLA ART (también llamado PLA+ o PLA de alta calidad) tiene mejores propiedades mecánicas que el PLA estándar: más resistente, menos frágil y mejor acabado superficial. Perfecto cuando necesitás algo más robusto sin perder la facilidad de impresión del PLA.',
+    desc: 'El PLA ART tiene mejores propiedades mecanicas que el PLA estandar: mas resistente, menos fragil y mejor acabado. Buena opcion cuando necesitas algo mas robusto sin perder la facilidad de impresion del PLA.',
     alertas: [
-      {tipo:'warn', texto:'[!] Sigue siendo sensible al calor del sol, igual que el PLA estándar.'},
-      {tipo:'success', texto:'[OK] Mejor resistencia al impacto y a la flexión que el PLA común. Buena opción para piezas funcionales de interior.'}
+      {tipo:'warn', texto:'Sigue siendo sensible al calor del sol igual que el PLA estandar.'},
+      {tipo:'success', texto:'Mejor resistencia al impacto y flexion que el PLA comun. Ideal para piezas funcionales de interior.'}
     ],
     usos: [
       {ok:true, txt:'Piezas funcionales'},
@@ -973,114 +973,114 @@ var FICHAS = {
       {ok:false, txt:'Exterior bajo el sol'},
       {ok:false, txt:'Alta temperatura'},
     ],
-    tags:['Mayor resistencia','Menos frágil','Buen acabado','Fácil de imprimir'],
+    tags:['Mayor resistencia','Menos fragil','Buen acabado','Facil de imprimir'],
     specs:[
-      {l:'Temp. impresión',v:'200–230 °C'},
-      {l:'Temp. cama',v:'25–60 °C'},
-      {l:'Resistencia tracción',v:'~55 MPa'},
-      {l:'Diámetro',v:'1,75 mm'},
-      {l:'Retracción',v:'Baja-media'},
+      {l:'Temp. boquilla',v:'200-230 C'},
+      {l:'Temp. cama',v:'25-60 C'},
+      {l:'Resistencia traccion',v:'~55 MPa'},
+      {l:'Diametro',v:'1,75 mm'},
+      {l:'Retraccion',v:'Baja-media'},
       {l:'Flexibilidad',v:'Media'},
     ]
   },
   'PETG': {
     emoji: '🔵',
-    desc: 'El PETG combina la facilidad de impresión del PLA con la resistencia del ABS. Aguanta bien el calor, la humedad y los golpes. Es semi-transparente en su versión natural y tiene muy buena adhesión entre capas. Ideal para piezas que van a tener uso real.',
+    desc: 'El PETG combina la facilidad del PLA con la resistencia del ABS. Aguanta bien el calor, la humedad y los golpes. Es algo pegajoso al imprimir y puede dejar hilos, pero se regula ajustando la retraccion. Ideal para piezas con uso real.',
     alertas: [
-      {tipo:'success', texto:'[OK] Mucho más resistente al calor que el PLA: aguanta hasta ~80 °C. Apto para uso exterior moderado.'},
-      {tipo:'tip', texto:'[tip] Es algo pegajoso al imprimir y puede dejar hilos. Se regula ajustando la retraccion.'}
+      {tipo:'success', texto:'Mucho mas resistente al calor que el PLA: aguanta hasta 80 grados. Apto para uso exterior moderado.'},
+      {tipo:'warn', texto:'Puede dejar hilos al imprimir. Se regula bien ajustando la retraccion en el slicer.'}
     ],
     usos: [
       {ok:true, txt:'Uso exterior moderado'},
-      {ok:true, txt:'Piezas mecánicas'},
+      {ok:true, txt:'Piezas mecanicas'},
       {ok:true, txt:'Contenedores y tapas'},
       {ok:true, txt:'Piezas con humedad'},
-      {ok:false, txt:'Piezas de alta precisión'},
+      {ok:false, txt:'Piezas de alta precision'},
       {ok:false, txt:'Muy alta temperatura'},
     ],
-    tags:['Resistente al calor','Baja retracción','Semi-flexible','Apto exterior'],
+    tags:['Resistente al calor','Baja retraccion','Semi-flexible','Apto exterior'],
     specs:[
-      {l:'Temp. impresión',v:'230–250 °C'},
-      {l:'Temp. cama',v:'70–90 °C'},
-      {l:'Temp. deformación',v:'~80 °C'},
-      {l:'Resistencia tracción',v:'~50 MPa'},
-      {l:'Diámetro',v:'1,75 mm'},
-      {l:'Retracción',v:'Media'},
+      {l:'Temp. boquilla',v:'230-250 C'},
+      {l:'Temp. cama',v:'70-90 C'},
+      {l:'Temp. deformacion',v:'~80 C'},
+      {l:'Resistencia traccion',v:'~50 MPa'},
+      {l:'Diametro',v:'1,75 mm'},
+      {l:'Retraccion',v:'Media'},
     ]
   },
   'ABS': {
     emoji: '🟡',
-    desc: 'El ABS (Acrilonitrilo Butadieno Estireno) es un plastico tecnico muy resistente al impacto y al calor. Se usa mucho en la industria y es el mismo material de los Legos. Requiere mas cuidado al imprimir: necesita cama caliente y ambiente cerrado para evitar que se agriete. Si se agrieta, subi la temperatura y cerra el ambiente para evitar corrientes de aire.',
+    desc: 'El ABS es un plastico tecnico muy resistente al impacto y al calor. Es el mismo material de los Legos. Necesita cama caliente y ambiente cerrado para imprimir bien. Si se agrieta, sube la temperatura y cierra el ambiente para evitar corrientes de aire.',
     alertas: [
-      {tipo:'warn', texto:'[!] Desprende vapores durante la impresion. Imprimi en un espacio ventilado o con caja cerrada.'},
-      {tipo:'success', texto:'[OK] Aguanta hasta ~100 C. Perfecto para piezas que van a estar bajo el sol, en el auto o en ambientes calurosos.'}
+      {tipo:'warn', texto:'Desprende vapores al imprimir. Usa un espacio ventilado o caja cerrada con filtro.'},
+      {tipo:'success', texto:'Aguanta hasta 100 grados. Perfecto para piezas bajo el sol, en el auto o en ambientes calurosos.'}
     ],
     usos: [
       {ok:true, txt:'Piezas para el auto'},
       {ok:true, txt:'Uso exterior y sol'},
-      {ok:true, txt:'Piezas mecánicas'},
+      {ok:true, txt:'Piezas mecanicas'},
       {ok:true, txt:'Carcasas y protecciones'},
       {ok:false, txt:'Principiantes'},
       {ok:false, txt:'Sin cama caliente'},
     ],
-    tags:['Alta resistencia','Tolera el calor','Postprocesable','Uso técnico'],
+    tags:['Alta resistencia','Tolera el calor','Postprocesable','Uso tecnico'],
     specs:[
-      {l:'Temp. impresión',v:'230–250 °C'},
-      {l:'Temp. cama',v:'90–110 °C'},
-      {l:'Temp. deformación',v:'~100 °C'},
-      {l:'Resistencia tracción',v:'~40 MPa'},
-      {l:'Diámetro',v:'1,75 mm'},
-      {l:'Retracción',v:'Alta'},
+      {l:'Temp. boquilla',v:'230-250 C'},
+      {l:'Temp. cama',v:'90-110 C'},
+      {l:'Temp. deformacion',v:'~100 C'},
+      {l:'Resistencia traccion',v:'~40 MPa'},
+      {l:'Diametro',v:'1,75 mm'},
+      {l:'Retraccion',v:'Alta'},
     ]
   },
   'Nylon': {
     emoji: '⚪',
-    desc: 'El Nylon es uno de los materiales más resistentes disponibles para impresión 3D doméstica. Es flexible, muy duro y aguanta el desgaste. Se usa para engranajes, bisagras, piezas industriales y todo lo que necesite resistir esfuerzos mecánicos reales. Requiere experiencia para imprimir bien.',
+    desc: 'El Nylon es uno de los materiales mas resistentes para impresion 3D. Es flexible, muy duro y aguanta el desgaste. Se usa para engranajes, bisagras y piezas industriales. Absorbe humedad del ambiente, por eso hay que guardarlo en bolsa hermetica con silica gel.',
     alertas: [
-      {tipo:'warn', texto:'[!] Absorbe humedad del ambiente (higroscópico). Guardá el rollo en bolsa hermética con silica gel cuando no lo uses — la humedad arruina la impresión.'},
-      {tipo:'tip', texto:'[tip] Si el filamento crepita o burbujea al imprimir, está húmedo. Secalo en horno a 60–70 °C durante 4–6 horas.'}
+      {tipo:'warn', texto:'Absorbe humedad del ambiente. Guarda el rollo en bolsa hermetica con silica gel cuando no lo uses.'},
+      {tipo:'warn', texto:'Si el filamento crepita al imprimir, esta humedo. Secalo en horno a 65 grados durante 4-6 horas.'}
     ],
     usos: [
       {ok:true, txt:'Engranajes y poleas'},
       {ok:true, txt:'Bisagras y clips'},
       {ok:true, txt:'Piezas industriales'},
-      {ok:true, txt:'Alta resistencia mecánica'},
+      {ok:true, txt:'Alta resistencia mecanica'},
       {ok:false, txt:'Principiantes'},
-      {ok:false, txt:'Alta humedad sin secar'},
+      {ok:false, txt:'Sin secar el filamento'},
     ],
     tags:['Muy resistente','Flexible','Alta durabilidad','Uso industrial'],
     specs:[
-      {l:'Temp. impresión',v:'240–260 °C'},
-      {l:'Temp. cama',v:'70–90 °C'},
-      {l:'Temp. deformación',v:'~120 °C'},
-      {l:'Resistencia tracción',v:'~70 MPa'},
-      {l:'Diámetro',v:'1,75 mm'},
-      {l:'Retracción',v:'Alta'},
+      {l:'Temp. boquilla',v:'240-260 C'},
+      {l:'Temp. cama',v:'70-90 C'},
+      {l:'Temp. deformacion',v:'~120 C'},
+      {l:'Resistencia traccion',v:'~70 MPa'},
+      {l:'Diametro',v:'1,75 mm'},
+      {l:'Retraccion',v:'Alta'},
     ]
   },
   'PC/ABS': {
     emoji: '🔩',
-    desc: 'El PC/ABS es una mezcla de Policarbonato y ABS que combina lo mejor de ambos: la rigidez y resistencia al calor del PC con la facilidad de impresión del ABS. Es un material técnico para aplicaciones exigentes donde el PLA o PETG no son suficientes.',
+    desc: 'El PC/ABS combina lo mejor del Policarbonato y el ABS: rigidez y resistencia al calor del PC con la facilidad del ABS. Material tecnico para aplicaciones exigentes donde el PLA o PETG no son suficientes.',
     alertas: [
-      {tipo:'warn', texto:'[!] Requiere temperaturas altas y ambiente cerrado. No recomendado para impresoras sin caja o sin cama que llegue a 100 °C+.'},
-      {tipo:'success', texto:'[OK] Excelente para piezas de ingeniería, carcasas de electrónica y todo lo que necesite resistencia mecánica y térmica al mismo tiempo.'}
+      {tipo:'warn', texto:'Requiere temperaturas altas y ambiente cerrado. No recomendado para impresoras sin caja o sin cama que llegue a 100 grados.'},
+      {tipo:'success', texto:'Excelente para carcasas de electronica y piezas de ingenieria que necesiten resistencia mecanica y termica.'}
     ],
     usos: [
-      {ok:true, txt:'Carcasas electrónica'},
-      {ok:true, txt:'Piezas de ingeniería'},
+      {ok:true, txt:'Carcasas electronica'},
+      {ok:true, txt:'Piezas de ingenieria'},
       {ok:true, txt:'Alta temperatura'},
-      {ok:true, txt:'Uso mecánico exigente'},
+      {ok:true, txt:'Uso mecanico exigente'},
       {ok:false, txt:'Principiantes'},
-      {ok:false, txt:'Impresoras básicas'},
+      {ok:false, txt:'Impresoras basicas'},
     ],
-    tags:['Alta temperatura','Muy rígido','Uso técnico','Alta resistencia'],
+    tags:['Alta temperatura','Muy rigido','Uso tecnico','Alta resistencia'],
     specs:[
-      {l:'Temp. impresión',v:'250–270 °C'},
-      {l:'Temp. cama',v:'100–110 °C'},
-      {l:'Temp. deformación',v:'~110 °C'},
-      {l:'Resistencia tracción',v:'~55 MPa'},
-      {l:'Diámetro',v:'1,75 mm'},
-      {l:'Retracción',v:'Media-alta'},
+      {l:'Temp. boquilla',v:'250-270 C'},
+      {l:'Temp. cama',v:'100-110 C'},
+      {l:'Temp. deformacion',v:'~110 C'},
+      {l:'Resistencia traccion',v:'~55 MPa'},
+      {l:'Diametro',v:'1,75 mm'},
+      {l:'Retraccion',v:'Media-alta'},
     ]
   }
 };
@@ -1226,7 +1226,10 @@ function abrirProducto(d){
     body.appendChild(mk('div','fdesc',ficha.desc));
 
     ficha.alertas.forEach(function(a){
-      body.appendChild(mk('div','falerta '+a.tipo,a.texto));
+      var ab=document.createElement('div');
+      ab.setAttribute('class','falerta '+a.tipo);
+      ab.appendChild(document.createTextNode(a.texto));
+      body.appendChild(ab);
     });
 
     body.appendChild(mk('div','ftitulo','Para que sirve'));
