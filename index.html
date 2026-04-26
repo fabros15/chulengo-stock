@@ -919,7 +919,7 @@ window.addEventListener('popstate', function(e){
 // ==================== STOCK ====================
 var DATA=[], FILTERED=[], FUSE=null;
 var WA='5492804585359';
-var IMG_PLACEHOLDER='placeholder_sin_imagen_filamento.svg';
+var IMG_PLACEHOLDER='data:image/svg+xml;charset=utf-8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect width=%22200%22 height=%22200%22 fill=%22%23F0EDE8%22/><circle cx=%22100%22 cy=%2285%22 r=%2238%22 fill=%22none%22 stroke=%22%23B0A898%22 stroke-width=%224%22/><circle cx=%22100%22 cy=%2285%22 r=%2215%22 fill=%22none%22 stroke=%22%23B0A898%22 stroke-width=%223%22/><line x1=%22100%22 y1=%2247%22 x2=%22100%22 y2=%22123%22 stroke=%22%23B0A898%22 stroke-width=%223%22/><line x1=%2262%22 y1=%2285%22 x2=%22138%22 y2=%2285%22 stroke=%22%23B0A898%22 stroke-width=%223%22/><text x=%22100%22 y=%22158%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2213%22 fill=%22%23968E83%22>Sin foto</text></svg>';
 var COLORS={'amarillo':'#FFD600','azul':'#1E88E5','blanco':'#E0E0E0','negro':'#212121','verde':'#43A047','rojo':'#E53935','naranja':'#FB8C00','rosa':'#E91E63','marron':'#6D4C41','violeta':'#8E24AA','gris':'#9E9E9E','plateado':'#B0BEC5','dorado':'#FFA000','celeste':'#4FC3F7','multicolor':'#CCCCCC','transparente':'#E3F2FD','surtido':'#CCCCCC'};
 
 function fmtPeso(n){return new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(n||0);}
