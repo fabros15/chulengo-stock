@@ -459,6 +459,7 @@ select:focus{border-color:#2D6A4F}
 .card.out-of-stock{cursor:pointer;opacity:0.82}
 .card.out-of-stock:hover{opacity:1}
 .card-img{width:100%;height:130px;object-fit:cover;border-radius:8px;margin-bottom:4px}
+.card-img-ph{display:flex;align-items:center;justify-content:center;background:#F0EDE8;color:#A09890;font-size:0.75rem;border-radius:8px;margin-bottom:4px}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .card-title{font-size:0.82rem;font-weight:600;line-height:1.4;flex:1}
 .badge{font-size:0.68rem;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap;font-family:'DM Mono',monospace;transition:transform 0.2s}
@@ -1396,7 +1397,7 @@ function render(){
       } else if(tieneFicha){
         card.addEventListener('click',function(){abrirProducto(d);});
       }
-      if(d.img){var im=document.createElement('img');im.className='card-img';im.onerror=function(){this.onerror=null;this.src=IMG_PLACEHOLDER;this.style.objectFit='contain';this.style.padding='4px';this.style.background='#F5F2ED';};im.src='img/'+d.img.split('/').pop();card.appendChild(im);}
+      if(d.img){var im=document.createElement('img');im.className='card-img';im.onerror=function(){this.style.display='none';var ph=document.createElement('div');ph.className='card-img card-img-ph';ph.textContent='Sin foto';this.parentNode.insertBefore(ph,this);};im.src='img/'+d.img.split('/').pop();card.appendChild(im);}
       var lista=Number(d.lista)||0,oferta=Number(d.oferta)||0;
       var hayOferta=oferta>0&&oferta!==lista;
       var stockN=parseInt(d.stock)||0;
