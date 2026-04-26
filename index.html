@@ -1292,6 +1292,7 @@ function abrirProducto(d){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
   document.getElementById('page-ficha').classList.add('active');
+  document.querySelector('footer').style.display='none';
   window.scrollTo(0,0);
 }
 
@@ -1301,6 +1302,7 @@ function cerrarProducto(){
   document.getElementById('page-stock').classList.add('active');
   document.querySelector('.nav-tab').classList.add('active');
   document.body.classList.remove('panel-open');
+  document.querySelector('footer').style.display='';
 }
 
 function actualizarBtnFicha(){
