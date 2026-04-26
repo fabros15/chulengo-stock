@@ -1397,7 +1397,7 @@ function render(){
       } else if(tieneFicha){
         card.addEventListener('click',function(){abrirProducto(d);});
       }
-      if(d.img){var im=document.createElement('img');im.className='card-img';im.onerror=function(){this.style.display='none';var ph=document.createElement('div');ph.className='card-img card-img-ph';ph.textContent='Sin foto';this.parentNode.insertBefore(ph,this);};im.src='img/'+d.img.split('/').pop();card.appendChild(im);}
+      if(d.img){var im=document.createElement('img');im.className='card-img';im.onerror=function(){this.style.display='none';var ph=document.createElement('div');ph.className='card-img card-img-ph';ph.textContent='Sin foto';this.parentNode.insertBefore(ph,this);};card.appendChild(im);im.src='img/'+d.img.split('/').pop();}
       var lista=Number(d.lista)||0,oferta=Number(d.oferta)||0;
       var hayOferta=oferta>0&&oferta!==lista;
       var stockN=parseInt(d.stock)||0;
