@@ -892,7 +892,29 @@ function showPage(page, btn) {
   document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
   document.getElementById('page-'+page).classList.add('active');
   btn.classList.add('active');
+  document.querySelector('footer').style.display='';
+  history.pushState({page:page}, '', '#'+page);
+  window.scrollTo(0,0);
 }
+
+// Manejar flechas del navegador
+window.addEventListener('popstate', function(e){
+  var state = e.state;
+  if(!state) state = {page:'stock'};
+  if(state.page === 'ficha' && productoActual){
+    // Re-abrir ficha sin pushState
+    _abrirFichaSinHistorial(productoActual);
+  } else {
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+    document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
+    var pid = 'page-' + state.page;
+    if(document.getElementById(pid)) document.getElementById(pid).classList.add('active');
+    if(state.page === 'stock') document.querySelectorAll('.nav-tab')[0].classList.add('active');
+    if(state.page === 'calc') document.querySelectorAll('.nav-tab')[1].classList.add('active');
+    document.querySelector('footer').style.display='';
+    window.scrollTo(0,0);
+  }
+});
 
 // ==================== STOCK ====================
 var DATA=[], FILTERED=[], FUSE=null;
@@ -1152,6 +1174,11 @@ function mk(tag,cls,txt){
 }
 
 function abrirProducto(d){
+  history.pushState({page:'ficha', cartId: d.material+'-'+d.denom+'-'+d.marca}, '', '#ficha');
+  _abrirFichaSinHistorial(d);
+}
+
+function _abrirFichaSinHistorial(d){
   productoActual = d;
   var ficha = getFicha(d.material, d.marca);
   var lista=Number(d.lista)||0, oferta=Number(d.oferta)||0;
@@ -1303,6 +1330,8 @@ function cerrarProducto(){
   document.querySelector('.nav-tab').classList.add('active');
   document.body.classList.remove('panel-open');
   document.querySelector('footer').style.display='';
+  history.pushState({page:'stock'}, '', '#stock');
+}
 }
 
 function actualizarBtnFicha(){
