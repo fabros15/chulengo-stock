@@ -1205,7 +1205,7 @@ function _abrirFichaSinHistorial(d){
     var img=document.createElement('img');
     img.className='ficha-img';
     img.src='img/'+d.img.split('/').pop();
-    img.onerror=function(){this.src=IMG_PLACEHOLDER;this.style.objectFit='contain';this.style.padding='1rem';this.style.background='#F5F2ED';};
+    img.onerror=function(){this.onerror=null;this.src=IMG_PLACEHOLDER;this.style.objectFit='contain';this.style.padding='1rem';this.style.background='#F5F2ED';};
     cont.appendChild(img);
   } else if(ficha){
     var ph=mk('div','ficha-img-placeholder');
@@ -1396,7 +1396,7 @@ function render(){
       } else if(tieneFicha){
         card.addEventListener('click',function(){abrirProducto(d);});
       }
-      if(d.img){var im=document.createElement('img');im.className='card-img';im.src='img/'+d.img.split('/').pop();im.loading='lazy';im.onerror=function(){this.src=IMG_PLACEHOLDER;this.style.objectFit='contain';this.style.padding='4px';this.style.background='#F5F2ED';};card.appendChild(im);}
+      if(d.img){var im=document.createElement('img');im.className='card-img';im.onerror=function(){this.onerror=null;this.src=IMG_PLACEHOLDER;this.style.objectFit='contain';this.style.padding='4px';this.style.background='#F5F2ED';};im.src='img/'+d.img.split('/').pop();card.appendChild(im);}
       var lista=Number(d.lista)||0,oferta=Number(d.oferta)||0;
       var hayOferta=oferta>0&&oferta!==lista;
       var stockN=parseInt(d.stock)||0;
@@ -1430,7 +1430,7 @@ function render(){
 function openModal(idx){
   var d=FILTERED[idx];if(!d)return;
   var img=document.getElementById('modal-img');
-  if(d.img){img.src='img/'+d.img.split('/').pop();img.style.display='block';img.onerror=function(){this.src=IMG_PLACEHOLDER;this.style.objectFit='contain';this.style.padding='1rem';this.style.background='#F5F2ED';};}
+  if(d.img){img.src='img/'+d.img.split('/').pop();img.style.display='block';img.onerror=function(){this.onerror=null;this.src=IMG_PLACEHOLDER;this.style.objectFit='contain';this.style.padding='1rem';this.style.background='#F5F2ED';};}
   else{img.style.display='none';}
   document.getElementById('modal-title').textContent=d.material+' - '+d.denom;
   document.getElementById('modal-meta').innerHTML='<b>'+d.marca+'</b> · '+d.present+' · '+(d.color&&d.color!=='*n/a'?d.color:'Sin color');
