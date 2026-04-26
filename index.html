@@ -1402,9 +1402,10 @@ function render(){
         var im=document.createElement('img');
         im.className='card-img';
         im.alt='';
-        im.setAttribute('onerror',"this.style.visibility='hidden'");
+        im.onerror=function(){this.style.visibility='hidden';};
         card.appendChild(im);
         im.src='img/'+d.img.split('/').pop();
+        if(im.complete && im.naturalWidth===0) im.onerror();
       }
       var lista=Number(d.lista)||0,oferta=Number(d.oferta)||0;
       var hayOferta=oferta>0&&oferta!==lista;
