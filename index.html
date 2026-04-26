@@ -1398,7 +1398,14 @@ function render(){
       } else if(tieneFicha){
         card.addEventListener('click',function(){abrirProducto(d);});
       }
-      if(d.img){var im=document.createElement('img');im.className='card-img';im.onerror=function(){this.style.visibility='hidden';this.style.background='#F0EDE8';};card.appendChild(im);im.src='img/'+d.img.split('/').pop();}
+      if(d.img){
+        var im=document.createElement('img');
+        im.className='card-img';
+        im.alt='';
+        im.setAttribute('onerror',"this.style.visibility='hidden'");
+        card.appendChild(im);
+        im.src='img/'+d.img.split('/').pop();
+      }
       var lista=Number(d.lista)||0,oferta=Number(d.oferta)||0;
       var hayOferta=oferta>0&&oferta!==lista;
       var stockN=parseInt(d.stock)||0;
