@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js"></script>
 <script>
 firebase.initializeApp({
@@ -24,17 +25,33 @@ document.addEventListener('DOMContentLoaded', function(){
     document.getElementById('app').style.display='block';
     var btnSalir = document.getElementById('btn-salir');
     var btnEntrar = document.getElementById('btn-entrar');
+    var tabCuenta = document.getElementById('tab-cuenta');
     if(user){
       if(btnSalir) btnSalir.style.display='flex';
       if(btnEntrar) btnEntrar.style.display='none';
-      // Cerrar modal de login si está abierto
+      if(tabCuenta) tabCuenta.style.display='flex';
+      // Actualizar perfil en Mi cuenta
+      var el=document.getElementById('cuenta-nombre');
+      if(el) el.textContent=user.displayName||'Usuario';
+      var el2=document.getElementById('cuenta-email');
+      if(el2) el2.textContent=user.email||'';
+      var avatar=document.getElementById('cuenta-avatar');
+      if(avatar&&user.photoURL){avatar.src=user.photoURL;avatar.style.display='block';}
+      // Cerrar modal si estaba abierto
       var modal = document.getElementById('google-login-modal');
       if(modal) modal.style.display='none';
-      // Reabrir PDF modal si estaba intentando generar
       if(window._pendingPDF){ window._pendingPDF=false; abrirPDFModal(); }
     } else {
       if(btnSalir) btnSalir.style.display='none';
       if(btnEntrar) btnEntrar.style.display='flex';
+      if(tabCuenta) tabCuenta.style.display='none';
+      // Si estaba en Mi cuenta, volver al stock
+      if(document.getElementById('page-cuenta').classList.contains('active')){
+        document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+        document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
+        document.getElementById('page-stock').classList.add('active');
+        document.querySelector('.nav-tab').classList.add('active');
+      }
     }
   });
 });
@@ -48,6 +65,63 @@ function loginConGoogle(){
 
 function doLogout(){
   firebase.auth().signOut();
+}
+
+function guardarPresupuesto(datos){
+  if(!window.currentUser) return;
+  firebase.firestore().collection('presupuestos').add({
+    uid: window.currentUser.uid,
+    email: window.currentUser.email,
+    nombre: window.currentUser.displayName||'',
+    fecha: firebase.firestore.FieldValue.serverTimestamp(),
+    proyecto: datos.proyecto||'',
+    descripcion: datos.descripcion||'',
+    cantidad: datos.cantidad||1,
+    precioUnit: datos.precioUnit||0,
+    precioTotal: datos.precioTotal||0,
+    validez: datos.validez||'',
+    condiciones: datos.condiciones||''
+  }).catch(function(e){ console.error('Error guardando presupuesto:', e); });
+}
+
+function cargarMisPresupuestos(){
+  if(!window.currentUser){
+    document.getElementById('lista-presupuestos').innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Iniciá sesión para ver tus presupuestos.</p>';
+    return;
+  }
+  var lista = document.getElementById('lista-presupuestos');
+  lista.innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Cargando...</p>';
+  firebase.firestore().collection('presupuestos')
+    .where('uid','==',window.currentUser.uid)
+    .orderBy('fecha','desc')
+    .limit(50)
+    .get()
+    .then(function(snap){
+      if(snap.empty){
+        lista.innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Todavia no generaste ningun presupuesto.</p>';
+        return;
+      }
+      lista.innerHTML='';
+      snap.forEach(function(doc){
+        var d=doc.data();
+        var fecha=d.fecha?d.fecha.toDate().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+        var card=document.createElement('div');
+        card.style.cssText='background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:0.75rem';
+        card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'+
+          '<div style="font-weight:600;color:#1A1814;font-size:0.95rem">'+(d.proyecto||'Sin nombre')+'</div>'+
+          '<div style="font-size:0.75rem;color:#8A8479">'+fecha+'</div>'+
+          '</div>'+
+          (d.descripcion?'<div style="font-size:0.8rem;color:#8A8479;margin-bottom:6px">'+d.descripcion+'</div>':'')+
+          '<div style="display:flex;gap:1rem">'+
+          '<div style="font-size:0.8rem;color:#4B4640">'+d.cantidad+' u. &times; '+fmtPeso(d.precioUnit)+'</div>'+
+          '<div style="font-size:0.9rem;font-weight:700;color:#2D6A4F">'+fmtPeso(d.precioTotal)+'</div>'+
+          '</div>';
+        lista.appendChild(card);
+      });
+    })
+    .catch(function(e){
+      lista.innerHTML='<p style="color:#DC2626;font-size:0.85rem;text-align:center;padding:2rem">Error al cargar. Intentá de nuevo.</p>';
+    });
 }
 
 
@@ -209,9 +283,14 @@ function abrirPDFModal(){
     return;
   }
   cargarConfigMarca();
-  var precioRaw=document.getElementById('r-precio').textContent.replace(/[^0-9.,]/g,'');
-  var precioNum=parseFloat(precioRaw.replace(/\./g,'').replace(',','.'))||0;
-  document.getElementById('pdf-precio-unit').value=precioNum>0?Math.round(precioNum):'';
+  if(itemsPresupuesto.length > 0){
+    var total = itemsPresupuesto.reduce(function(s,i){return s+i.precio;},0);
+    document.getElementById('pdf-precio-unit').value = Math.round(total);
+  } else {
+    var precioRaw=document.getElementById('r-precio').textContent.replace(/[^0-9.,]/g,'');
+    var precioNum=parseFloat(precioRaw.replace(/\./g,'').replace(',','.'))||0;
+    document.getElementById('pdf-precio-unit').value=precioNum>0?Math.round(precioNum):'';
+  }
   document.getElementById('pdf-modal-overlay').classList.add('open');
 }
 function cerrarPDFModal(){
@@ -406,24 +485,32 @@ function generarPDF(sendWA){
   doc.text('Precio unit.', 155, tableY+6, {align:'right'});
   doc.text('Total', w-18, tableY+6, {align:'right'});
 
-  // Table row
+  // Table rows — multiples items
   var rowY=tableY+9;
-  doc.setFillColor(248,248,248);
-  doc.rect(14,rowY,w-28,10,'F');
-  doc.setTextColor(30,30,30);
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(9);
-  doc.text(proyecto, 18, rowY+7);
-  doc.text(String(cantidad), 120, rowY+7, {align:'center'});
-  doc.text(new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(precioUnit), 155, rowY+7, {align:'right'});
-  doc.text(new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(precioTotal), w-18, rowY+7, {align:'right'});
+  var items = itemsPresupuesto.length > 0 ? itemsPresupuesto : [{nombre: proyecto, precio: precioTotal}];
+  var grandTotal = 0;
+  items.forEach(function(item, idx){
+    if(idx%2===0){ doc.setFillColor(248,248,248); } else { doc.setFillColor(255,255,255); }
+    doc.rect(14,rowY,w-28,10,'F');
+    doc.setTextColor(30,30,30);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    var nombreCorto = item.nombre.length > 55 ? item.nombre.substring(0,52)+'...' : item.nombre;
+    doc.text(nombreCorto, 18, rowY+7);
+    doc.text('1', 120, rowY+7, {align:'center'});
+    doc.text(new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(item.precio), 155, rowY+7, {align:'right'});
+    doc.text(new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(item.precio), w-18, rowY+7, {align:'right'});
+    grandTotal += item.precio;
+    rowY += 10;
+  });
 
   // Table border
   doc.setDrawColor(220,220,220);
-  doc.rect(14,tableY,w-28,rowY+10-tableY);
+  doc.rect(14,tableY,w-28,rowY-tableY);
 
   // Total box — siempre verde
-  var totalY=rowY+20;
+  var totalY=rowY+10;
+  precioTotal = grandTotal;
   doc.setFillColor(45,106,79);
   doc.roundedRect(w-80,totalY,66,16,3,3,'F');
   doc.setTextColor(255,255,255);
@@ -457,6 +544,17 @@ function generarPDF(sendWA){
   doc.text(empresa, w/2, h-8, {align:'center'});
 
   var filename='Presupuesto-'+nro+'-'+proyecto.replace(/\s+/g,'-')+'.pdf';
+
+  // Guardar en historial
+  guardarPresupuesto({
+    proyecto: proyecto,
+    descripcion: document.getElementById('pdf-desc').value||'',
+    cantidad: cantidad,
+    precioUnit: precioUnit,
+    precioTotal: precioTotal,
+    validez: document.getElementById('pdf-validez').value||''
+  });
+
   if(sendWA){
     // Generate blob and share or open WA with text
     var pdfBlob=doc.output('blob');
@@ -470,6 +568,9 @@ function generarPDF(sendWA){
     doc.save(filename);
   }
   cerrarPDFModal();
+  // Limpiar items del presupuesto después de generar
+  itemsPresupuesto = [];
+  renderItemsPresupuesto();
 }
 
 
@@ -726,6 +827,7 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('stock',this)">🛒 Ver productos</button>
     <button class="nav-tab" onclick="showPage('calc',this)">🧮 Calculadora de costos</button>
+    <button class="nav-tab" id="tab-cuenta" onclick="showPage('cuenta',this);cargarMisPresupuestos()" style="display:none">👤 Mi cuenta</button>
   </div>
 </header>
 
@@ -914,8 +1016,23 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
         <div class="res-precio-lbl">Precio de venta sugerido</div>
         <div class="res-precio-val" id="r-precio">—</div>
       </div>
-      <button class="btn-pdf" onclick="abrirPDFModal()">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <button class="btn-pdf" onclick="agregarItemPresupuesto()" style="background:#2D6A4F;margin-bottom:8px">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Agregar al presupuesto
+      </button>
+      <div id="presupuesto-items-box" style="display:none;background:#F5F2ED;border-radius:12px;padding:1rem;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+          <span style="font-size:0.85rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif">Items del presupuesto</span>
+          <button onclick="limpiarPresupuesto()" style="background:none;border:none;color:#DC2626;font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif">Limpiar todo</button>
+        </div>
+        <div id="presupuesto-items-lista"></div>
+        <div style="border-top:1px solid #E2DDD6;margin-top:0.75rem;padding-top:0.75rem;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:0.85rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif">Total presupuesto</span>
+          <span id="presupuesto-total" style="font-family:'DM Mono',monospace;font-size:1rem;font-weight:700;color:#2D6A4F"></span>
+        </div>
+      </div>
+      <button id="btn-generar-pdf" class="btn-pdf" onclick="abrirPDFModal()" style="display:none">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Generar presupuesto PDF
       </button>
       <div class="res-rep">
@@ -978,7 +1095,66 @@ window.addEventListener('popstate', function(e){
   }
 });
 
-// ==================== STOCK ====================
+// ==================== ITEMS PRESUPUESTO ====================
+var itemsPresupuesto = [];
+
+function agregarItemPresupuesto(){
+  var precioRaw = document.getElementById('r-precio').textContent.replace(/[^0-9.,]/g,'');
+  var precio = parseFloat(precioRaw.replace(/\./g,'').replace(',','.')) || 0;
+  if(precio <= 0){ alert('Primero completá el cálculo para obtener un precio.'); return; }
+
+  var nombre = prompt('Nombre de este ítem (ej: Estatuilla dragón):','');
+  if(nombre === null) return; // canceló
+  if(!nombre.trim()) nombre = 'Ítem ' + (itemsPresupuesto.length + 1);
+
+  itemsPresupuesto.push({
+    nombre: nombre.trim(),
+    precio: Math.round(precio)
+  });
+  renderItemsPresupuesto();
+}
+
+function eliminarItemPresupuesto(idx){
+  itemsPresupuesto.splice(idx, 1);
+  renderItemsPresupuesto();
+}
+
+function renderItemsPresupuesto(){
+  var lista = document.getElementById('presupuesto-items-lista');
+  var box = document.getElementById('presupuesto-items-box');
+  var btnGenerar = document.getElementById('btn-generar-pdf');
+
+  if(itemsPresupuesto.length === 0){
+    box.style.display = 'none';
+    btnGenerar.style.display = 'none';
+    return;
+  }
+
+  box.style.display = 'block';
+  btnGenerar.style.display = 'flex';
+  lista.innerHTML = '';
+
+  var total = 0;
+  itemsPresupuesto.forEach(function(item, idx){
+    total += item.precio;
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #E2DDD6';
+    row.innerHTML = '<span style="font-size:0.82rem;color:#1A1814;font-family:\'DM Sans\',sans-serif;flex:1">' + item.nombre + '</span>' +
+      '<span style="font-family:\'DM Mono\',monospace;font-size:0.82rem;color:#2D6A4F;margin:0 12px">' + fmtPeso(item.precio) + '</span>' +
+      '<button onclick="eliminarItemPresupuesto(' + idx + ')" style="background:none;border:none;color:#DC2626;cursor:pointer;font-size:0.9rem;padding:2px 6px">✕</button>';
+    lista.appendChild(row);
+  });
+
+  document.getElementById('presupuesto-total').textContent = fmtPeso(total);
+}
+
+function limpiarPresupuesto(){
+  if(itemsPresupuesto.length > 0 && !confirm('¿Limpiar todos los ítems?')) return;
+  itemsPresupuesto = [];
+  renderItemsPresupuesto();
+}
+
+
 var DATA=[], FILTERED=[], FUSE=null;
 var WA='5492804585359';
 var IMG_PLACEHOLDER='data:image/svg+xml;charset=utf-8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect width=%22200%22 height=%22200%22 fill=%22%23F0EDE8%22/><circle cx=%22100%22 cy=%2285%22 r=%2238%22 fill=%22none%22 stroke=%22%23B0A898%22 stroke-width=%224%22/><circle cx=%22100%22 cy=%2285%22 r=%2215%22 fill=%22none%22 stroke=%22%23B0A898%22 stroke-width=%223%22/><line x1=%22100%22 y1=%2247%22 x2=%22100%22 y2=%22123%22 stroke=%22%23B0A898%22 stroke-width=%223%22/><line x1=%2262%22 y1=%2285%22 x2=%22138%22 y2=%2285%22 stroke=%22%23B0A898%22 stroke-width=%223%22/><text x=%22100%22 y=%22158%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2213%22 fill=%22%23968E83%22>Sin foto</text></svg>';
@@ -1867,6 +2043,24 @@ document.addEventListener('input', function(e){
         <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.115.549 4.1 1.508 5.83L.057 23.077a.75.75 0 0 0 .916.953l5.453-1.427A11.933 11.933 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.715 9.715 0 0 1-4.951-1.355l-.355-.211-3.676.962.98-3.578-.231-.368A9.715 9.715 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
         Enviar por WhatsApp
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGINA MI CUENTA -->
+<div class="page" id="page-cuenta">
+  <div style="max-width:680px;margin:0 auto;padding:1.5rem 1rem 6rem">
+    <div id="cuenta-header" style="background:#1A1814;border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem">
+      <img id="cuenta-avatar" src="" style="width:52px;height:52px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);display:none">
+      <div>
+        <div id="cuenta-nombre" style="font-size:1.1rem;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif"></div>
+        <div id="cuenta-email" style="font-size:0.8rem;color:rgba(255,255,255,0.6);font-family:'DM Sans',sans-serif"></div>
+      </div>
+      <button onclick="doLogout()" style="margin-left:auto;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:7px 14px;font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif">Cerrar sesión</button>
+    </div>
+    <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:'DM Sans',sans-serif;margin-bottom:1rem">Mis presupuestos</div>
+    <div id="lista-presupuestos">
+      <p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Cargando...</p>
     </div>
   </div>
 </div>
