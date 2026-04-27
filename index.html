@@ -93,33 +93,44 @@ function cargarMisPresupuestos(){
   lista.innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Cargando...</p>';
   firebase.firestore().collection('presupuestos')
     .where('uid','==',window.currentUser.uid)
-    .orderBy('fecha','desc')
-    .limit(50)
     .get()
     .then(function(snap){
       if(snap.empty){
-        lista.innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Todavia no generaste ningun presupuesto.</p>';
+        lista.innerHTML='<div style="text-align:center;padding:2.5rem 1rem">'+
+          '<div style="font-size:2.5rem;margin-bottom:0.75rem">📄</div>'+
+          '<div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:\'DM Sans\',sans-serif;margin-bottom:0.5rem">Todavia no generaste ningun presupuesto</div>'+
+          '<div style="font-size:0.82rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;margin-bottom:1.25rem">Usa la calculadora para calcular el costo de tu impresion y generar un presupuesto para tu cliente.</div>'+
+          '<button onclick="showPage(\'calc\',document.querySelectorAll(\'.nav-tab\')[1])" style="background:#2D6A4F;color:#fff;border:none;border-radius:10px;padding:11px 24px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif">Ir a la calculadora</button>'+
+          '</div>';
         return;
       }
+      // Ordenar por fecha manualmente (evita necesitar índice compuesto)
+      var docs = [];
+      snap.forEach(function(doc){ docs.push(doc.data()); });
+      docs.sort(function(a,b){
+        var ta = a.fecha ? a.fecha.toMillis() : 0;
+        var tb = b.fecha ? b.fecha.toMillis() : 0;
+        return tb - ta;
+      });
       lista.innerHTML='';
-      snap.forEach(function(doc){
-        var d=doc.data();
+      docs.forEach(function(d){
         var fecha=d.fecha?d.fecha.toDate().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
         var card=document.createElement('div');
         card.style.cssText='background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:0.75rem';
         card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'+
-          '<div style="font-weight:600;color:#1A1814;font-size:0.95rem">'+(d.proyecto||'Sin nombre')+'</div>'+
-          '<div style="font-size:0.75rem;color:#8A8479">'+fecha+'</div>'+
+          '<div style="font-weight:600;color:#1A1814;font-size:0.95rem;font-family:\'DM Sans\',sans-serif">'+(d.proyecto||'Sin nombre')+'</div>'+
+          '<div style="font-size:0.75rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">'+fecha+'</div>'+
           '</div>'+
-          (d.descripcion?'<div style="font-size:0.8rem;color:#8A8479;margin-bottom:6px">'+d.descripcion+'</div>':'')+
-          '<div style="display:flex;gap:1rem">'+
-          '<div style="font-size:0.8rem;color:#4B4640">'+d.cantidad+' u. &times; '+fmtPeso(d.precioUnit)+'</div>'+
-          '<div style="font-size:0.9rem;font-weight:700;color:#2D6A4F">'+fmtPeso(d.precioTotal)+'</div>'+
+          (d.descripcion?'<div style="font-size:0.8rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;margin-bottom:6px">'+d.descripcion+'</div>':'')+
+          '<div style="display:flex;gap:1rem;align-items:center">'+
+          '<div style="font-size:0.8rem;color:#4B4640;font-family:\'DM Sans\',sans-serif">'+d.cantidad+' u.</div>'+
+          '<div style="font-size:0.95rem;font-weight:700;color:#2D6A4F;font-family:\'DM Mono\',monospace">'+fmtPeso(d.precioTotal)+'</div>'+
           '</div>';
         lista.appendChild(card);
       });
     })
     .catch(function(e){
+      console.error(e);
       lista.innerHTML='<p style="color:#DC2626;font-size:0.85rem;text-align:center;padding:2rem">Error al cargar. Intentá de nuevo.</p>';
     });
 }
