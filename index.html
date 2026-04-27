@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js"></script>
 <script>
 firebase.initializeApp({
   apiKey: "AIzaSyAmCmiHMah0Vm9Lu8mK-BnFO_42fqSUYRQ",
@@ -17,16 +18,14 @@ firebase.initializeApp({
   appId: "1:637663644234:web:e95950d415c1b0fdbfb4b3"
 });
 
-firebase.auth().onAuthStateChanged(function(user){
-  window.currentUser = user;
-  // La app siempre visible — solo la calculadora requiere cuenta
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').style.display='block';
-  // Actualizar UI según estado
-  var btnSalir = document.getElementById('btn-salir');
-  if(btnSalir) btnSalir.style.display = user ? 'block' : 'none';
-  // Si está en la calc, actualizar el estado del login
-  actualizarEstadoCalc();
+document.addEventListener('DOMContentLoaded', function(){
+  firebase.auth().onAuthStateChanged(function(user){
+    window.currentUser = user;
+    document.getElementById('app').style.display='block';
+    var btnSalir = document.getElementById('btn-salir');
+    if(btnSalir) btnSalir.style.display = user ? 'block' : 'none';
+    actualizarEstadoCalc();
+  });
 });
 
 function actualizarEstadoCalc(){
