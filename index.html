@@ -5,7 +5,92 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Chulengo Estudio</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyAmCmiHMah0Vm9Lu8mK-BnFO_42fqSUYRQ",
+  authDomain: "chulengo-stock.firebaseapp.com",
+  projectId: "chulengo-stock",
+  storageBucket: "chulengo-stock.firebasestorage.app",
+  messagingSenderId: "637663644234",
+  appId: "1:637663644234:web:e95950d415c1b0fdbfb4b3"
+});
+
+firebase.auth().onAuthStateChanged(function(user){
+  window.currentUser = user;
+  // La app siempre visible — solo la calculadora requiere cuenta
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  // Actualizar UI según estado
+  var btnSalir = document.getElementById('btn-salir');
+  if(btnSalir) btnSalir.style.display = user ? 'block' : 'none';
+  // Si está en la calc, actualizar el estado del login
+  actualizarEstadoCalc();
+});
+
+function actualizarEstadoCalc(){
+  var overlay = document.getElementById('calc-login-overlay');
+  if(!overlay) return;
+  if(window.currentUser){
+    overlay.style.display='none';
+  } else {
+    overlay.style.display='flex';
+  }
+}
+
+function doLogin(){
+  var email=document.getElementById('login-email').value.trim();
+  var pass=document.getElementById('login-pass').value;
+  var err=document.getElementById('login-err');
+  err.textContent='';
+  document.getElementById('login-btn').disabled=true;
+  document.getElementById('login-btn').textContent='Entrando...';
+  firebase.auth().signInWithEmailAndPassword(email, pass)
+    .catch(function(e){
+      err.textContent='Email o contraseña incorrectos.';
+      document.getElementById('login-btn').disabled=false;
+      document.getElementById('login-btn').textContent='Ingresar';
+    });
+}
+
+function doRegister(){
+  var email=document.getElementById('login-email').value.trim();
+  var pass=document.getElementById('login-pass').value;
+  var err=document.getElementById('login-err');
+  err.textContent='';
+  if(pass.length < 6){err.textContent='La contraseña debe tener al menos 6 caracteres.';return;}
+  document.getElementById('login-btn').disabled=true;
+  firebase.auth().createUserWithEmailAndPassword(email, pass)
+    .catch(function(e){
+      if(e.code==='auth/email-already-in-use') err.textContent='Ya existe una cuenta con ese email.';
+      else err.textContent='Error al registrarse. Intentá de nuevo.';
+      document.getElementById('login-btn').disabled=false;
+    });
+}
+
+function doLogout(){
+  firebase.auth().signOut();
+}
+
+function toggleLoginMode(){
+  var isLogin = document.getElementById('login-btn').dataset.mode !== 'register';
+  if(isLogin){
+    document.getElementById('login-btn').textContent='Registrarse';
+    document.getElementById('login-btn').dataset.mode='register';
+    document.getElementById('login-btn').onclick=doRegister;
+    document.getElementById('login-toggle-txt').innerHTML='¿Ya tenés cuenta? <a href="#" onclick="toggleLoginMode();return false" style="color:#2D6A4F;font-weight:600">Iniciá sesión</a>';
+    document.getElementById('login-title').textContent='Crear cuenta';
+  } else {
+    document.getElementById('login-btn').textContent='Ingresar';
+    document.getElementById('login-btn').dataset.mode='login';
+    document.getElementById('login-btn').onclick=doLogin;
+    document.getElementById('login-toggle-txt').innerHTML='¿No tenés cuenta? <a href="#" onclick="toggleLoginMode();return false" style="color:#2D6A4F;font-weight:600">Registrate gratis</a>';
+    document.getElementById('login-title').textContent='Iniciar sesión';
+  }
+}
+</script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 // ==================== CARRITO ====================
@@ -661,10 +746,14 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 </head>
 <body>
 
+<!-- APP -->
+<div id="app" style="display:none">
+
 <header class="site-header">
   <div class="header-top">
     <img src="img/CHULENGO_LOGOO.png" alt="Logo" class="logo">
     <span class="site-title">Chulengo Estudio</span>
+    <button id="btn-salir" onclick="doLogout()" style="display:none;margin-left:auto;background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:8px;padding:5px 12px;font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif">Salir</button>
   </div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('stock',this)">🛒 Ver productos</button>
@@ -698,6 +787,27 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 
 <!-- ==================== CALCULADORA PAGE ==================== -->
 <div class="page" id="page-calc">
+  <!-- Overlay de login para la calculadora -->
+  <div id="calc-login-overlay" style="display:flex;position:absolute;inset:0;background:rgba(245,242,237,0.97);z-index:200;flex-direction:column;align-items:center;justify-content:center;padding:2rem;min-height:100vh">
+    <div style="background:#fff;border-radius:16px;padding:2rem;width:100%;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,0.12)">
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="font-size:2rem;margin-bottom:0.75rem">🧮</div>
+        <div id="login-title" style="font-size:1.2rem;font-weight:700;color:#1A1814;font-family:'DM Sans',sans-serif">Iniciá sesión</div>
+        <div style="font-size:0.82rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-top:6px;line-height:1.5">Para usar la calculadora y guardar el historial de tus presupuestos y cálculos, creá una cuenta gratis.</div>
+      </div>
+      <div style="margin-bottom:1rem">
+        <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:6px">Email</label>
+        <input id="login-email" type="email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.95rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:1.25rem">
+        <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:6px">Contraseña</label>
+        <input id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.95rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+      </div>
+      <div id="login-err" style="color:#DC2626;font-size:0.8rem;font-family:'DM Sans',sans-serif;margin-bottom:0.75rem;min-height:1rem"></div>
+      <button id="login-btn" data-mode="login" onclick="doLogin()" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:0.75rem">Ingresar</button>
+      <div id="login-toggle-txt" style="text-align:center;font-size:0.8rem;color:#8A8479;font-family:'DM Sans',sans-serif">¿No tenés cuenta? <a href="#" onclick="toggleLoginMode();return false" style="color:#2D6A4F;font-weight:600">Registrate gratis</a></div>
+    </div>
+  </div>
   <div class="calc-container">
 
     <div class="calc-section">
@@ -899,6 +1009,7 @@ function showPage(page, btn) {
   document.querySelector('footer').style.display='';
   history.pushState({page:page}, '', '#'+page);
   window.scrollTo(0,0);
+  if(page==='calc') actualizarEstadoCalc();
 }
 
 // Manejar flechas del navegador
@@ -1797,5 +1908,6 @@ document.addEventListener('input', function(e){
   </div>
 </div>
 
+</div><!-- fin app -->
 </body>
 </html>
