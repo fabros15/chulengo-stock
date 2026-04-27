@@ -23,71 +23,34 @@ document.addEventListener('DOMContentLoaded', function(){
     window.currentUser = user;
     document.getElementById('app').style.display='block';
     var btnSalir = document.getElementById('btn-salir');
-    if(btnSalir) btnSalir.style.display = user ? 'block' : 'none';
-    actualizarEstadoCalc();
+    var btnEntrar = document.getElementById('btn-entrar');
+    if(user){
+      if(btnSalir) btnSalir.style.display='flex';
+      if(btnEntrar) btnEntrar.style.display='none';
+      // Cerrar modal de login si está abierto
+      var modal = document.getElementById('google-login-modal');
+      if(modal) modal.style.display='none';
+      // Reabrir PDF modal si estaba intentando generar
+      if(window._pendingPDF){ window._pendingPDF=false; abrirPDFModal(); }
+    } else {
+      if(btnSalir) btnSalir.style.display='none';
+      if(btnEntrar) btnEntrar.style.display='flex';
+    }
   });
 });
 
-function actualizarEstadoCalc(){
-  var overlay = document.getElementById('calc-login-overlay');
-  if(!overlay) return;
-  if(window.currentUser){
-    overlay.style.display='none';
-  } else {
-    overlay.style.display='flex';
-  }
-}
-
-function doLogin(){
-  var email=document.getElementById('login-email').value.trim();
-  var pass=document.getElementById('login-pass').value;
-  var err=document.getElementById('login-err');
-  err.textContent='';
-  document.getElementById('login-btn').disabled=true;
-  document.getElementById('login-btn').textContent='Entrando...';
-  firebase.auth().signInWithEmailAndPassword(email, pass)
-    .catch(function(e){
-      err.textContent='Email o contraseña incorrectos.';
-      document.getElementById('login-btn').disabled=false;
-      document.getElementById('login-btn').textContent='Ingresar';
-    });
-}
-
-function doRegister(){
-  var email=document.getElementById('login-email').value.trim();
-  var pass=document.getElementById('login-pass').value;
-  var err=document.getElementById('login-err');
-  err.textContent='';
-  if(pass.length < 6){err.textContent='La contraseña debe tener al menos 6 caracteres.';return;}
-  document.getElementById('login-btn').disabled=true;
-  firebase.auth().createUserWithEmailAndPassword(email, pass)
-    .catch(function(e){
-      if(e.code==='auth/email-already-in-use') err.textContent='Ya existe una cuenta con ese email.';
-      else err.textContent='Error al registrarse. Intentá de nuevo.';
-      document.getElementById('login-btn').disabled=false;
-    });
+function loginConGoogle(){
+  var provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider).catch(function(e){
+    console.error('Error login Google:', e);
+  });
 }
 
 function doLogout(){
   firebase.auth().signOut();
 }
 
-function toggleLoginMode(){
-  var isLogin = document.getElementById('login-btn').dataset.mode !== 'register';
-  if(isLogin){
-    document.getElementById('login-btn').textContent='Registrarse';
-    document.getElementById('login-btn').dataset.mode='register';
-    document.getElementById('login-btn').onclick=doRegister;
-    document.getElementById('login-toggle-txt').innerHTML='¿Ya tenés cuenta? <a href="#" onclick="toggleLoginMode();return false" style="color:#2D6A4F;font-weight:600">Iniciá sesión</a>';
-    document.getElementById('login-title').textContent='Crear cuenta';
-  } else {
-    document.getElementById('login-btn').textContent='Ingresar';
-    document.getElementById('login-btn').dataset.mode='login';
-    document.getElementById('login-btn').onclick=doLogin;
-    document.getElementById('login-toggle-txt').innerHTML='¿No tenés cuenta? <a href="#" onclick="toggleLoginMode();return false" style="color:#2D6A4F;font-weight:600">Registrate gratis</a>';
-    document.getElementById('login-title').textContent='Iniciar sesión';
-  }
-}
+
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -240,6 +203,11 @@ var pdfLogoBase64 = null;
 var precioFinalPDF = 0;
 
 function abrirPDFModal(){
+  if(!window.currentUser){
+    window._pendingPDF=true;
+    document.getElementById('google-login-modal').style.display='flex';
+    return;
+  }
   cargarConfigMarca();
   var precioRaw=document.getElementById('r-precio').textContent.replace(/[^0-9.,]/g,'');
   var precioNum=parseFloat(precioRaw.replace(/\./g,'').replace(',','.'))||0;
@@ -752,7 +720,8 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
   <div class="header-top">
     <img src="img/CHULENGO_LOGOO.png" alt="Logo" class="logo">
     <span class="site-title">Chulengo Estudio</span>
-    <button id="btn-salir" onclick="doLogout()" style="display:none;margin-left:auto;background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:8px;padding:5px 12px;font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif">Salir</button>
+    <button id="btn-salir" onclick="doLogout()" style="display:none;margin-left:auto;align-items:center;gap:6px;background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:8px;padding:5px 12px;font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif">Salir</button>
+    <button onclick="document.getElementById('google-login-modal').style.display='flex'" id="btn-entrar" style="display:flex;margin-left:auto;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif">Iniciar sesión</button>
   </div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('stock',this)">🛒 Ver productos</button>
@@ -786,27 +755,6 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 
 <!-- ==================== CALCULADORA PAGE ==================== -->
 <div class="page" id="page-calc">
-  <!-- Overlay de login para la calculadora -->
-  <div id="calc-login-overlay" style="display:flex;position:absolute;inset:0;background:rgba(245,242,237,0.97);z-index:200;flex-direction:column;align-items:center;justify-content:center;padding:2rem;min-height:100vh">
-    <div style="background:#fff;border-radius:16px;padding:2rem;width:100%;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,0.12)">
-      <div style="text-align:center;margin-bottom:1.5rem">
-        <div style="font-size:2rem;margin-bottom:0.75rem">🧮</div>
-        <div id="login-title" style="font-size:1.2rem;font-weight:700;color:#1A1814;font-family:'DM Sans',sans-serif">Iniciá sesión</div>
-        <div style="font-size:0.82rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-top:6px;line-height:1.5">Para usar la calculadora y guardar el historial de tus presupuestos y cálculos, creá una cuenta gratis.</div>
-      </div>
-      <div style="margin-bottom:1rem">
-        <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:6px">Email</label>
-        <input id="login-email" type="email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.95rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:1.25rem">
-        <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:6px">Contraseña</label>
-        <input id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.95rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
-      </div>
-      <div id="login-err" style="color:#DC2626;font-size:0.8rem;font-family:'DM Sans',sans-serif;margin-bottom:0.75rem;min-height:1rem"></div>
-      <button id="login-btn" data-mode="login" onclick="doLogin()" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:0.75rem">Ingresar</button>
-      <div id="login-toggle-txt" style="text-align:center;font-size:0.8rem;color:#8A8479;font-family:'DM Sans',sans-serif">¿No tenés cuenta? <a href="#" onclick="toggleLoginMode();return false" style="color:#2D6A4F;font-weight:600">Registrate gratis</a></div>
-    </div>
-  </div>
   <div class="calc-container">
 
     <div class="calc-section">
@@ -1008,7 +956,7 @@ function showPage(page, btn) {
   document.querySelector('footer').style.display='';
   history.pushState({page:page}, '', '#'+page);
   window.scrollTo(0,0);
-  if(page==='calc') actualizarEstadoCalc();
+  if(page==='calc'){}// calc es libre
 }
 
 // Manejar flechas del navegador
@@ -1779,6 +1727,22 @@ document.addEventListener('input', function(e){
 <!-- PRODUCTO PAGINA -->
 <div class="page" id="page-ficha">
   <div id="ficha-contenido"></div>
+</div>
+
+<!-- MODAL LOGIN GOOGLE -->
+<div id="google-login-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:3000;align-items:center;justify-content:center;padding:1.5rem">
+  <div style="background:#fff;border-radius:20px;padding:2rem;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <button onclick="document.getElementById('google-login-modal').style.display='none'" style="float:right;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#8A8479;margin-top:-8px">✕</button>
+    <div style="clear:both"></div>
+    <div style="font-size:2.5rem;margin-bottom:0.75rem">📄</div>
+    <div style="font-size:1.1rem;font-weight:700;color:#1A1814;font-family:'DM Sans',sans-serif;margin-bottom:0.5rem">Guardá tus presupuestos</div>
+    <div style="font-size:0.82rem;color:#8A8479;font-family:'DM Sans',sans-serif;line-height:1.6;margin-bottom:1.5rem">Iniciá sesión gratis con Google para generar presupuestos en PDF y guardar el historial de tus cálculos.</div>
+    <button onclick="loginConGoogle()" style="width:100%;padding:12px;background:#fff;color:#1A1814;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.95rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:0.75rem;transition:background 0.2s" onmouseover="this.style.background='#F5F2ED'" onmouseout="this.style.background='#fff'">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continuar con Google
+    </button>
+    <div style="font-size:0.75rem;color:#B0A898;font-family:'DM Sans',sans-serif">Es gratis y tarda 5 segundos</div>
+  </div>
 </div>
 
 <!-- CARRITO FLOTANTE -->
