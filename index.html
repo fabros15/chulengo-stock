@@ -2015,6 +2015,14 @@ function procesarDatos(json){
   DATA=json.map(function(row){return{marca:String(row['marca nombre']||''),material:String(row['material nombre']||''),present:String(row['presentacion nombre']||''),color:String(row['color nombre']||''),denom:String(row['denominacion nombre']||''),lista:row['precio_lista']||0,oferta:row['precio_oferta']||0,stock:row['stock']!==undefined?row['stock']:0,img:String(row['imagen']||'')};}).filter(function(d){return d.material||d.denom;});
   FUSE=new Fuse(DATA,{keys:[{name:'denom',weight:2},{name:'marca',weight:1.5},{name:'material',weight:1.5},{name:'color',weight:1}],threshold:0.45,ignoreLocation:true,includeScore:true});
   populate();render();
+  // Restaurar estado visual de los botones del carrito
+  Object.keys(carrito).forEach(function(id){
+    document.querySelectorAll('[data-cartid="'+id+'"]').forEach(function(btn){
+      btn.textContent='✓ '+carrito[id].qty+' en el pedido';
+      btn.className='btn-agregar en-carrito';
+    });
+  });
+  actualizarCarrito();
   poblarSelectFilamentos();
   ['search','fil-material','fil-marca','fil-stock'].forEach(function(id){
     document.getElementById(id).addEventListener('input',render);
