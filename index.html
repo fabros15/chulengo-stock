@@ -256,7 +256,11 @@ var carrito = (function(){
 })();
 
 function guardarCarrito(){
-  try { setStorage('chulengo_carrito', JSON.stringify(carrito)); } catch(e){}
+  try {
+    var json = JSON.stringify(carrito);
+    setStorage('chulengo_carrito', json);
+    console.log('Carrito guardado:', json);
+  } catch(e){ console.error('Error guardando carrito:', e); }
 }
 
 function kgTotal(){
