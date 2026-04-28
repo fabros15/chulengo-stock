@@ -429,7 +429,22 @@ function abrirPDFModal(){
     document.getElementById('pdf-precio-unit').value=precioNum>0?Math.round(precioNum):'';
   }
   document.getElementById('pdf-modal-overlay').classList.add('open');
+  document.getElementById('pdf-descuento').value='';
+  document.getElementById('descuento-preview').style.display='none';
 }
+function actualizarDescuento(){
+  var precio = parseFloat(document.getElementById('pdf-precio-unit').value)||0;
+  var desc = parseFloat(document.getElementById('pdf-descuento').value)||0;
+  var preview = document.getElementById('descuento-preview');
+  if(desc > 0 && precio > 0){
+    var total = Math.round(precio * (1 - desc/100));
+    document.getElementById('descuento-preview-val').textContent = fmtPeso(total);
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
 function cerrarPDFModal(){
   document.getElementById('pdf-modal-overlay').classList.remove('open');
 }
@@ -505,6 +520,9 @@ function generarPDF(sendWA){
   var validez=document.getElementById('pdf-validez').value||'7 días';
   var notas=document.getElementById('pdf-notas').value;
   var precioUnit=parseFloat(document.getElementById('pdf-precio-unit').value)||0;
+  var descuento=parseFloat(document.getElementById('pdf-descuento').value)||0;
+  var precioOriginal=precioUnit;
+  if(descuento>0) precioUnit=Math.round(precioUnit*(1-descuento/100));
   var precioTotal=precioUnit*cantidad;
   var nro='P-'+Date.now().toString().slice(-6);
   var fecha=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
@@ -648,6 +666,22 @@ function generarPDF(sendWA){
   // Total box — siempre verde
   var totalY=rowY+10;
   precioTotal = grandTotal;
+
+  // Si hay descuento, mostrar subtotal y descuento antes del total
+  if(descuento > 0){
+    doc.setTextColor(80,80,80);
+    doc.setFontSize(8);
+    doc.setFont('helvetica','normal');
+    doc.text('Subtotal:', w-76, totalY);
+    doc.text(new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(grandTotal), w-18, totalY, {align:'right'});
+    doc.setTextColor(220,60,60);
+    doc.text('Descuento ('+descuento+'%):', w-76, totalY+6);
+    var montoDesc = Math.round(grandTotal * descuento/100);
+    doc.text('- '+new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(montoDesc), w-18, totalY+6, {align:'right'});
+    precioTotal = grandTotal - montoDesc;
+    totalY += 12;
+  }
+
   doc.setFillColor(45,106,79);
   doc.roundedRect(w-80,totalY,66,16,3,3,'F');
   doc.setTextColor(255,255,255);
@@ -2461,7 +2495,20 @@ document.addEventListener('input', function(e){
       <label>Precio unitario <span style="font-size:0.75rem;color:#8A8479;font-weight:400">(podés modificarlo antes de generar)</span></label>
       <div style="position:relative">
         <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.88rem;pointer-events:none">$</span>
-        <input type="number" id="pdf-precio-unit" min="0" step="1" placeholder="Ej: 9000" style="padding-left:24px;background:#EFF6FF;border-color:#BFDBFE;font-weight:600;font-size:1rem;color:#1E3A8A">
+        <input type="number" id="pdf-precio-unit" min="0" step="1" placeholder="Ej: 9000" oninput="actualizarDescuento()" style="padding-left:24px;background:#EFF6FF;border-color:#BFDBFE;font-weight:600;font-size:1rem;color:#1E3A8A">
+      </div>
+    </div>
+    <div class="field">
+      <label>Descuento <span style="font-size:0.75rem;color:#8A8479;font-weight:400">(opcional)</span></label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="position:relative;flex:1">
+          <input type="number" id="pdf-descuento" min="0" max="100" step="1" placeholder="0" oninput="actualizarDescuento()" style="width:100%;padding:10px 32px 10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:1rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+          <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.88rem;pointer-events:none">%</span>
+        </div>
+        <div id="descuento-preview" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;text-align:center;min-width:110px">
+          <div style="font-size:0.68rem;color:#8A8479;font-family:'DM Sans',sans-serif">Total con descuento</div>
+          <div id="descuento-preview-val" style="font-size:1rem;font-weight:700;color:#2D6A4F;font-family:'DM Mono',monospace"></div>
+        </div>
       </div>
     </div>
     <div class="field">
