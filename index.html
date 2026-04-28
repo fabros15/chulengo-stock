@@ -231,6 +231,7 @@ function cargarMisPresupuestos(){
       var search=document.getElementById('pres-search');
       if(search) search.value='';
       renderListaPresupuestos(todosPresupuestos);
+      calcularEstadisticas(todosPresupuestos);
     })
     .catch(function(e){
       console.error(e);
@@ -1247,6 +1248,97 @@ window.addEventListener('popstate', function(e){
     window.scrollTo(0,0);
   }
 });
+
+function calcularEstadisticas(docs){
+  if(!docs||docs.length===0){
+    document.getElementById('stats-box').style.display='none';
+    return;
+  }
+  document.getElementById('stats-box').style.display='block';
+
+  // Total generado (solo pagados + señados + aprobados)
+  var totalPagado=0, totalGeneral=0;
+  docs.forEach(function(e){
+    var p=e.data.precioTotal||0;
+    totalGeneral+=p;
+    if(['Pagado','Señado','Aprobado'].includes(e.data.estado||'')) totalPagado+=p;
+  });
+  document.getElementById('stat-total').textContent=fmtPeso(totalPagado);
+  document.getElementById('stat-total-sub').textContent='De '+fmtPeso(totalGeneral)+' presupuestado total';
+
+  // Tasa de aprobación
+  var aprobados=docs.filter(function(e){return['Aprobado','Señado','Pagado'].includes(e.data.estado||'');}).length;
+  var noCancel=docs.filter(function(e){return(e.data.estado||'')!=='Cancelado';}).length;
+  var tasa=noCancel>0?Math.round(aprobados/noCancel*100):0;
+  document.getElementById('stat-tasa').textContent=tasa+'%';
+  document.getElementById('stat-tasa-sub').textContent=aprobados+' aprobados de '+noCancel+' enviados';
+
+  // Por estado
+  var porEstado={};
+  ESTADOS.forEach(function(e){porEstado[e]=0;});
+  docs.forEach(function(e){var est=e.data.estado||'Enviado';if(porEstado[est]!==undefined)porEstado[est]++;});
+  var estadosEl=document.getElementById('stat-estados');
+  estadosEl.innerHTML='';
+  var colores={'Enviado':'#BFDBFE','Aprobado':'#BBF7D0','Señado':'#FDE68A','Pagado':'#6EE7B7','Cancelado':'#FECACA'};
+  ESTADOS.forEach(function(est){
+    if(porEstado[est]===0)return;
+    var pct=Math.round(porEstado[est]/docs.length*100);
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px';
+    row.innerHTML='<div style="width:80px;font-size:0.78rem;color:#4B4640;font-family:\'DM Sans\',sans-serif;flex-shrink:0">'+est+'</div>'+
+      '<div style="flex:1;background:#F5F2ED;border-radius:4px;height:8px;overflow:hidden">'+
+        '<div style="width:'+pct+'%;background:'+colores[est]+';height:100%;border-radius:4px;transition:width 0.5s"></div>'+
+      '</div>'+
+      '<div style="font-size:0.78rem;color:#1A1814;font-family:\'DM Mono\',monospace;width:20px;text-align:right">'+porEstado[est]+'</div>';
+    estadosEl.appendChild(row);
+  });
+
+  // Cliente top
+  var clientes={};
+  docs.forEach(function(e){
+    var c=(e.data.cliente||'').trim();
+    if(c){clientes[c]=(clientes[c]||0)+1;}
+  });
+  var topCliente=Object.keys(clientes).sort(function(a,b){return clientes[b]-clientes[a];})[0];
+  if(topCliente){
+    document.getElementById('stat-cliente-box').style.display='block';
+    document.getElementById('stat-cliente').textContent=topCliente;
+    document.getElementById('stat-cliente-sub').textContent=clientes[topCliente]+' presupuesto'+(clientes[topCliente]!==1?'s':'');
+  }
+
+  // Gráfico por mes (últimos 6 meses)
+  var meses={};
+  var ahora=new Date();
+  for(var i=5;i>=0;i--){
+    var d=new Date(ahora.getFullYear(),ahora.getMonth()-i,1);
+    var key=d.getFullYear()+'-'+(d.getMonth()+1);
+    meses[key]={label:d.toLocaleDateString('es-AR',{month:'short'}),count:0,monto:0};
+  }
+  docs.forEach(function(e){
+    if(!e.data.fecha)return;
+    var d=e.data.fecha.toDate();
+    var key=d.getFullYear()+'-'+(d.getMonth()+1);
+    if(meses[key]){meses[key].count++;meses[key].monto+=e.data.precioTotal||0;}
+  });
+  var keys=Object.keys(meses);
+  var maxCount=Math.max.apply(null,keys.map(function(k){return meses[k].count;}))||1;
+  var grafico=document.getElementById('stat-grafico');
+  var labels=document.getElementById('stat-grafico-labels');
+  grafico.innerHTML=''; labels.innerHTML='';
+  keys.forEach(function(k){
+    var m=meses[k];
+    var pct=Math.round(m.count/maxCount*100);
+    var bar=document.createElement('div');
+    bar.style.cssText='flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px';
+    bar.innerHTML='<div style="font-size:0.68rem;color:#8A8479;font-family:\'DM Mono\',sans-serif">'+(m.count||'')+'</div>'+
+      '<div style="width:100%;background:'+(m.count>0?'#2D6A4F':'#E2DDD6')+';border-radius:4px 4px 0 0;height:'+(pct||4)+'%;min-height:4px;transition:height 0.5s"></div>';
+    grafico.appendChild(bar);
+    var lbl=document.createElement('div');
+    lbl.style.cssText='flex:1;text-align:center;font-size:0.68rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;text-transform:capitalize';
+    lbl.textContent=m.label;
+    labels.appendChild(lbl);
+  });
+}
 
 // ==================== GESTOR PRESUPUESTOS ====================
 var todosPresupuestos = [];
@@ -2402,6 +2494,45 @@ document.addEventListener('input', function(e){
         <div id="cuenta-email" style="font-size:0.78rem;color:rgba(255,255,255,0.5);font-family:'DM Sans',sans-serif"></div>
       </div>
       <button onclick="doLogout()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:7px 14px;font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif">Cerrar sesión</button>
+    </div>
+
+    <!-- ESTADÍSTICAS -->
+    <div id="stats-box" style="display:none;margin-bottom:1.5rem">
+
+      <!-- Métricas principales -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem">
+          <div style="font-size:0.72rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Total generado</div>
+          <div id="stat-total" style="font-size:1.3rem;font-weight:700;color:#2D6A4F;font-family:'DM Mono',monospace"></div>
+          <div id="stat-total-sub" style="font-size:0.72rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-top:2px"></div>
+        </div>
+        <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem">
+          <div style="font-size:0.72rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Tasa de aprobación</div>
+          <div id="stat-tasa" style="font-size:1.3rem;font-weight:700;color:#1A1814;font-family:'DM Mono',monospace"></div>
+          <div id="stat-tasa-sub" style="font-size:0.72rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-top:2px"></div>
+        </div>
+      </div>
+
+      <!-- Estados -->
+      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:10px">
+        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;margin-bottom:0.75rem">Presupuestos por estado</div>
+        <div id="stat-estados" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+
+      <!-- Cliente top -->
+      <div id="stat-cliente-box" style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:10px;display:none">
+        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;margin-bottom:4px">Cliente más frecuente</div>
+        <div id="stat-cliente" style="font-size:0.95rem;font-weight:700;color:#1A1814;font-family:'DM Sans',sans-serif"></div>
+        <div id="stat-cliente-sub" style="font-size:0.78rem;color:#8A8479;font-family:'DM Sans',sans-serif"></div>
+      </div>
+
+      <!-- Gráfico por mes -->
+      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem">
+        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;margin-bottom:0.875rem">Presupuestos por mes</div>
+        <div id="stat-grafico" style="display:flex;align-items:flex-end;gap:6px;height:80px"></div>
+        <div id="stat-grafico-labels" style="display:flex;gap:6px;margin-top:4px"></div>
+      </div>
+
     </div>
 
     <!-- Título + búsqueda -->
