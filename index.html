@@ -80,8 +80,127 @@ function guardarPresupuesto(datos){
     precioUnit: datos.precioUnit||0,
     precioTotal: datos.precioTotal||0,
     validez: datos.validez||'',
-    condiciones: datos.condiciones||''
+    condiciones: datos.condiciones||'',
+    cliente: datos.cliente||'',
+    estado: 'Enviado',
+    items: datos.items||[],
+    // Datos de la empresa para regenerar el PDF
+    empresa: datos.empresa||'',
+    tel: datos.tel||'',
+    email2: datos.email2||'',
+    web: datos.web||'',
+    colorPrimario: datos.colorPrimario||'',
+    colorSecundario: datos.colorSecundario||''
   }).catch(function(e){ console.error('Error guardando presupuesto:', e); });
+}
+
+function regenerarPDF(docId, d){
+  var jsPDF=window.jspdf&&window.jspdf.jsPDF?window.jspdf.jsPDF:window.jsPDF;
+  if(!jsPDF){alert('Error: no se pudo cargar la librería PDF.');return;}
+  var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  var w=210,h=297;
+  var rgb1=hexToRgb(d.colorPrimario||'#4797ff');
+  var rgb2=hexToRgb(d.colorSecundario||'#6200ff');
+
+  // Header
+  doc.setFillColor(rgb1[0],rgb1[1],rgb1[2]);
+  doc.rect(0,0,w,45,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(20);doc.setFont('helvetica','bold');
+  doc.text(d.empresa||'Chulengo Estudio', pdfLogoBase64?46:14, 22);
+
+  var contactX=pdfLogoBase64?46:14;
+  var contactY=28;
+  doc.setFontSize(8);doc.setFont('helvetica','normal');
+  if(d.tel){
+    doc.setFillColor(37,211,102);doc.roundedRect(contactX,contactY-3.2,6,4,1,1,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(5.5);doc.setFont('helvetica','bold');
+    doc.text('WA',contactX+1,contactY-0.6);
+    doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text(d.tel,contactX+8,contactY);contactY+=5;
+  }
+  if(d.email2){
+    doc.setFillColor(180,210,255);doc.roundedRect(contactX,contactY-3.2,6,4,1,1,'F');
+    doc.setTextColor(rgb1[0],rgb1[1],rgb1[2]);doc.setFontSize(7);doc.setFont('helvetica','bold');
+    doc.text('@',contactX+1.8,contactY-0.5);
+    doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(255,255,255);
+    doc.text(d.email2,contactX+8,contactY);contactY+=5;
+  }
+  if(d.web){
+    var esIG=d.web.toLowerCase().includes('instagram')||d.web.startsWith('@');
+    doc.setFillColor(esIG?193:100,esIG?53:100,esIG?132:255);
+    doc.roundedRect(contactX,contactY-3.2,6,4,1,1,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(5.5);doc.setFont('helvetica','bold');
+    doc.text(esIG?'IG':'Web',contactX+(esIG?1.2:0.5),contactY-0.6);
+    doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text(d.web,contactX+8,contactY);
+  }
+
+  // Header derecho
+  doc.setTextColor(255,255,255);doc.setFontSize(10);doc.setFont('helvetica','bold');
+  doc.text('PRESUPUESTO',w-14,15,{align:'right'});
+  var fecha=d.fecha?d.fecha.toDate().toLocaleDateString('es-AR'):'—';
+  var nro='P-'+Math.floor(Math.random()*900000+100000);
+  doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text('N° '+nro,w-14,21,{align:'right'});
+  doc.text('Fecha: '+fecha,w-14,27,{align:'right'});
+  if(d.validez) doc.text('Válido: '+d.validez,w-14,33,{align:'right'});
+
+  // Proyecto
+  doc.setTextColor(rgb1[0],rgb1[1],rgb1[2]);doc.setFontSize(11);doc.setFont('helvetica','bold');
+  doc.text(d.proyecto||'',14,58);
+  if(d.descripcion){doc.setTextColor(80,80,80);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(d.descripcion,14,65);}
+
+  // Tabla
+  var tableY=d.descripcion?72:65;
+  doc.setFillColor(rgb1[0],rgb1[1],rgb1[2]);doc.rect(14,tableY,w-28,9,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text('Descripción',18,tableY+6);
+  doc.text('Cant.',120,tableY+6,{align:'center'});
+  doc.text('Precio unit.',155,tableY+6,{align:'right'});
+  doc.text('Total',w-18,tableY+6,{align:'right'});
+
+  var items=d.items&&d.items.length>0?d.items:[{nombre:d.proyecto||'',precio:d.precioTotal||0}];
+  var rowY=tableY+9;var grandTotal=0;
+  items.forEach(function(item,idx){
+    if(idx%2===0){doc.setFillColor(248,248,248);}else{doc.setFillColor(255,255,255);}
+    doc.rect(14,rowY,w-28,10,'F');
+    doc.setTextColor(30,30,30);doc.setFont('helvetica','normal');doc.setFontSize(9);
+    var nm=item.nombre&&item.nombre.length>55?item.nombre.substring(0,52)+'...':item.nombre||'';
+    doc.text(nm,18,rowY+7);
+    doc.text('1',120,rowY+7,{align:'center'});
+    doc.text(new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(item.precio),155,rowY+7,{align:'right'});
+    doc.text(new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(item.precio),w-18,rowY+7,{align:'right'});
+    grandTotal+=item.precio;rowY+=10;
+  });
+  doc.setDrawColor(220,220,220);doc.rect(14,tableY,w-28,rowY-tableY);
+
+  var totalY=rowY+10;
+  doc.setFillColor(45,106,79);doc.roundedRect(w-80,totalY,66,16,3,3,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(10);doc.setFont('helvetica','bold');
+  doc.text('TOTAL:',w-76,totalY+7);doc.setFontSize(12);
+  doc.text(new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(grandTotal),w-18,totalY+10,{align:'right'});
+
+  if(d.condiciones){
+    var condY=totalY+30;
+    doc.setDrawColor(rgb1[0],rgb1[1],rgb1[2]);doc.setLineWidth(0.5);doc.line(14,condY,w-14,condY);
+    doc.setTextColor(50,50,50);doc.setFontSize(8);doc.setFont('helvetica','bold');
+    doc.text('Condiciones:',14,condY+7);doc.setFont('helvetica','normal');
+    doc.text(d.condiciones,14,condY+13);
+  }
+
+  doc.setFillColor(rgb1[0],rgb1[1],rgb1[2]);doc.rect(0,h-18,w,18,'F');
+  doc.setTextColor(180,180,180);doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text(d.empresa||'Chulengo Estudio',w/2,h-8,{align:'center'});
+
+  doc.save('Presupuesto-'+nro+'.pdf');
+}
+
+function eliminarPresupuesto(docId, el){
+  if(!confirm('¿Eliminar este presupuesto?')) return;
+  firebase.firestore().collection('presupuestos').doc(docId).delete()
+    .then(function(){ el.closest('.pres-card').remove(); })
+    .catch(function(e){ alert('Error al eliminar.'); });
 }
 
 function cargarMisPresupuestos(){
@@ -95,39 +214,22 @@ function cargarMisPresupuestos(){
     .where('uid','==',window.currentUser.uid)
     .get()
     .then(function(snap){
-      if(snap.empty){
-        lista.innerHTML='<div style="text-align:center;padding:2.5rem 1rem">'+
-          '<div style="font-size:2.5rem;margin-bottom:0.75rem">📄</div>'+
-          '<div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:\'DM Sans\',sans-serif;margin-bottom:0.5rem">Todavia no generaste ningun presupuesto</div>'+
-          '<div style="font-size:0.82rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;margin-bottom:1.25rem">Usa la calculadora para calcular el costo de tu impresion y generar un presupuesto para tu cliente.</div>'+
-          '<button onclick="showPage(\'calc\',document.querySelectorAll(\'.nav-tab\')[1])" style="background:#2D6A4F;color:#fff;border:none;border-radius:10px;padding:11px 24px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif">Ir a la calculadora</button>'+
-          '</div>';
-        return;
-      }
-      // Ordenar por fecha manualmente (evita necesitar índice compuesto)
-      var docs = [];
-      snap.forEach(function(doc){ docs.push(doc.data()); });
-      docs.sort(function(a,b){
-        var ta = a.fecha ? a.fecha.toMillis() : 0;
-        var tb = b.fecha ? b.fecha.toMillis() : 0;
-        return tb - ta;
+      todosPresupuestos=[];
+      snap.forEach(function(doc){todosPresupuestos.push({id:doc.id,data:doc.data()});});
+      todosPresupuestos.sort(function(a,b){
+        var ta=a.data.fecha?a.data.fecha.toMillis():0;
+        var tb=b.data.fecha?b.data.fecha.toMillis():0;
+        return tb-ta;
       });
-      lista.innerHTML='';
-      docs.forEach(function(d){
-        var fecha=d.fecha?d.fecha.toDate().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
-        var card=document.createElement('div');
-        card.style.cssText='background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:0.75rem';
-        card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'+
-          '<div style="font-weight:600;color:#1A1814;font-size:0.95rem;font-family:\'DM Sans\',sans-serif">'+(d.proyecto||'Sin nombre')+'</div>'+
-          '<div style="font-size:0.75rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">'+fecha+'</div>'+
-          '</div>'+
-          (d.descripcion?'<div style="font-size:0.8rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;margin-bottom:6px">'+d.descripcion+'</div>':'')+
-          '<div style="display:flex;gap:1rem;align-items:center">'+
-          '<div style="font-size:0.8rem;color:#4B4640;font-family:\'DM Sans\',sans-serif">'+d.cantidad+' u.</div>'+
-          '<div style="font-size:0.95rem;font-weight:700;color:#2D6A4F;font-family:\'DM Mono\',monospace">'+fmtPeso(d.precioTotal)+'</div>'+
-          '</div>';
-        lista.appendChild(card);
-      });
+      var count=document.getElementById('pres-count');
+      if(count) count.textContent=todosPresupuestos.length+' presupuesto'+(todosPresupuestos.length!==1?'s':'');
+      filtroEstadoActual='Todos';
+      document.querySelectorAll('.pres-filtro').forEach(function(b){b.classList.remove('active');});
+      var btnTodos=document.querySelector('.pres-filtro[data-estado="Todos"]');
+      if(btnTodos) btnTodos.classList.add('active');
+      var search=document.getElementById('pres-search');
+      if(search) search.value='';
+      renderListaPresupuestos(todosPresupuestos);
     })
     .catch(function(e){
       console.error(e);
@@ -559,11 +661,20 @@ function generarPDF(sendWA){
   // Guardar en historial
   guardarPresupuesto({
     proyecto: proyecto,
+    cliente: document.getElementById('pdf-cliente').value||'',
     descripcion: document.getElementById('pdf-descripcion').value||'',
     cantidad: cantidad,
     precioUnit: precioUnit,
     precioTotal: precioTotal,
-    validez: document.getElementById('pdf-validez').value||''
+    validez: document.getElementById('pdf-validez').value||'',
+    condiciones: document.getElementById('pdf-condiciones').value||'',
+    items: itemsPresupuesto.length > 0 ? JSON.parse(JSON.stringify(itemsPresupuesto)) : [{nombre:proyecto, precio:precioTotal}],
+    empresa: document.getElementById('conf-empresa').value||'',
+    tel: document.getElementById('conf-tel').value||'',
+    email2: document.getElementById('conf-email').value||'',
+    web: document.getElementById('conf-web').value||'',
+    colorPrimario: document.getElementById('conf-color1').value||'',
+    colorSecundario: document.getElementById('conf-color2').value||''
   });
 
   if(sendWA){
@@ -663,6 +774,14 @@ select:focus{border-color:#2D6A4F}
 .btn-wa{display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:14px 20px;font-size:1rem;font-weight:600;width:100%;cursor:pointer;text-decoration:none;font-family:'DM Sans',sans-serif;transition:background 0.2s}
 .btn-wa:hover{background:#1ebe5d}
 /* ==================== FICHA PAGINA ====================*/
+.pres-filtro{padding:5px 12px;border-radius:20px;font-size:0.78rem;font-weight:600;cursor:pointer;border:1.5px solid #E2DDD6;background:#fff;color:#8A8479;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.pres-filtro.active,.pres-filtro:hover{background:#1A1814;color:#fff;border-color:#1A1814}
+.estado-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid transparent}
+.estado-Enviado{background:#EFF6FF;color:#1E3A8A;border-color:#BFDBFE}
+.estado-Aprobado{background:#F0FDF4;color:#166534;border-color:#BBF7D0}
+.estado-Senado{background:#FEF9EE;color:#92400E;border-color:#FDE68A}
+.estado-Pagado{background:#DCFCE7;color:#166534;border-color:#86EFAC}
+.estado-Cancelado{background:#FEF2F2;color:#7F1D1D;border-color:#FECACA}
 .ficha-back-bar{background:#1A1814;padding:0.75rem 1.25rem;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
 .ficha-back-btn{background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;padding:4px;line-height:1;display:flex;align-items:center;gap:8px;font-family:"DM Sans",sans-serif;font-size:0.9rem;font-weight:500}
 .ficha-back-btn:hover{opacity:0.8}
@@ -1105,6 +1224,175 @@ window.addEventListener('popstate', function(e){
     window.scrollTo(0,0);
   }
 });
+
+// ==================== GESTOR PRESUPUESTOS ====================
+var todosPresupuestos = [];
+var filtroEstadoActual = 'Todos';
+var ESTADOS = ['Enviado','Aprobado','Señado','Pagado','Cancelado'];
+var ESTADO_CLASE = {'Enviado':'Enviado','Aprobado':'Aprobado','Señado':'Senado','Pagado':'Pagado','Cancelado':'Cancelado'};
+
+function setFiltroEstado(btn){
+  document.querySelectorAll('.pres-filtro').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  filtroEstadoActual = btn.dataset.estado;
+  renderPresupuestosFiltrados();
+}
+
+function filtrarPresupuestos(){
+  renderPresupuestosFiltrados();
+}
+
+function renderPresupuestosFiltrados(){
+  var busqueda = (document.getElementById('pres-search').value||'').toLowerCase().trim();
+  var filtered = todosPresupuestos.filter(function(entry){
+    var d = entry.data;
+    if(filtroEstadoActual !== 'Todos' && d.estado !== filtroEstadoActual) return false;
+    if(busqueda){
+      var hay = (d.proyecto||'').toLowerCase().includes(busqueda) || (d.cliente||'').toLowerCase().includes(busqueda);
+      if(!hay) return false;
+    }
+    return true;
+  });
+  var count = document.getElementById('pres-count');
+  if(count) count.textContent = filtered.length + ' de ' + todosPresupuestos.length;
+  renderListaPresupuestos(filtered);
+}
+
+function cambiarEstadoYActualizar(docId, nuevoEstado, btnEl){
+  firebase.firestore().collection('presupuestos').doc(docId).update({estado: nuevoEstado})
+    .then(function(){
+      var entry = todosPresupuestos.find(function(e){return e.id===docId;});
+      if(entry) entry.data.estado = nuevoEstado;
+      var btns = btnEl.closest('[data-estado-group]').querySelectorAll('.estado-badge');
+      btns.forEach(function(b){
+        b.style.opacity = b.dataset.est === nuevoEstado ? '1' : '0.4';
+        b.style.borderWidth = b.dataset.est === nuevoEstado ? '2px' : '1px';
+      });
+      var card = btnEl.closest('.pres-card');
+      if(card){
+        var hb = card.querySelector('.header-estado-badge');
+        if(hb){ var cls=ESTADO_CLASE[nuevoEstado]||nuevoEstado; hb.className='estado-badge header-estado-badge estado-'+cls; hb.textContent=nuevoEstado; }
+      }
+    }).catch(function(e){console.error(e);});
+}
+
+function renderListaPresupuestos(docs){
+  var lista = document.getElementById('lista-presupuestos');
+  if(!lista) return;
+  if(docs.length === 0){
+    if(todosPresupuestos.length === 0){
+      lista.innerHTML='<div style="text-align:center;padding:2.5rem 1rem">'+
+        '<div style="font-size:2.5rem;margin-bottom:0.75rem">📄</div>'+
+        '<div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:\'DM Sans\',sans-serif;margin-bottom:0.5rem">Todavia no generaste ningun presupuesto</div>'+
+        '<div style="font-size:0.82rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;margin-bottom:1.25rem">Usa la calculadora para calcular el costo y generar un presupuesto para tu cliente.</div>'+
+        '<button onclick="showPage(\'calc\',document.querySelectorAll(\'.nav-tab\')[1])" style="background:#2D6A4F;color:#fff;border:none;border-radius:10px;padding:11px 24px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif">Ir a la calculadora</button>'+
+        '</div>';
+    } else {
+      lista.innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">No hay presupuestos con ese filtro.</p>';
+    }
+    return;
+  }
+  lista.innerHTML='';
+  docs.forEach(function(entry){
+    var d=entry.data; var id=entry.id;
+    var fecha=d.fecha?d.fecha.toDate().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+    var items=d.items&&d.items.length>0?d.items:[{nombre:d.proyecto||'',precio:d.precioTotal||0}];
+    var estado=d.estado||'Enviado';
+    var estadoClase=ESTADO_CLASE[estado]||estado;
+
+    var card=document.createElement('div');
+    card.className='pres-card';
+    card.style.cssText='background:#fff;border:1px solid #E2DDD6;border-radius:12px;margin-bottom:0.75rem;overflow:hidden';
+
+    // Header
+    var header=document.createElement('div');
+    header.style.cssText='padding:1rem;display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer;user-select:none;gap:10px';
+    var hLeft=document.createElement('div');
+    hLeft.style.cssText='flex:1;min-width:0';
+    hLeft.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap">'+
+      '<span style="font-weight:600;color:#1A1814;font-size:0.9rem;font-family:\'DM Sans\',sans-serif">'+(d.proyecto||'Sin nombre')+'</span>'+
+      (d.cliente?'<span style="font-size:0.75rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">· '+d.cliente+'</span>':'')+
+      '</div><div style="font-size:0.75rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">'+fecha+' · '+fmtPeso(d.precioTotal)+'</div>';
+    var hBadge=document.createElement('span');
+    hBadge.className='estado-badge header-estado-badge estado-'+estadoClase;
+    hBadge.textContent=estado;
+    var hChev=document.createElement('span');
+    hChev.style.cssText='color:#8A8479;font-size:1.1rem;transition:transform 0.2s;flex-shrink:0;margin-top:2px';
+    hChev.textContent='▾';
+    header.appendChild(hLeft); header.appendChild(hBadge); header.appendChild(hChev);
+
+    // Detalle
+    var detalle=document.createElement('div');
+    detalle.style.cssText='display:none;border-top:1px solid #F5F2ED;padding:1rem';
+
+    // Selector estado
+    var estadoGrp=document.createElement('div');
+    estadoGrp.setAttribute('data-estado-group','1');
+    estadoGrp.style.cssText='margin-bottom:0.875rem';
+    estadoGrp.innerHTML='<div style="font-size:0.72rem;font-weight:600;color:#8A8479;font-family:\'DM Sans\',sans-serif;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Estado</div>';
+    var estadoBtns=document.createElement('div');
+    estadoBtns.style.cssText='display:flex;gap:6px;flex-wrap:wrap';
+    ESTADOS.forEach(function(est){
+      var cls=ESTADO_CLASE[est]||est;
+      var btn=document.createElement('button');
+      btn.className='estado-badge estado-'+cls;
+      btn.dataset.est=est;
+      btn.textContent=est;
+      btn.style.cssText='cursor:pointer;opacity:'+(est===estado?'1':'0.4')+';border-width:'+(est===estado?'2px':'1px');
+      btn.addEventListener('click',function(){cambiarEstadoYActualizar(id,est,this);});
+      estadoBtns.appendChild(btn);
+    });
+    estadoGrp.appendChild(estadoBtns);
+    detalle.appendChild(estadoGrp);
+
+    // Items
+    var itemsDiv=document.createElement('div');
+    itemsDiv.style.cssText='margin-bottom:0.75rem';
+    items.forEach(function(item){
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F5F2ED;font-size:0.82rem;font-family:\'DM Sans\',sans-serif';
+      row.innerHTML='<span style="color:#1A1814">'+item.nombre+'</span><span style="color:#2D6A4F;font-family:\'DM Mono\',monospace;font-weight:600">'+fmtPeso(item.precio)+'</span>';
+      itemsDiv.appendChild(row);
+    });
+    if(items.length>1){
+      var tot=document.createElement('div');
+      tot.style.cssText='display:flex;justify-content:space-between;padding:6px 0;font-size:0.88rem;font-weight:700;font-family:\'DM Sans\',sans-serif';
+      tot.innerHTML='<span>Total</span><span style="color:#2D6A4F;font-family:\'DM Mono\',monospace">'+fmtPeso(d.precioTotal)+'</span>';
+      itemsDiv.appendChild(tot);
+    }
+    detalle.appendChild(itemsDiv);
+    if(d.descripcion){var desc=document.createElement('div');desc.style.cssText='font-size:0.8rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;margin-bottom:0.75rem';desc.textContent=d.descripcion;detalle.appendChild(desc);}
+    if(d.condiciones){var cond=document.createElement('div');cond.style.cssText='font-size:0.78rem;color:#4B4640;font-family:\'DM Sans\',sans-serif;margin-bottom:0.75rem';cond.innerHTML='<b>Condiciones:</b> '+d.condiciones;detalle.appendChild(cond);}
+
+    // Botones acción
+    var acciones=document.createElement('div');
+    acciones.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin-top:0.5rem';
+    var btnPDF=document.createElement('button');
+    btnPDF.style.cssText='flex:1;min-width:120px;padding:9px;background:#1A1814;color:#fff;border:none;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px';
+    btnPDF.textContent='📄 Descargar PDF';
+    btnPDF.addEventListener('click',function(){regenerarPDF(id,d);});
+    var btnWA=document.createElement('a');
+    btnWA.style.cssText='flex:1;min-width:120px;padding:9px;background:#25D366;color:#fff;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none';
+    btnWA.textContent='💬 Enviar WA';
+    btnWA.target='_blank';
+    var waMsg='Hola! Te envio el presupuesto de *'+(d.proyecto||'tu pedido')+'* por '+fmtPeso(d.precioTotal)+'.';
+    btnWA.href='https://wa.me/'+WA+'?text='+encodeURIComponent(waMsg);
+    var btnDel=document.createElement('button');
+    btnDel.style.cssText='padding:9px 14px;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;border-radius:8px;font-size:0.82rem;cursor:pointer;font-family:\'DM Sans\',sans-serif';
+    btnDel.textContent='🗑';
+    btnDel.addEventListener('click',function(){eliminarPresupuesto(id,btnDel);});
+    acciones.appendChild(btnPDF); acciones.appendChild(btnWA); acciones.appendChild(btnDel);
+    detalle.appendChild(acciones);
+
+    header.addEventListener('click',function(){
+      var isOpen=detalle.style.display!=='none';
+      detalle.style.display=isOpen?'none':'block';
+      hChev.style.transform=isOpen?'':'rotate(180deg)';
+    });
+    card.appendChild(header); card.appendChild(detalle);
+    lista.appendChild(card);
+  });
+}
 
 // ==================== ITEMS PRESUPUESTO ====================
 var itemsPresupuesto = [];
@@ -2016,6 +2304,10 @@ document.addEventListener('input', function(e){
     <h3 style="font-size:0.88rem;color:#8A8479;border:none;padding:0;margin:1rem 0 0.75rem">Datos del presupuesto</h3>
 
     <div class="field">
+      <label>Cliente <span style="font-size:0.75rem;color:#8A8479;font-weight:400">(opcional)</span></label>
+      <input type="text" id="pdf-cliente" placeholder="Ej: Juan García, Empresa XYZ">
+    </div>
+    <div class="field">
       <label>Nombre del proyecto / pieza</label>
       <input type="text" id="pdf-proyecto" placeholder="Ej: Estatuilla personalizada - Dragón">
     </div>
@@ -2061,15 +2353,36 @@ document.addEventListener('input', function(e){
 <!-- PAGINA MI CUENTA -->
 <div class="page" id="page-cuenta">
   <div style="max-width:680px;margin:0 auto;padding:1.5rem 1rem 6rem">
-    <div id="cuenta-header" style="background:#1A1814;border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem">
-      <img id="cuenta-avatar" src="" style="width:52px;height:52px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);display:none">
-      <div>
-        <div id="cuenta-nombre" style="font-size:1.1rem;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif"></div>
-        <div id="cuenta-email" style="font-size:0.8rem;color:rgba(255,255,255,0.6);font-family:'DM Sans',sans-serif"></div>
+
+    <!-- Perfil -->
+    <div id="cuenta-header" style="background:#1A1814;border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem">
+      <img id="cuenta-avatar" src="" style="width:48px;height:48px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);display:none">
+      <div style="flex:1">
+        <div id="cuenta-nombre" style="font-size:1rem;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif"></div>
+        <div id="cuenta-email" style="font-size:0.78rem;color:rgba(255,255,255,0.5);font-family:'DM Sans',sans-serif"></div>
       </div>
-      <button onclick="doLogout()" style="margin-left:auto;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:7px 14px;font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif">Cerrar sesión</button>
+      <button onclick="doLogout()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:7px 14px;font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif">Cerrar sesión</button>
     </div>
-    <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:'DM Sans',sans-serif;margin-bottom:1rem">Mis presupuestos</div>
+
+    <!-- Título + búsqueda -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.875rem">
+      <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:'DM Sans',sans-serif">Mis presupuestos</div>
+      <div id="pres-count" style="font-size:0.78rem;color:#8A8479;font-family:'DM Sans',sans-serif"></div>
+    </div>
+
+    <!-- Búsqueda -->
+    <input id="pres-search" type="text" placeholder="Buscar por cliente o proyecto..." oninput="filtrarPresupuestos()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.88rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;margin-bottom:0.75rem">
+
+    <!-- Filtros de estado -->
+    <div id="pres-filtros" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem">
+      <button class="pres-filtro active" data-estado="Todos" onclick="setFiltroEstado(this)">Todos</button>
+      <button class="pres-filtro" data-estado="Enviado" onclick="setFiltroEstado(this)">Enviado</button>
+      <button class="pres-filtro" data-estado="Aprobado" onclick="setFiltroEstado(this)">Aprobado</button>
+      <button class="pres-filtro" data-estado="Señado" onclick="setFiltroEstado(this)">Señado</button>
+      <button class="pres-filtro" data-estado="Pagado" onclick="setFiltroEstado(this)">Pagado</button>
+      <button class="pres-filtro" data-estado="Cancelado" onclick="setFiltroEstado(this)">Cancelado</button>
+    </div>
+
     <div id="lista-presupuestos">
       <p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Cargando...</p>
     </div>
