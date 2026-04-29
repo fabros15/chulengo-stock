@@ -905,10 +905,10 @@ select:focus{border-color:#2D6A4F}
 .btn-ficha-agregar.en-carrito{background:#1A1814}
 .btn-ficha-wa{padding:13px 16px;border-radius:12px;background:#25D366;color:#fff;border:none;cursor:pointer;font-size:0.85rem;font-weight:600;font-family:"DM Sans",sans-serif;text-decoration:none;display:flex;align-items:center}
 /* ==================== CALCULADORA PAGE ====================/* ==================== CARRUSEL ==================== */
-.carousel-wrap{position:relative;width:100%;overflow:hidden;background:#1A1814;max-height:340px}
+.carousel-wrap{position:relative;width:100%;overflow:hidden;background:#1A1814;line-height:0}
 .carousel-track{display:flex;transition:transform 0.5s cubic-bezier(.4,0,.2,1);will-change:transform}
 .carousel-slide{min-width:100%;position:relative;overflow:hidden;cursor:pointer}
-.carousel-slide img{width:100%;height:280px;object-fit:cover;display:block}
+.carousel-slide img{width:100%;height:auto;display:block}
 .carousel-overlay{position:absolute;inset:0;background:linear-gradient(to right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0) 100%);display:flex;align-items:center;padding:2rem;pointer-events:none}
 .carousel-content{max-width:480px;color:#fff}
 .carousel-tag{display:inline-block;background:rgba(255,255,255,0.2);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.3);border-radius:20px;padding:3px 12px;font-size:0.72rem;font-weight:600;font-family:'DM Sans',sans-serif;margin-bottom:0.75rem;letter-spacing:0.05em;text-transform:uppercase}
@@ -924,7 +924,7 @@ select:focus{border-color:#2D6A4F}
 .carousel-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.4);border:none;cursor:pointer;padding:0;transition:all 0.2s}
 .carousel-dot.active{background:#fff;width:20px;border-radius:4px}
 @media(max-width:600px){
-  .carousel-slide img{height:200px}
+  .carousel-slide img{height:auto}
   .carousel-titulo{font-size:1.1rem}
   .carousel-desc{display:none}
   .carousel-overlay{padding:1rem}
@@ -1650,18 +1650,8 @@ function initCarrusel(){
     var img = document.createElement('img');
     img.src = slide.img; img.alt = slide.titulo;
     img.onerror = function(){ this.style.display='none'; div.style.background='linear-gradient(135deg,#1A1814 0%,#2D6A4F 100%)'; div.style.height='280px'; };
-    var overlay = document.createElement('div');
-    overlay.className = 'carousel-overlay';
-    var content = document.createElement('div');
-    content.className = 'carousel-content';
-    content.innerHTML = '<div class="carousel-tag">'+slide.tag+'</div><div class="carousel-titulo">'+slide.titulo+'</div><div class="carousel-desc">'+slide.desc+'</div>';
-    overlay.appendChild(content);
-    div.appendChild(img); div.appendChild(overlay);
-    div.addEventListener('click', (function(s){ return function(e){
-      if(!e.target.classList.contains('carousel-btn') && !e.target.classList.contains('carousel-dot')){
-        s.btnAccion();
-      }
-    }; })(slide));
+    div.appendChild(img);
+    div.addEventListener('click', (function(s){ return function(){ s.btnAccion(); }; })(slide));
     track.appendChild(div);
     var dot = document.createElement('button');
     dot.className = 'carousel-dot'+(i===0?' active':'');
