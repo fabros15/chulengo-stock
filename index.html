@@ -518,7 +518,7 @@ function generarPDF(sendWA){
   var descripcion=document.getElementById('pdf-descripcion').value;
   var cantidad=parseInt(document.getElementById('pdf-cantidad').value)||1;
   var validez=document.getElementById('pdf-validez').value||'7 días';
-  var notas=document.getElementById('pdf-notas').value;
+  var notas=document.getElementById('pdf-notas')?document.getElementById('pdf-notas').value:(document.getElementById('pdf-condiciones')?document.getElementById('pdf-condiciones').value:'');
   var precioUnit=parseFloat(document.getElementById('pdf-precio-unit').value)||0;
   var descuento=parseFloat(document.getElementById('pdf-descuento').value)||0;
   var precioOriginal=precioUnit;
@@ -880,7 +880,32 @@ select:focus{border-color:#2D6A4F}
 .btn-ficha-agregar{flex:1;padding:13px;border-radius:12px;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;border:none;background:#2D6A4F;color:#fff;transition:background 0.2s}
 .btn-ficha-agregar.en-carrito{background:#1A1814}
 .btn-ficha-wa{padding:13px 16px;border-radius:12px;background:#25D366;color:#fff;border:none;cursor:pointer;font-size:0.85rem;font-weight:600;font-family:"DM Sans",sans-serif;text-decoration:none;display:flex;align-items:center}
-/* ==================== CALCULADORA PAGE ====================/* ==================== CALCULADORA PAGE ==================== */
+/* ==================== CALCULADORA PAGE ====================/* ==================== CARRUSEL ==================== */
+.carousel-wrap{position:relative;width:100%;overflow:hidden;background:#1A1814;max-height:340px}
+.carousel-track{display:flex;transition:transform 0.5s cubic-bezier(.4,0,.2,1);will-change:transform}
+.carousel-slide{min-width:100%;position:relative;overflow:hidden}
+.carousel-slide img{width:100%;height:280px;object-fit:cover;display:block}
+.carousel-overlay{position:absolute;inset:0;background:linear-gradient(to right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0) 100%);display:flex;align-items:center;padding:2rem}
+.carousel-content{max-width:480px;color:#fff}
+.carousel-tag{display:inline-block;background:rgba(255,255,255,0.2);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.3);border-radius:20px;padding:3px 12px;font-size:0.72rem;font-weight:600;font-family:'DM Sans',sans-serif;margin-bottom:0.75rem;letter-spacing:0.05em;text-transform:uppercase}
+.carousel-titulo{font-size:1.6rem;font-weight:800;font-family:'DM Sans',sans-serif;line-height:1.2;margin-bottom:0.5rem;text-shadow:0 2px 8px rgba(0,0,0,0.3)}
+.carousel-desc{font-size:0.88rem;font-family:'DM Sans',sans-serif;opacity:0.85;margin-bottom:1.25rem;line-height:1.5}
+.carousel-cta{display:inline-block;padding:10px 22px;border-radius:10px;font-size:0.88rem;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;text-decoration:none;border:none;transition:opacity 0.2s}
+.carousel-cta:hover{opacity:0.85}
+.carousel-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.35);border:none;color:#fff;font-size:2rem;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:background 0.2s;line-height:1}
+.carousel-btn:hover{background:rgba(0,0,0,0.6)}
+.carousel-prev{left:10px}
+.carousel-next{right:10px}
+.carousel-dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10}
+.carousel-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.4);border:none;cursor:pointer;padding:0;transition:all 0.2s}
+.carousel-dot.active{background:#fff;width:20px;border-radius:4px}
+@media(max-width:600px){
+  .carousel-slide img{height:200px}
+  .carousel-titulo{font-size:1.1rem}
+  .carousel-desc{display:none}
+  .carousel-overlay{padding:1rem}
+}
+/* ==================== CARRUSEL ==================== */
 .calc-container{max-width:720px;margin:0 auto;padding:1.5rem 1rem 3rem}
 .calc-section{background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
 .calc-section h2{font-size:1rem;font-weight:600;color:#1A1814;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:2px solid #E2DDD6}
@@ -1021,6 +1046,15 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 
 <!-- ==================== STOCK PAGE ==================== -->
 <div class="page active" id="page-stock">
+
+  <!-- CARRUSEL -->
+  <div class="carousel-wrap" id="carousel-wrap">
+    <div class="carousel-track" id="carousel-track"></div>
+    <button class="carousel-btn carousel-prev" onclick="moverCarrusel(-1)">&#8249;</button>
+    <button class="carousel-btn carousel-next" onclick="moverCarrusel(1)">&#8250;</button>
+    <div class="carousel-dots" id="carousel-dots"></div>
+  </div>
+
   <div style="background:#1A1814;padding:0.5rem 1.25rem 1rem">
     <div class="promo-pill">Precio oferta disponible comprando 2 kg o más de cualquier color, material o marca</div>
   </div>
@@ -1373,6 +1407,86 @@ function calcularEstadisticas(docs){
     labels.appendChild(lbl);
   });
 }
+
+// ==================== CARRUSEL ====================
+var SLIDES = [
+  {
+    img: 'banner/banner1.jpg',
+    tag: 'Novedades',
+    titulo: 'Filamentos GST3D',
+    desc: 'Los mejores filamentos PLA, PETG y ABS. Calidad nacional, entrega en Puerto Madryn.',
+    btnTxt: 'Ver productos',
+    btnColor: '#2D6A4F',
+    btnAccion: function(){ showPage('stock', document.querySelector('.nav-tab')); }
+  },
+  {
+    img: 'banner/banner2.jpg',
+    tag: 'Oferta',
+    titulo: '2 kg o mas = precio especial',
+    desc: 'Comprando 2 kg o mas de cualquier filamento accedes automaticamente al precio oferta.',
+    btnTxt: 'Ver precios',
+    btnColor: '#1D4ED8',
+    btnAccion: function(){ showPage('stock', document.querySelector('.nav-tab')); }
+  },
+  {
+    img: 'banner/banner3.jpg',
+    tag: 'Servicio',
+    titulo: 'Calculadora de costos 3D',
+    desc: 'Calcula el costo exacto de tu impresion y genera un presupuesto profesional en PDF.',
+    btnTxt: 'Ir a la calculadora',
+    btnColor: '#7C3AED',
+    btnAccion: function(){ showPage('calc', document.querySelectorAll('.nav-tab')[1]); }
+  }
+];
+
+var carruselIdx = 0;
+var carruselTimer = null;
+
+function initCarrusel(){
+  var track = document.getElementById('carousel-track');
+  var dots = document.getElementById('carousel-dots');
+  if(!track) return;
+  track.innerHTML = ''; dots.innerHTML = '';
+  SLIDES.forEach(function(slide, i){
+    var div = document.createElement('div');
+    div.className = 'carousel-slide';
+    var img = document.createElement('img');
+    img.src = slide.img; img.alt = slide.titulo;
+    img.onerror = function(){ this.style.display='none'; div.style.background='linear-gradient(135deg,#1A1814 0%,#2D6A4F 100%)'; div.style.height='280px'; };
+    var overlay = document.createElement('div');
+    overlay.className = 'carousel-overlay';
+    var content = document.createElement('div');
+    content.className = 'carousel-content';
+    content.innerHTML = '<div class="carousel-tag">'+slide.tag+'</div><div class="carousel-titulo">'+slide.titulo+'</div><div class="carousel-desc">'+slide.desc+'</div>';
+    var btn = document.createElement('button');
+    btn.className = 'carousel-cta';
+    btn.style.background = slide.btnColor;
+    btn.style.color = '#fff';
+    btn.textContent = slide.btnTxt;
+    btn.onclick = slide.btnAccion;
+    content.appendChild(btn); overlay.appendChild(content);
+    div.appendChild(img); div.appendChild(overlay);
+    track.appendChild(div);
+    var dot = document.createElement('button');
+    dot.className = 'carousel-dot'+(i===0?' active':'');
+    dot.onclick = (function(idx){ return function(){ irASlide(idx); }; })(i);
+    dots.appendChild(dot);
+  });
+  iniciarTimerCarrusel();
+}
+
+function irASlide(idx){
+  carruselIdx = idx;
+  document.getElementById('carousel-track').style.transform = 'translateX(-'+idx+'00%)';
+  document.querySelectorAll('.carousel-dot').forEach(function(d,i){ d.className='carousel-dot'+(i===idx?' active':''); });
+  reiniciarTimerCarrusel();
+}
+
+function moverCarrusel(dir){ irASlide((carruselIdx+dir+SLIDES.length)%SLIDES.length); }
+function iniciarTimerCarrusel(){ carruselTimer=setInterval(function(){moverCarrusel(1);},5000); }
+function reiniciarTimerCarrusel(){ clearInterval(carruselTimer); iniciarTimerCarrusel(); }
+
+document.addEventListener('DOMContentLoaded', function(){ initCarrusel(); });
 
 // ==================== GESTOR PRESUPUESTOS ====================
 var todosPresupuestos = [];
