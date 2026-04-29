@@ -643,8 +643,29 @@ function generarPDF(sendWA){
   // Table rows — multiples items
   var rowY=tableY+9;
   var items = itemsPresupuesto.length > 0 ? itemsPresupuesto : [{nombre: proyecto, precio: precioTotal}];
+  
+  // Si el usuario cambió el precio total, redistribuir proporcionalmente entre los ítems
+  var sumaOriginal = items.reduce(function(s,i){return s+i.precio;}, 0);
+  var precioManual = parseFloat(document.getElementById('pdf-precio-unit').value)||0;
+  var precioSinDesc = descuento > 0 ? Math.round(precioManual / (1 - descuento/100)) : precioManual;
+  var itemsAjustados = items;
+  if(sumaOriginal > 0 && Math.abs(precioSinDesc - sumaOriginal) > 1){
+    // Redistribuir proporcionalmente
+    var factor = precioSinDesc / sumaOriginal;
+    var acumulado = 0;
+    itemsAjustados = items.map(function(item, idx){
+      if(idx === items.length - 1){
+        // El último ítem absorbe el redondeo para que la suma sea exacta
+        return {nombre: item.nombre, precio: precioSinDesc - acumulado};
+      }
+      var nuevoPrecio = Math.round(item.precio * factor);
+      acumulado += nuevoPrecio;
+      return {nombre: item.nombre, precio: nuevoPrecio};
+    });
+  }
+  
   var grandTotal = 0;
-  items.forEach(function(item, idx){
+  itemsAjustados.forEach(function(item, idx){
     if(idx%2===0){ doc.setFillColor(248,248,248); } else { doc.setFillColor(255,255,255); }
     doc.rect(14,rowY,w-28,10,'F');
     doc.setTextColor(30,30,30);
