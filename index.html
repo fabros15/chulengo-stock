@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function(){
   firebase.auth().onAuthStateChanged(function(user){
     window.currentUser = user;
     document.getElementById('app').style.display='block';
+    initCarrusel();
     var btnSalir = document.getElementById('btn-salir');
     var btnEntrar = document.getElementById('btn-entrar');
     var tabCuenta = document.getElementById('tab-cuenta');
