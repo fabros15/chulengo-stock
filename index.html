@@ -42,6 +42,8 @@ document.addEventListener('DOMContentLoaded', function(){
       var modal = document.getElementById('google-login-modal');
       if(modal) modal.style.display='none';
       if(window._pendingPDF){ window._pendingPDF=false; abrirPDFModal(); }
+      // Cargar favoritos y filamentos propios
+      cargarFavoritosEnSelect();
     } else {
       if(btnSalir) btnSalir.style.display='none';
       if(btnEntrar) btnEntrar.style.display='flex';
@@ -904,9 +906,9 @@ select:focus{border-color:#2D6A4F}
 /* ==================== CALCULADORA PAGE ====================/* ==================== CARRUSEL ==================== */
 .carousel-wrap{position:relative;width:100%;overflow:hidden;background:#1A1814;max-height:340px}
 .carousel-track{display:flex;transition:transform 0.5s cubic-bezier(.4,0,.2,1);will-change:transform}
-.carousel-slide{min-width:100%;position:relative;overflow:hidden}
+.carousel-slide{min-width:100%;position:relative;overflow:hidden;cursor:pointer}
 .carousel-slide img{width:100%;height:280px;object-fit:cover;display:block}
-.carousel-overlay{position:absolute;inset:0;background:linear-gradient(to right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0) 100%);display:flex;align-items:center;padding:2rem}
+.carousel-overlay{position:absolute;inset:0;background:linear-gradient(to right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0) 100%);display:flex;align-items:center;padding:2rem;pointer-events:none}
 .carousel-content{max-width:480px;color:#fff}
 .carousel-tag{display:inline-block;background:rgba(255,255,255,0.2);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.3);border-radius:20px;padding:3px 12px;font-size:0.72rem;font-weight:600;font-family:'DM Sans',sans-serif;margin-bottom:0.75rem;letter-spacing:0.05em;text-transform:uppercase}
 .carousel-titulo{font-size:1.6rem;font-weight:800;font-family:'DM Sans',sans-serif;line-height:1.2;margin-bottom:0.5rem;text-shadow:0 2px 8px rgba(0,0,0,0.3)}
@@ -1108,11 +1110,19 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
         <label>Filamento</label>
         <select id="sel-material" onchange="onMatChange()">
           <option value="">— Seleccioná un filamento —</option>
+          <optgroup label="⭐ Favoritos" id="optgroup-favoritos" style="display:none">
+          </optgroup>
+          <optgroup label="🎨 Mis filamentos" id="optgroup-propios" style="display:none">
+          </optgroup>
           <optgroup label="Filamentos Chulengo (precio oferta)" id="optgroup-filamentos">
             <option disabled>Cargando...</option>
           </optgroup>
-          <option value="custom">Otro filamento (ingresar precio manualmente)</option>
+          <option value="custom">+ Otro filamento (precio manual)</option>
         </select>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button id="btn-fav-fil" onclick="toggleFavoritoFilamento()" style="display:none;flex:1;padding:6px 10px;background:#FEF9EE;border:1px solid #FDE68A;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;color:#92400E">☆ Guardar en favoritos</button>
+          <button onclick="abrirModalFilamentoPropio()" style="flex:1;padding:6px 10px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;color:#4B4640">+ Agregar mi filamento</button>
+        </div>
       </div>
       <div class="field" id="campo-custom-mat" style="display:none">
         <label>Precio del filamento <span class="label-hint">$/kg</span></label>
@@ -1138,7 +1148,22 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
         <label>Seleccioná la impresora</label>
         <select id="sel-imp" onchange="onImpChange()">
           <option value="">— Seleccioná una impresora —</option>
-          <optgroup label="Impresoras">
+          <optgroup label="Bambu Lab">
+            <option value="1.72" selected>Bambu Lab A1 — $1.72/min</option>
+            <option value="2.89">Bambu Lab A1 Combo — $2.89/min</option>
+            <option value="1.25">Bambu Lab A1 Mini — $1.25/min</option>
+            <option value="2.03">Bambu Lab A1 Mini Combo — $2.03/min</option>
+          </optgroup>
+          <optgroup label="Creality">
+            <option value="0.96">Creality Ender 3 — $0.96/min</option>
+          </optgroup>
+          <optgroup label="Flashforge">
+            <option value="1.93">Flashforge AD5X — $1.93/min</option>
+          </optgroup>
+          <optgroup label="Snapmaker">
+            <option value="6.75">Snapmaker U1 — $6.75/min</option>
+          </optgroup>
+          <optgroup label="Otras">
             <option value="1.45">Trimaker — $1.45/min</option>
             <option value="0.39">Hellbot Magna — $0.39/min</option>
             <option value="5.79">Creality K2 Plus Combo — $5.79/min</option>
@@ -1429,34 +1454,183 @@ function calcularEstadisticas(docs){
   });
 }
 
+// ==================== FAVORITOS Y FILAMENTOS PROPIOS ====================
+var filamentosFavoritos = [];
+var filamentosPropios = [];
+
+function cargarFavoritosEnSelect(){
+  if(!window.currentUser) return;
+  firebase.firestore().collection('usuarios').doc(window.currentUser.uid).get()
+    .then(function(doc){
+      if(!doc.exists) return;
+      var data = doc.data();
+      filamentosFavoritos = data.filamentosFavoritos || [];
+      filamentosPropios = data.filamentosPropios || [];
+      renderOptgroupFavoritos();
+      renderOptgroupPropios();
+    }).catch(function(){});
+}
+
+function renderOptgroupFavoritos(){
+  var og = document.getElementById('optgroup-favoritos');
+  if(!og) return;
+  og.innerHTML='';
+  if(filamentosFavoritos.length === 0){ og.style.display='none'; return; }
+  og.style.display='';
+  // Quitar el atributo style display para que se muestre (optgroup no respeta display en algunos browsers)
+  og.removeAttribute('style');
+  filamentosFavoritos.forEach(function(f){
+    var o=document.createElement('option');
+    o.value=f.precio;
+    o.textContent='⭐ '+f.nombre+' — '+fmtPeso(f.precio)+'/kg';
+    o.dataset.favId=f.id;
+    og.appendChild(o);
+  });
+}
+
+function renderOptgroupPropios(){
+  var og = document.getElementById('optgroup-propios');
+  if(!og) return;
+  og.innerHTML='';
+  if(filamentosPropios.length === 0){ og.removeAttribute('style'); og.style.display='none'; return; }
+  og.removeAttribute('style');
+  filamentosPropios.forEach(function(f){
+    var o=document.createElement('option');
+    o.value=f.precio;
+    o.textContent='🎨 '+f.nombre+' — '+fmtPeso(f.precio)+'/kg';
+    o.dataset.propioId=f.id;
+    og.appendChild(o);
+  });
+}
+
+function toggleFavoritoFilamento(){
+  if(!window.currentUser){
+    document.getElementById('google-login-modal').style.display='flex';
+    return;
+  }
+  var sel = document.getElementById('sel-material');
+  var opt = sel.options[sel.selectedIndex];
+  if(!opt || !opt.value || opt.value==='custom' || opt.value==='') return;
+
+  var nombre = opt.textContent.replace('⭐ ','').replace('🎨 ','').split(' —')[0].trim();
+  var precio = Number(opt.value);
+  var id = nombre+'-'+precio;
+
+  // Verificar si ya es favorito
+  var yaFav = filamentosFavoritos.findIndex(function(f){return f.id===id;});
+  if(yaFav >= 0){
+    filamentosFavoritos.splice(yaFav, 1);
+    document.getElementById('btn-fav-fil').textContent='☆ Guardar en favoritos';
+    document.getElementById('btn-fav-fil').style.background='#FEF9EE';
+  } else {
+    filamentosFavoritos.push({id:id, nombre:nombre, precio:precio});
+    document.getElementById('btn-fav-fil').textContent='★ En favoritos';
+    document.getElementById('btn-fav-fil').style.background='#FDE68A';
+  }
+  renderOptgroupFavoritos();
+  guardarPrefsUsuario();
+}
+
+function actualizarBtnFavorito(){
+  var btn = document.getElementById('btn-fav-fil');
+  if(!btn || !window.currentUser) return;
+  var sel = document.getElementById('sel-material');
+  var opt = sel.options[sel.selectedIndex];
+  if(!opt || !opt.value || opt.value==='custom' || opt.value===''){
+    btn.style.display='none'; return;
+  }
+  btn.style.display='flex';
+  var nombre = opt.textContent.replace('⭐ ','').replace('🎨 ','').split(' —')[0].trim();
+  var precio = Number(opt.value);
+  var id = nombre+'-'+precio;
+  var yaFav = filamentosFavoritos.findIndex(function(f){return f.id===id;}) >= 0;
+  btn.textContent = yaFav ? '★ En favoritos' : '☆ Guardar en favoritos';
+  btn.style.background = yaFav ? '#FDE68A' : '#FEF9EE';
+}
+
+function abrirModalFilamentoPropio(){
+  if(!window.currentUser){
+    document.getElementById('google-login-modal').style.display='flex';
+    return;
+  }
+  document.getElementById('modal-fil-propio').style.display='flex';
+  document.getElementById('fil-propio-nombre').value='';
+  document.getElementById('fil-propio-precio').value='';
+  document.getElementById('fil-propio-err').textContent='';
+}
+
+function cerrarModalFilamentoPropio(){
+  document.getElementById('modal-fil-propio').style.display='none';
+}
+
+function guardarFilamentoPropio(){
+  var nombre = document.getElementById('fil-propio-nombre').value.trim();
+  var precio = parseInt(document.getElementById('fil-propio-precio').value)||0;
+  var err = document.getElementById('fil-propio-err');
+  if(!nombre){ err.textContent='Escribí un nombre.'; return; }
+  if(precio <= 0){ err.textContent='Ingresá un precio válido.'; return; }
+
+  var id = 'propio-'+Date.now();
+  filamentosPropios.push({id:id, nombre:nombre, precio:precio});
+  renderOptgroupPropios();
+  guardarPrefsUsuario();
+  cerrarModalFilamentoPropio();
+
+  // Seleccionarlo automáticamente
+  var sel = document.getElementById('sel-material');
+  sel.value = precio;
+  // Si no existe esa opción exacta, crear una temporal
+  var found = false;
+  for(var i=0;i<sel.options.length;i++){
+    if(sel.options[i].value==precio && sel.options[i].textContent.includes(nombre)){
+      sel.selectedIndex=i; found=true; break;
+    }
+  }
+  onMatChange();
+}
+
+function guardarPrefsUsuario(){
+  if(!window.currentUser) return;
+  firebase.firestore().collection('usuarios').doc(window.currentUser.uid).set({
+    filamentosFavoritos: filamentosFavoritos,
+    filamentosPropios: filamentosPropios
+  }, {merge:true}).catch(function(){});
+}
+
 // ==================== CARRUSEL ====================
 var SLIDES = [
   {
-    img: 'banner/banner1.jpg',
-    tag: 'Novedades',
-    titulo: 'Filamentos GST3D',
-    desc: 'Los mejores filamentos PLA, PETG y ABS. Calidad nacional, entrega en Puerto Madryn.',
-    btnTxt: 'Ver productos',
-    btnColor: '#2D6A4F',
-    btnAccion: function(){ showPage('stock', document.querySelector('.nav-tab')); }
+    img: 'banner/banner3.png',
+    tag: 'Servicio',
+    titulo: 'Calculadora de costos 3D',
+    desc: 'Calcula el costo exacto de tu impresion y genera un presupuesto profesional en PDF.',
+    btnTxt: 'Ir a la calculadora',
+    btnColor: '#1A1814',
+    btnAccion: function(){ showPage('calc', document.querySelectorAll('.nav-tab')[1]); }
   },
   {
-    img: 'banner/banner2.jpg',
+    img: 'banner/banner1.png',
+    tag: 'Novedades',
+    titulo: 'Dorado Silk GST3D',
+    desc: 'PLA+ Sedoso con acabado metalico premium. Black Edition, hecho en Argentina.',
+    btnTxt: 'Ver producto',
+    btnColor: '#D4AF37',
+    btnAccion: function(){
+      showPage('stock', document.querySelector('.nav-tab'));
+      setTimeout(function(){
+        var search = document.getElementById('search');
+        if(search){ search.value = 'Dorado Silk GST3D'; search.dispatchEvent(new Event('input')); }
+      }, 100);
+    }
+  },
+  {
+    img: 'banner/banner2.png',
     tag: 'Oferta',
     titulo: '2 kg o mas = precio especial',
     desc: 'Comprando 2 kg o mas de cualquier filamento accedes automaticamente al precio oferta.',
     btnTxt: 'Ver precios',
     btnColor: '#1D4ED8',
     btnAccion: function(){ showPage('stock', document.querySelector('.nav-tab')); }
-  },
-  {
-    img: 'banner/banner3.jpg',
-    tag: 'Servicio',
-    titulo: 'Calculadora de costos 3D',
-    desc: 'Calcula el costo exacto de tu impresion y genera un presupuesto profesional en PDF.',
-    btnTxt: 'Ir a la calculadora',
-    btnColor: '#7C3AED',
-    btnAccion: function(){ showPage('calc', document.querySelectorAll('.nav-tab')[1]); }
   }
 ];
 
@@ -1469,8 +1643,11 @@ function initCarrusel(){
   if(!track) return;
   track.innerHTML = ''; dots.innerHTML = '';
   SLIDES.forEach(function(slide, i){
-    var div = document.createElement('div');
     div.className = 'carousel-slide';
+    div.onclick = slide.btnAccion;
+
+    div.style.cursor = 'pointer';
+    div.addEventListener('click', slide.btnAccion);
     var img = document.createElement('img');
     img.src = slide.img; img.alt = slide.titulo;
     img.onerror = function(){ this.style.display='none'; div.style.background='linear-gradient(135deg,#1A1814 0%,#2D6A4F 100%)'; div.style.height='280px'; };
@@ -1479,14 +1656,14 @@ function initCarrusel(){
     var content = document.createElement('div');
     content.className = 'carousel-content';
     content.innerHTML = '<div class="carousel-tag">'+slide.tag+'</div><div class="carousel-titulo">'+slide.titulo+'</div><div class="carousel-desc">'+slide.desc+'</div>';
-    var btn = document.createElement('button');
-    btn.className = 'carousel-cta';
-    btn.style.background = slide.btnColor;
-    btn.style.color = '#fff';
-    btn.textContent = slide.btnTxt;
-    btn.onclick = slide.btnAccion;
-    content.appendChild(btn); overlay.appendChild(content);
+    overlay.appendChild(content);
     div.appendChild(img); div.appendChild(overlay);
+    // Click en toda la imagen excepto los botones de navegación
+    div.addEventListener('click', function(e){
+      if(!e.target.classList.contains('carousel-btn') && !e.target.classList.contains('carousel-dot')){
+        slide.btnAccion();
+      }
+    });
     track.appendChild(div);
     var dot = document.createElement('button');
     dot.className = 'carousel-dot'+(i===0?' active':'');
@@ -2304,6 +2481,7 @@ function procesarDatos(json){
     renderCarritoBody();
   }
   poblarSelectFilamentos();
+  onImpChange(); // preseleccionar Bambu Lab A1
   ['search','fil-material','fil-marca','fil-stock'].forEach(function(id){
     document.getElementById(id).addEventListener('input',render);
   });
@@ -2312,18 +2490,16 @@ function procesarDatos(json){
 function poblarSelectFilamentos(){
   var optgroup=document.getElementById('optgroup-filamentos');
   if(!optgroup)return;
-  // Agrupar por material+marca, tomar precio oferta (o lista si no hay oferta)
   var vistos={};
   var opciones=[];
   DATA.forEach(function(d){
-    // Solo filamentos con presentación en kg
     if(!(d.present||'').toLowerCase().includes('kg'))return;
     var precio=Number(d.oferta)>0&&Number(d.oferta)!==Number(d.lista)?Number(d.oferta):Number(d.lista);
     if(!precio)return;
     var key=d.material+'-'+d.marca+'-'+precio;
     if(vistos[key])return;
     vistos[key]=1;
-    opciones.push({label:d.material+' '+d.marca+' — '+fmtPeso(precio)+'/kg', valor:precio});
+    opciones.push({label:d.material+' '+d.marca+' — '+fmtPeso(precio)+'/kg', valor:precio, material:d.material, marca:d.marca});
   });
   opciones.sort(function(a,b){return a.label.localeCompare(b.label);});
   optgroup.innerHTML='';
@@ -2331,8 +2507,24 @@ function poblarSelectFilamentos(){
     var o=document.createElement('option');
     o.value=op.valor;
     o.textContent=op.label;
+    o.dataset.material=op.material;
+    o.dataset.marca=op.marca;
     optgroup.appendChild(o);
   });
+
+  // Preseleccionar PLA GST3D
+  var opts=optgroup.querySelectorAll('option');
+  for(var i=0;i<opts.length;i++){
+    var txt=opts[i].textContent.toLowerCase();
+    if(txt.includes('pla') && txt.includes('gst')){
+      document.getElementById('sel-material').value=opts[i].value;
+      onMatChange();
+      break;
+    }
+  }
+
+  // Cargar favoritos si hay usuario
+  cargarFavoritosEnSelect();
 }
 
 function cargarDesdeAPI(){
@@ -2383,6 +2575,7 @@ function onMatChange(){
   var cc=document.getElementById('campo-custom-mat');
   if(v==='custom'){cc.style.display='block';document.getElementById('precio-fil').value='';}
   else{cc.style.display='none';document.getElementById('precio-fil').value=v;}
+  actualizarBtnFavorito();
   calcular();
 }
 function onImpChange(){
@@ -2518,6 +2711,29 @@ document.addEventListener('input', function(e){
       Continuar con Google
     </button>
     <div style="font-size:0.75rem;color:#B0A898;font-family:'DM Sans',sans-serif">Es gratis y tarda 5 segundos</div>
+  </div>
+</div>
+
+<!-- MODAL FILAMENTO PROPIO -->
+<div id="modal-fil-propio" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;align-items:center;justify-content:center;padding:1.5rem">
+  <div style="background:#fff;border-radius:16px;padding:1.5rem;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+      <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:'DM Sans',sans-serif">Agregar mi filamento</div>
+      <button onclick="cerrarModalFilamentoPropio()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#8A8479">✕</button>
+    </div>
+    <div style="margin-bottom:0.875rem">
+      <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Nombre del filamento</label>
+      <input id="fil-propio-nombre" type="text" placeholder="Ej: PLA+ Bambu Lab" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+    </div>
+    <div style="margin-bottom:1.25rem">
+      <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Precio por kg</label>
+      <div style="position:relative">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.88rem">$</span>
+        <input id="fil-propio-precio" type="number" min="0" placeholder="Ej: 28000" style="width:100%;padding:10px 12px 10px 24px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="fil-propio-err" style="color:#DC2626;font-size:0.78rem;font-family:'DM Sans',sans-serif;margin-bottom:0.75rem;min-height:1rem"></div>
+    <button onclick="guardarFilamentoPropio()" style="width:100%;padding:11px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer">Guardar filamento</button>
   </div>
 </div>
 
