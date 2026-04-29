@@ -727,12 +727,12 @@ function generarPDF(sendWA){
     validez: document.getElementById('pdf-validez').value||'',
     condiciones: document.getElementById('pdf-notas')?document.getElementById('pdf-notas').value||'':'',
     items: itemsPresupuesto.length > 0 ? JSON.parse(JSON.stringify(itemsPresupuesto)) : [{nombre:proyecto, precio:precioTotal}],
-    empresa: document.getElementById('conf-empresa').value||'',
-    tel: document.getElementById('conf-tel').value||'',
-    email2: document.getElementById('conf-email').value||'',
-    web: document.getElementById('conf-web').value||'',
-    colorPrimario: document.getElementById('conf-color1').value||'',
-    colorSecundario: document.getElementById('conf-color2').value||''
+    empresa: document.getElementById('pdf-empresa').value||'',
+    tel: document.getElementById('pdf-tel').value||'',
+    email2: document.getElementById('pdf-email').value||'',
+    web: document.getElementById('pdf-web').value||'',
+    colorPrimario: document.getElementById('pdf-color1').value||'',
+    colorSecundario: document.getElementById('pdf-color2').value||''
   });
 
   if(sendWA){
