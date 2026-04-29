@@ -1647,7 +1647,6 @@ function initCarrusel(){
     var div = document.createElement('div');
     div.className = 'carousel-slide';
     div.style.cursor = 'pointer';
-    div.addEventListener('click', slide.btnAccion);
     var img = document.createElement('img');
     img.src = slide.img; img.alt = slide.titulo;
     img.onerror = function(){ this.style.display='none'; div.style.background='linear-gradient(135deg,#1A1814 0%,#2D6A4F 100%)'; div.style.height='280px'; };
@@ -1658,12 +1657,11 @@ function initCarrusel(){
     content.innerHTML = '<div class="carousel-tag">'+slide.tag+'</div><div class="carousel-titulo">'+slide.titulo+'</div><div class="carousel-desc">'+slide.desc+'</div>';
     overlay.appendChild(content);
     div.appendChild(img); div.appendChild(overlay);
-    // Click en toda la imagen excepto los botones de navegación
-    div.addEventListener('click', function(e){
+    div.addEventListener('click', (function(s){ return function(e){
       if(!e.target.classList.contains('carousel-btn') && !e.target.classList.contains('carousel-dot')){
-        slide.btnAccion();
+        s.btnAccion();
       }
-    });
+    }; })(slide));
     track.appendChild(div);
     var dot = document.createElement('button');
     dot.className = 'carousel-dot'+(i===0?' active':'');
@@ -2966,4 +2964,3 @@ document.addEventListener('input', function(e){
 </div><!-- fin app -->
 </body>
 </html>
-
