@@ -1684,7 +1684,12 @@ function moverCarrusel(dir){ irASlide((carruselIdx+dir+SLIDES.length)%SLIDES.len
 function iniciarTimerCarrusel(){ carruselTimer=setInterval(function(){moverCarrusel(1);},5000); }
 function reiniciarTimerCarrusel(){ clearInterval(carruselTimer); iniciarTimerCarrusel(); }
 
-document.addEventListener('DOMContentLoaded', function(){ initCarrusel(); });
+// Init carrusel — esperar a que el DOM esté completamente listo
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', function(){ initCarrusel(); });
+} else {
+  initCarrusel();
+}
 
 // ==================== GESTOR PRESUPUESTOS ====================
 var todosPresupuestos = [];
