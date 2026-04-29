@@ -1644,9 +1644,8 @@ function initCarrusel(){
   if(!track) return;
   track.innerHTML = ''; dots.innerHTML = '';
   SLIDES.forEach(function(slide, i){
+    var div = document.createElement('div');
     div.className = 'carousel-slide';
-    div.onclick = slide.btnAccion;
-
     div.style.cursor = 'pointer';
     div.addEventListener('click', slide.btnAccion);
     var img = document.createElement('img');
@@ -2967,3 +2966,4 @@ document.addEventListener('input', function(e){
 </div><!-- fin app -->
 </body>
 </html>
+
