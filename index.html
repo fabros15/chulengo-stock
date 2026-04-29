@@ -725,7 +725,7 @@ function generarPDF(sendWA){
     precioUnit: precioUnit,
     precioTotal: precioTotal,
     validez: document.getElementById('pdf-validez').value||'',
-    condiciones: document.getElementById('pdf-condiciones').value||'',
+    condiciones: document.getElementById('pdf-notas')?document.getElementById('pdf-notas').value||'':'',
     items: itemsPresupuesto.length > 0 ? JSON.parse(JSON.stringify(itemsPresupuesto)) : [{nombre:proyecto, precio:precioTotal}],
     empresa: document.getElementById('conf-empresa').value||'',
     tel: document.getElementById('conf-tel').value||'',
