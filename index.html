@@ -1645,15 +1645,16 @@ function abrirModalVenta(ventaId, datos){
   ventaEditandoId = ventaId || null;
   var titulo = document.getElementById('modal-venta-titulo');
   titulo.textContent = ventaId ? 'Editar venta' : 'Nueva venta';
-
-  // Fecha de hoy por defecto
   var hoy = new Date().toISOString().split('T')[0];
   document.getElementById('venta-fecha').value = datos ? datos.fecha : hoy;
+  document.getElementById('venta-factura').value = datos ? (datos.factura||'') : '';
   document.getElementById('venta-cliente').value = datos ? datos.cliente : '';
-  document.getElementById('venta-producto').value = datos ? datos.producto : '';
+  document.getElementById('venta-producto').value = datos ? (datos.producto||'') : '';
   document.getElementById('venta-monto').value = datos ? datos.monto : '';
-  document.getElementById('venta-costo').value = datos ? datos.costo : '';
-  document.getElementById('venta-metodo').value = datos ? datos.metodo : 'Efectivo';
+  document.getElementById('venta-flete').value = datos ? (datos.flete||0) : '';
+  document.getElementById('venta-costo').value = datos ? (datos.costo||0) : '';
+  document.getElementById('venta-metodo').value = datos ? (datos.metodo||'Efectivo') : 'Efectivo';
+  document.getElementById('venta-notas').value = datos ? (datos.notas||'') : '';
   document.getElementById('venta-err').textContent = '';
   document.getElementById('modal-venta').style.display='flex';
 }
@@ -1668,12 +1669,15 @@ function guardarVenta(){
   var cliente = document.getElementById('venta-cliente').value.trim();
   var producto = document.getElementById('venta-producto').value.trim();
   var monto = parseFloat(document.getElementById('venta-monto').value)||0;
+  var flete = parseFloat(document.getElementById('venta-flete').value)||0;
   var costo = parseFloat(document.getElementById('venta-costo').value)||0;
   var metodo = document.getElementById('venta-metodo').value;
   var fecha = document.getElementById('venta-fecha').value;
+  var factura = document.getElementById('venta-factura').value.trim();
+  var notas = document.getElementById('venta-notas').value.trim();
   var err = document.getElementById('venta-err');
 
-  if(!producto){ err.textContent='Ingresá un producto.'; return; }
+  if(!cliente){ err.textContent='Ingresá un cliente.'; return; }
   if(monto <= 0){ err.textContent='Ingresá un monto válido.'; return; }
 
   var btn = document.getElementById('venta-guardar-btn');
@@ -1681,13 +1685,16 @@ function guardarVenta(){
 
   var datos = {
     uid: window.currentUser.uid,
+    fecha: fecha,
+    factura: factura,
     cliente: cliente,
     producto: producto,
+    metodo: metodo,
     monto: monto,
+    flete: flete,
     costo: costo,
     ganancia: monto - costo,
-    metodo: metodo,
-    fecha: fecha,
+    notas: notas,
     fechaTs: firebase.firestore.FieldValue.serverTimestamp()
   };
 
@@ -1822,32 +1829,38 @@ function renderListaVentas(ventas){
   lista.innerHTML='';
   ventas.forEach(function(entry){
     var d=entry.data; var id=entry.id;
-    var ganancia=d.ganancia||(d.monto-d.costo)||0;
+    var ganancia=d.monto-(d.costo||0);
     var color=METODOS_COLORES[d.metodo]||'#8A8479';
 
     var card=document.createElement('div');
     card.style.cssText='background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:0.75rem';
     card.innerHTML=
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'+
         '<div style="flex:1">'+
-          '<div style="font-weight:600;color:#1A1814;font-size:0.9rem;font-family:\'DM Sans\',sans-serif">'+(d.producto||'Sin nombre')+'</div>'+
-          (d.cliente?'<div style="font-size:0.75rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">'+d.cliente+'</div>':'')+
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px">'+
+            '<span style="font-weight:600;color:#1A1814;font-size:0.9rem;font-family:\'DM Sans\',sans-serif">'+(d.cliente||'Sin cliente')+'</span>'+
+            (d.factura?'<span style="font-size:0.72rem;color:#8A8479;font-family:\'DM Mono\',monospace;background:#F5F2ED;padding:2px 6px;border-radius:4px">'+d.factura+'</span>':'')+
+          '</div>'+
+          (d.producto?'<div style="font-size:0.78rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">'+d.producto+'</div>':'')+
         '</div>'+
-        '<div style="text-align:right">'+
+        '<div style="text-align:right;flex-shrink:0">'+
           '<div style="font-size:0.95rem;font-weight:700;color:#2D6A4F;font-family:\'DM Mono\',monospace">'+fmtPeso(d.monto)+'</div>'+
           '<div style="font-size:0.72rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">'+d.fecha+'</div>'+
         '</div>'+
       '</div>'+
-      '<div style="display:flex;justify-content:space-between;align-items:center">'+
-        '<div style="display:flex;gap:8px;align-items:center">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">'+
+        '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
           '<span style="background:'+color+'20;color:'+color+';border:1px solid '+color+'40;border-radius:6px;padding:2px 8px;font-size:0.72rem;font-weight:600;font-family:\'DM Sans\',sans-serif">'+d.metodo+'</span>'+
-          (d.costo?'<span style="font-size:0.75rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">Ganancia: '+fmtPeso(ganancia)+'</span>':'')+
+          (d.flete?'<span style="font-size:0.75rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">Flete: '+fmtPeso(d.flete)+'</span>':'')+
+          (d.costo?'<span style="font-size:0.75rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">Gan: '+fmtPeso(ganancia)+'</span>':'')+
         '</div>'+
         '<div style="display:flex;gap:6px">'+
           '<button onclick="editarVenta(\''+id+'\')" style="padding:5px 10px;background:#F5F2ED;border:none;border-radius:6px;font-size:0.75rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;color:#4B4640">✏️</button>'+
           '<button onclick="eliminarVenta(\''+id+'\')" style="padding:5px 10px;background:#FEF2F2;border:none;border-radius:6px;font-size:0.75rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;color:#DC2626">🗑</button>'+
         '</div>'+
-      '</div>';
+      '</div>'+
+      (d.notas?'<div style="margin-top:6px;font-size:0.75rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;border-top:1px solid #F5F2ED;padding-top:6px">'+d.notas+'</div>':'')+
+    '';
     lista.appendChild(card);
   });
 }
@@ -3305,44 +3318,68 @@ document.addEventListener('input', function(e){
       <button onclick="cerrarModalVenta()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#8A8479">✕</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:0.875rem">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Fecha</label>
+          <input id="venta-fecha" type="date" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Nº Factura <span style="font-weight:400;color:#8A8479">(opcional)</span></label>
+          <input id="venta-factura" type="text" placeholder="Ej: V 2026.05.03" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+        </div>
+      </div>
+
       <div>
         <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Cliente</label>
         <input id="venta-cliente" type="text" placeholder="Nombre del cliente" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
       </div>
+
       <div>
         <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Producto / Descripción</label>
         <input id="venta-producto" type="text" placeholder="Ej: Estatuilla dragón PLA" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+      <div>
+        <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Forma de pago</label>
+        <select id="venta-metodo" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;background:#fff">
+          <option value="Efectivo">💵 Efectivo</option>
+          <option value="Transferencia MP">📱 Transferencia MP</option>
+          <option value="Transferencia">🏦 Transferencia bancaria</option>
+          <option value="Tarjeta">💳 Tarjeta</option>
+          <option value="Cripto">₿ Cripto</option>
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <div>
-          <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Monto cobrado</label>
+          <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Total</label>
           <div style="position:relative">
             <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.85rem">$</span>
             <input id="venta-monto" type="number" min="0" placeholder="0" style="width:100%;padding:10px 10px 10px 22px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
           </div>
         </div>
         <div>
-          <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Costo real</label>
+          <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Flete</label>
+          <div style="position:relative">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.85rem">$</span>
+            <input id="venta-flete" type="number" min="0" placeholder="0" style="width:100%;padding:10px 10px 10px 22px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+          </div>
+        </div>
+        <div>
+          <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Costo</label>
           <div style="position:relative">
             <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.85rem">$</span>
             <input id="venta-costo" type="number" min="0" placeholder="0" style="width:100%;padding:10px 10px 10px 22px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
           </div>
         </div>
       </div>
+
       <div>
-        <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Método de pago</label>
-        <select id="venta-metodo" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;background:#fff">
-          <option value="Efectivo">💵 Efectivo</option>
-          <option value="Transferencia">🏦 Transferencia</option>
-          <option value="Mercado Pago">📱 Mercado Pago</option>
-          <option value="Tarjeta">💳 Tarjeta</option>
-          <option value="Cripto">₿ Cripto</option>
-        </select>
+        <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Notas <span style="font-weight:400;color:#8A8479">(opcional)</span></label>
+        <textarea id="venta-notas" placeholder="Observaciones, detalles del pedido..." rows="2" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;resize:none"></textarea>
       </div>
-      <div>
-        <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Fecha</label>
-        <input id="venta-fecha" type="date" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
-      </div>
+
       <div id="venta-err" style="color:#DC2626;font-size:0.78rem;font-family:'DM Sans',sans-serif;min-height:1rem"></div>
       <button id="venta-guardar-btn" onclick="guardarVenta()" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer">Guardar venta</button>
     </div>
