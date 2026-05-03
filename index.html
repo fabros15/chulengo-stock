@@ -1601,35 +1601,27 @@ function guardarPrefsUsuario(){
 
 // ==================== GESTOR VENTAS ====================
 var todasVentas = [];
+var ventasFiltradas = [];
 var ventaEditandoId = null;
+var ventaSeleccionadaId = null;
+var sortCol = 'fecha';
+var sortDir = -1;
 var METODOS_COLORES = {
-  'Efectivo':'#22C55E','Transferencia':'#3B82F6','Mercado Pago':'#06B6D4',
+  'Efectivo':'#22C55E','Transferencia MP':'#06B6D4','Transferencia':'#3B82F6',
   'Tarjeta':'#8B5CF6','Cripto':'#F59E0B'
 };
 
 function switchCuentaTab(tab){
   var btnP = document.getElementById('tab-presupuestos-btn');
   var btnV = document.getElementById('tab-ventas-btn');
-  var secP = document.getElementById('stats-box').parentNode;
   var secV = document.getElementById('seccion-ventas');
-
-  // Obtener todos los hijos de la sección de presupuestos
-  var contPresupuestos = document.querySelectorAll('#page-cuenta > div > *:not(#cuenta-header):not([style*="tab"])');
-
   if(tab === 'presupuestos'){
     btnP.style.background='#1A1814'; btnP.style.color='#fff';
     btnV.style.background='transparent'; btnV.style.color='#8A8479';
-    document.getElementById('stats-box').style.display='';
-    document.getElementById('pres-search').parentNode.style.display='';
-    document.getElementById('lista-presupuestos').style.display='';
-    secV.style.display='none';
-    // Mostrar filtros y search
-    document.getElementById('pres-search') && (document.getElementById('pres-search').closest('div') || document.getElementById('pres-search')).parentNode;
-    // Más simple: toggle display de los elementos
     ['stats-box','pres-search','pres-filtros','lista-presupuestos'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.style.display='';
     });
-    // pres-count está inline, no tiene ID propio
+    secV.style.display='none';
   } else {
     btnV.style.background='#1A1814'; btnV.style.color='#fff';
     btnP.style.background='transparent'; btnP.style.color='#8A8479';
@@ -1641,18 +1633,181 @@ function switchCuentaTab(tab){
   }
 }
 
+function sortVentas(col){
+  if(sortCol===col) sortDir*=-1; else { sortCol=col; sortDir=-1; }
+  document.querySelectorAll('[id^="sort-"]').forEach(function(el){el.textContent='';});
+  var el=document.getElementById('sort-'+col);
+  if(el) el.textContent=sortDir===-1?'↓':'↑';
+  ventasFiltradas.sort(function(a,b){
+    var va=a.data[col]||''; var vb=b.data[col]||'';
+    if(col==='monto'||col==='flete') return sortDir*((va||0)-(vb||0));
+    return sortDir*String(va).localeCompare(String(vb));
+  });
+  renderTablaVentas(ventasFiltradas);
+}
+
+function filtrarVentas(){
+  var q=(document.getElementById('ventas-search').value||'').toLowerCase().trim();
+  var metodo=document.getElementById('ventas-filtro-metodo').value;
+  ventasFiltradas=todasVentas.filter(function(e){
+    var d=e.data;
+    if(metodo && d.metodo!==metodo) return false;
+    if(q){
+      var hay=(d.cliente||'').toLowerCase().includes(q)||
+              (d.factura||'').toLowerCase().includes(q)||
+              (d.producto||'').toLowerCase().includes(q);
+      if(!hay) return false;
+    }
+    return true;
+  });
+  var count=document.getElementById('ventas-count');
+  if(count) count.textContent=ventasFiltradas.length+' de '+todasVentas.length+' ventas';
+  renderTablaVentas(ventasFiltradas);
+}
+
+function renderTablaVentas(ventas){
+  var tbody=document.getElementById('ventas-tbody');
+  if(!tbody) return;
+  if(!ventas||ventas.length===0){
+    tbody.innerHTML='<tr><td colspan="6" style="padding:3rem;text-align:center;color:#8A8479;font-family:\'DM Sans\',sans-serif">No hay ventas. Usá el botón + Nueva para registrar.</td></tr>';
+    return;
+  }
+  tbody.innerHTML='';
+  ventas.forEach(function(entry){
+    var d=entry.data; var id=entry.id;
+    var color=METODOS_COLORES[d.metodo]||'#8A8479';
+    var isSelected=id===ventaSeleccionadaId;
+    var tr=document.createElement('tr');
+    tr.style.cssText='border-bottom:1px solid #F5F2ED;cursor:pointer;transition:background 0.1s;'+(isSelected?'background:#F0F9F4;':'');
+    tr.onmouseover=function(){ if(id!==ventaSeleccionadaId) this.style.background='#FAFAF8'; };
+    tr.onmouseout=function(){ if(id!==ventaSeleccionadaId) this.style.background=''; };
+    var clienteSpan='<span data-cliente="'+encodeURIComponent(d.cliente||'')+'" data-id="'+id+'" class="cliente-link" style="cursor:pointer;border-bottom:1px dashed #8A8479;color:#1A1814">'+(d.cliente||'—')+'</span>';
+    tr.innerHTML=
+      '<td style="padding:10px 12px;color:#4B4640;font-family:\'DM Sans\',sans-serif;white-space:nowrap">'+d.fecha+'</td>'+
+      '<td style="padding:10px 12px;color:#8A8479;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(d.factura||'—')+'</td>'+
+      '<td style="padding:10px 12px;font-weight:500;color:#1A1814;font-family:\'DM Sans\',sans-serif">'+clienteSpan+'</td>'+
+      '<td style="padding:10px 12px"><span style="background:'+color+'20;color:'+color+';border:1px solid '+color+'40;border-radius:5px;padding:2px 7px;font-size:0.72rem;font-weight:600;font-family:\'DM Sans\',sans-serif;white-space:nowrap">'+(d.metodo||'—')+'</span></td>'+
+      '<td style="padding:10px 12px;text-align:right;color:#4B4640;font-family:\'DM Mono\',monospace">'+(d.flete?fmtPeso(d.flete):'$0')+'</td>'+
+      '<td style="padding:10px 12px;text-align:right;font-weight:700;color:#2D6A4F;font-family:\'DM Mono\',monospace">'+fmtPeso(d.monto)+'</td>';
+    tr.querySelector('.cliente-link').addEventListener('click', function(e){
+      e.stopPropagation();
+      abrirPanelCliente(decodeURIComponent(this.dataset.cliente));
+    });
+    tr.addEventListener('click', function(){ abrirPanelVenta(id); });
+    tbody.appendChild(tr);
+  });
+}
+
+function mkField(label, val){
+  return '<div style="margin-bottom:0.75rem">'+
+    '<div style="font-size:0.65rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em">'+label+'</div>'+
+    '<div style="font-size:0.88rem;color:#1A1814;font-family:\'DM Sans\',sans-serif">'+val+'</div></div>';
+}
+
+function abrirPanelVenta(id){
+  ventaSeleccionadaId=id;
+  var panel=document.getElementById('ventas-panel');
+  var entry=todasVentas.find(function(e){ return e.id===id; });
+  if(!entry||!panel) return;
+  panel.style.display='block';
+  var d=entry.data;
+  var color=METODOS_COLORES[d.metodo]||'#8A8479';
+  var ganancia=(d.monto||0)-(d.costo||0);
+
+  panel.innerHTML=
+    '<div style="padding:1rem;border-bottom:1px solid #F5F2ED;display:flex;justify-content:space-between;align-items:center;background:#FAFAF8">'+
+      '<div style="font-size:0.85rem;font-weight:700;color:#1A1814;font-family:\'DM Sans\',sans-serif">'+d.fecha+'</div>'+
+      '<div style="display:flex;gap:6px;align-items:center">'+
+        '<button class="panel-edit-btn" style="padding:5px 10px;background:#F5F2ED;border:none;border-radius:6px;font-size:0.75rem;cursor:pointer;font-family:\'DM Sans\',sans-serif">✏️ Editar</button>'+
+        '<button class="panel-del-btn" style="padding:5px 8px;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;font-size:0.75rem;cursor:pointer;color:#DC2626">🗑</button>'+
+        '<button onclick="cerrarPanel()" style="padding:5px 8px;background:none;border:none;font-size:1rem;cursor:pointer;color:#8A8479">✕</button>'+
+      '</div>'+
+    '</div>'+
+    '<div style="padding:1rem">'+
+      mkField('Factura', d.factura||'—')+
+      '<div style="margin-bottom:0.75rem">'+
+        '<div style="font-size:0.65rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em">Cliente</div>'+
+        '<div style="font-size:0.88rem;color:#1A1814;font-family:\'DM Sans\',sans-serif"><span class="panel-cliente-link" style="cursor:pointer;border-bottom:1px dashed #8A8479">'+(d.cliente||'—')+'</span></div>'+
+      '</div>'+
+      (d.producto?mkField('Producto', d.producto):'')+
+      '<div style="margin-bottom:0.75rem"><div style="font-size:0.65rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em">Forma de pago</div>'+
+      '<span style="background:'+color+'20;color:'+color+';border:1px solid '+color+'40;border-radius:5px;padding:3px 10px;font-size:0.78rem;font-weight:600;font-family:\'DM Sans\',sans-serif">'+(d.metodo||'—')+'</span></div>'+
+      mkField('Total', '<span style="font-size:1.1rem;font-weight:700;color:#2D6A4F;font-family:\'DM Mono\',monospace">'+fmtPeso(d.monto)+'</span>')+
+      (d.flete?mkField('Flete', fmtPeso(d.flete)):'')+
+      (d.costo?mkField('Costo / Ganancia', fmtPeso(d.costo)+' <span style="color:#2D6A4F">· '+fmtPeso(ganancia)+'</span>'):'')+
+      (d.notas?mkField('Notas', d.notas):'')+
+    '</div>';
+
+  panel.querySelector('.panel-edit-btn').addEventListener('click', function(){ abrirModalVenta(id, d); });
+  panel.querySelector('.panel-del-btn').addEventListener('click', function(){ eliminarVenta(id); });
+  panel.querySelector('.panel-cliente-link').addEventListener('click', function(){ abrirPanelCliente(d.cliente||''); });
+
+  renderTablaVentas(ventasFiltradas);
+}
+
+function abrirPanelCliente(cliente){
+  var panel=document.getElementById('ventas-panel');
+  if(!panel) return;
+  panel.style.display='block';
+  ventaSeleccionadaId=null;
+
+  var ventasCliente=todasVentas.filter(function(v){ return (v.data.cliente||'')===cliente; });
+  var totalCliente=ventasCliente.reduce(function(s,v){ return s+(v.data.monto||0); }, 0);
+
+  var filas=ventasCliente.map(function(v){
+    return '<tr class="hist-row" data-id="'+v.id+'" style="border-bottom:1px solid #F5F2ED;cursor:pointer">'+
+      '<td style="padding:7px 8px;font-size:0.78rem;color:#4B4640;font-family:\'DM Sans\',sans-serif">'+v.data.fecha+'</td>'+
+      '<td style="padding:7px 8px;font-size:0.72rem;color:#8A8479;font-family:\'DM Mono\',monospace">'+(v.data.factura||'—')+'</td>'+
+      '<td style="padding:7px 8px;font-size:0.82rem;font-weight:600;color:#2D6A4F;font-family:\'DM Mono\',monospace;text-align:right">'+fmtPeso(v.data.monto)+'</td>'+
+    '</tr>';
+  }).join('');
+
+  panel.innerHTML=
+    '<div style="padding:1rem;border-bottom:1px solid #F5F2ED;display:flex;justify-content:space-between;align-items:center;background:#FAFAF8">'+
+      '<div style="font-size:0.9rem;font-weight:700;color:#1A1814;font-family:\'DM Sans\',sans-serif">'+cliente+'</div>'+
+      '<button onclick="cerrarPanel()" style="padding:5px 8px;background:none;border:none;font-size:1rem;cursor:pointer;color:#8A8479">✕</button>'+
+    '</div>'+
+    '<div style="padding:1rem">'+
+      '<div style="font-size:0.65rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em">Total comprado</div>'+
+      '<div style="font-size:1.4rem;font-weight:700;color:#2D6A4F;font-family:\'DM Mono\',monospace;margin-bottom:1.25rem">'+fmtPeso(totalCliente)+'</div>'+
+      '<div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:\'DM Sans\',sans-serif;margin-bottom:0.5rem">Historial · '+ventasCliente.length+' venta'+(ventasCliente.length!==1?'s':'')+'</div>'+
+      '<table style="width:100%;border-collapse:collapse">'+
+        '<thead><tr style="background:#F5F2ED">'+
+          '<th style="padding:6px 8px;text-align:left;font-size:0.68rem;color:#8A8479;font-weight:600;font-family:\'DM Sans\',sans-serif">Fecha</th>'+
+          '<th style="padding:6px 8px;text-align:left;font-size:0.68rem;color:#8A8479;font-weight:600;font-family:\'DM Sans\',sans-serif">Factura</th>'+
+          '<th style="padding:6px 8px;text-align:right;font-size:0.68rem;color:#8A8479;font-weight:600;font-family:\'DM Sans\',sans-serif">Total</th>'+
+        '</tr></thead>'+
+        '<tbody id="hist-tbody">'+filas+'</tbody>'+
+      '</table>'+
+    '</div>';
+
+  panel.querySelectorAll('.hist-row').forEach(function(tr){
+    tr.addEventListener('click', function(){ abrirPanelVenta(this.dataset.id); });
+    tr.onmouseover=function(){ this.style.background='#FAFAF8'; };
+    tr.onmouseout=function(){ this.style.background=''; };
+  });
+
+  renderTablaVentas(ventasFiltradas);
+}
+
+function cerrarPanel(){
+  var panel=document.getElementById('ventas-panel');
+  if(panel) panel.style.display='none';
+  ventaSeleccionadaId=null;
+  renderTablaVentas(ventasFiltradas);
+}
+
 function abrirModalVenta(ventaId, datos){
   ventaEditandoId = ventaId || null;
-  var titulo = document.getElementById('modal-venta-titulo');
-  titulo.textContent = ventaId ? 'Editar venta' : 'Nueva venta';
+  document.getElementById('modal-venta-titulo').textContent = ventaId ? 'Editar venta' : 'Nueva venta';
   var hoy = new Date().toISOString().split('T')[0];
   document.getElementById('venta-fecha').value = datos ? datos.fecha : hoy;
   document.getElementById('venta-factura').value = datos ? (datos.factura||'') : '';
-  document.getElementById('venta-cliente').value = datos ? datos.cliente : '';
+  document.getElementById('venta-cliente').value = datos ? (datos.cliente||'') : '';
   document.getElementById('venta-producto').value = datos ? (datos.producto||'') : '';
   document.getElementById('venta-monto').value = datos ? datos.monto : '';
-  document.getElementById('venta-flete').value = datos ? (datos.flete||0) : '';
-  document.getElementById('venta-costo').value = datos ? (datos.costo||0) : '';
+  document.getElementById('venta-flete').value = datos ? (datos.flete||'') : '';
+  document.getElementById('venta-costo').value = datos ? (datos.costo||'') : '';
   document.getElementById('venta-metodo').value = datos ? (datos.metodo||'Efectivo') : 'Efectivo';
   document.getElementById('venta-notas').value = datos ? (datos.notas||'') : '';
   document.getElementById('venta-err').textContent = '';
@@ -1667,123 +1822,78 @@ function cerrarModalVenta(){
 function guardarVenta(){
   if(!window.currentUser) return;
   var cliente = document.getElementById('venta-cliente').value.trim();
-  var producto = document.getElementById('venta-producto').value.trim();
   var monto = parseFloat(document.getElementById('venta-monto').value)||0;
-  var flete = parseFloat(document.getElementById('venta-flete').value)||0;
-  var costo = parseFloat(document.getElementById('venta-costo').value)||0;
-  var metodo = document.getElementById('venta-metodo').value;
-  var fecha = document.getElementById('venta-fecha').value;
-  var factura = document.getElementById('venta-factura').value.trim();
-  var notas = document.getElementById('venta-notas').value.trim();
   var err = document.getElementById('venta-err');
-
   if(!cliente){ err.textContent='Ingresá un cliente.'; return; }
   if(monto <= 0){ err.textContent='Ingresá un monto válido.'; return; }
-
   var btn = document.getElementById('venta-guardar-btn');
-  btn.disabled = true; btn.textContent = 'Guardando...';
-
+  btn.disabled=true; btn.textContent='Guardando...';
   var datos = {
     uid: window.currentUser.uid,
-    fecha: fecha,
-    factura: factura,
+    fecha: document.getElementById('venta-fecha').value,
+    factura: document.getElementById('venta-factura').value.trim(),
     cliente: cliente,
-    producto: producto,
-    metodo: metodo,
+    producto: document.getElementById('venta-producto').value.trim(),
+    metodo: document.getElementById('venta-metodo').value,
     monto: monto,
-    flete: flete,
-    costo: costo,
-    ganancia: monto - costo,
-    notas: notas,
+    flete: parseFloat(document.getElementById('venta-flete').value)||0,
+    costo: parseFloat(document.getElementById('venta-costo').value)||0,
+    ganancia: monto-(parseFloat(document.getElementById('venta-costo').value)||0),
+    notas: document.getElementById('venta-notas').value.trim(),
     fechaTs: firebase.firestore.FieldValue.serverTimestamp()
   };
-
-  var op;
-  if(ventaEditandoId){
-    op = firebase.firestore().collection('ventas').doc(ventaEditandoId).update(datos);
-  } else {
-    op = firebase.firestore().collection('ventas').add(datos);
-  }
-
+  var op = ventaEditandoId ?
+    firebase.firestore().collection('ventas').doc(ventaEditandoId).update(datos) :
+    firebase.firestore().collection('ventas').add(datos);
   op.then(function(){
-    btn.disabled = false; btn.textContent = 'Guardar venta';
-    cerrarModalVenta();
-    cargarVentas();
-  }).catch(function(e){
-    err.textContent = 'Error al guardar.';
-    btn.disabled = false; btn.textContent = 'Guardar venta';
+    btn.disabled=false; btn.textContent='Guardar venta';
+    cerrarModalVenta(); cargarVentas();
+  }).catch(function(){
+    err.textContent='Error al guardar.';
+    btn.disabled=false; btn.textContent='Guardar venta';
   });
 }
 
 function cargarVentas(){
   if(!window.currentUser) return;
-  var lista = document.getElementById('lista-ventas');
-  lista.innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Cargando...</p>';
-
+  var tbody=document.getElementById('ventas-tbody');
+  if(tbody) tbody.innerHTML='<tr><td colspan="6" style="padding:2rem;text-align:center;color:#8A8479">Cargando...</td></tr>';
   firebase.firestore().collection('ventas')
     .where('uid','==',window.currentUser.uid)
     .get()
     .then(function(snap){
-      todasVentas = [];
+      todasVentas=[];
       snap.forEach(function(doc){ todasVentas.push({id:doc.id, data:doc.data()}); });
-      todasVentas.sort(function(a,b){
-        var fa = a.data.fecha||''; var fb = b.data.fecha||'';
-        return fb.localeCompare(fa);
-      });
+      todasVentas.sort(function(a,b){ return String(b.data.fecha||'').localeCompare(String(a.data.fecha||'')); });
+      ventasFiltradas=[].concat(todasVentas);
+      var count=document.getElementById('ventas-count');
+      if(count) count.textContent=todasVentas.length+' ventas en total';
       calcularEstadisticasVentas(todasVentas);
-      renderListaVentas(todasVentas);
-    }).catch(function(e){
-      lista.innerHTML='<p style="color:#DC2626;font-size:0.85rem;text-align:center;padding:2rem">Error al cargar.</p>';
+      renderTablaVentas(ventasFiltradas);
+    }).catch(function(){
+      if(tbody) tbody.innerHTML='<tr><td colspan="6" style="padding:2rem;text-align:center;color:#DC2626">Error al cargar.</td></tr>';
     });
 }
 
 function calcularEstadisticasVentas(ventas){
-  var box = document.getElementById('ventas-stats');
+  var box=document.getElementById('ventas-stats');
   if(!ventas||ventas.length===0){ box.style.display='none'; return; }
   box.style.display='block';
-
-  var totalMonto=0, totalGanancia=0;
-  ventas.forEach(function(v){ totalMonto+=v.data.monto||0; totalGanancia+=v.data.ganancia||0; });
+  var totalMonto=0, totalGanancia=0, ventasMes=0;
+  var mesActual=new Date().toISOString().substring(0,7);
+  ventas.forEach(function(v){
+    totalMonto+=v.data.monto||0;
+    totalGanancia+=(v.data.monto||0)-(v.data.costo||0);
+    if((v.data.fecha||'').startsWith(mesActual)) ventasMes++;
+  });
   document.getElementById('vstat-total').textContent=fmtPeso(totalMonto);
-  document.getElementById('vstat-total-sub').textContent=ventas.length+' venta'+(ventas.length!==1?'s':'');
+  document.getElementById('vstat-total-sub').textContent=ventas.length+' ventas';
   document.getElementById('vstat-ganancia').textContent=fmtPeso(totalGanancia);
-  var margen = totalMonto>0?Math.round(totalGanancia/totalMonto*100):0;
-  document.getElementById('vstat-ganancia-sub').textContent='Margen: '+margen+'%';
-
-  // Métodos de pago
-  var metodos={};
-  ventas.forEach(function(v){ var m=v.data.metodo||'Otro'; metodos[m]=(metodos[m]||0)+(v.data.monto||0); });
-  var metEl=document.getElementById('vstat-metodos');
-  metEl.innerHTML='';
-  Object.keys(metodos).sort(function(a,b){return metodos[b]-metodos[a];}).forEach(function(m){
-    var pct=Math.round(metodos[m]/totalMonto*100);
-    var row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;gap:8px';
-    row.innerHTML='<div style="width:100px;font-size:0.78rem;color:#4B4640;font-family:\'DM Sans\',sans-serif;flex-shrink:0">'+m+'</div>'+
-      '<div style="flex:1;background:#F5F2ED;border-radius:4px;height:8px;overflow:hidden">'+
-        '<div style="width:'+pct+'%;background:'+(METODOS_COLORES[m]||'#8A8479')+';height:100%;border-radius:4px"></div>'+
-      '</div>'+
-      '<div style="font-size:0.78rem;color:#1A1814;font-family:\'DM Mono\',monospace;min-width:80px;text-align:right">'+fmtPeso(metodos[m])+'</div>';
-    metEl.appendChild(row);
-  });
-
-  // Top clientes
-  var clientes={};
-  ventas.forEach(function(v){ var c=(v.data.cliente||'Sin nombre').trim(); clientes[c]=(clientes[c]||0)+(v.data.monto||0); });
-  var topCl=Object.keys(clientes).sort(function(a,b){return clientes[b]-clientes[a];}).slice(0,5);
-  var clEl=document.getElementById('vstat-clientes');
-  clEl.innerHTML='';
-  topCl.forEach(function(c,i){
-    var row=document.createElement('div');
-    row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #F5F2ED;font-family:\'DM Sans\',sans-serif';
-    row.innerHTML='<div style="display:flex;align-items:center;gap:8px">'+
-      '<span style="font-size:0.72rem;color:#8A8479;width:16px">'+(i+1)+'</span>'+
-      '<span style="font-size:0.82rem;color:#1A1814">'+c+'</span></div>'+
-      '<span style="font-size:0.82rem;font-weight:600;color:#2D6A4F;font-family:\'DM Mono\',monospace">'+fmtPeso(clientes[c])+'</span>';
-    clEl.appendChild(row);
-  });
-
-  // Gráfico por mes
+  var margen=totalMonto>0?Math.round(totalGanancia/totalMonto*100):0;
+  document.getElementById('vstat-ganancia-sub').textContent='Margen '+margen+'%';
+  document.getElementById('vstat-count').textContent=ventasMes;
+  document.getElementById('vstat-mes').textContent='este mes';
+  // Grafico
   var meses={};
   var ahora=new Date();
   for(var i=5;i>=0;i--){
@@ -1797,103 +1907,48 @@ function calcularEstadisticasVentas(ventas){
     if(meses[key]) meses[key].monto+=v.data.monto||0;
   });
   var keys=Object.keys(meses);
-  var maxMonto=Math.max.apply(null,keys.map(function(k){return meses[k].monto;}))||1;
+  var maxM=Math.max.apply(null,keys.map(function(k){return meses[k].monto;}))||1;
   var graf=document.getElementById('vstat-grafico');
   var lbls=document.getElementById('vstat-grafico-labels');
+  if(!graf||!lbls) return;
   graf.innerHTML=''; lbls.innerHTML='';
   keys.forEach(function(k){
-    var m=meses[k];
-    var pct=Math.round(m.monto/maxMonto*100);
+    var m=meses[k]; var pct=Math.round(m.monto/maxM*100);
     var bar=document.createElement('div');
-    bar.style.cssText='flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px';
-    bar.innerHTML='<div style="font-size:0.62rem;color:#8A8479;font-family:\'DM Mono\',sans-serif;text-align:center">'+(m.monto>0?'$'+Math.round(m.monto/1000)+'k':'')+'</div>'+
-      '<div style="width:100%;background:'+(m.monto>0?'#2D6A4F':'#E2DDD6')+';border-radius:4px 4px 0 0;height:'+(pct||4)+'%;min-height:4px"></div>';
+    bar.style.cssText='flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px';
+    bar.innerHTML='<div style="font-size:0.6rem;color:#8A8479;font-family:\'DM Mono\',monospace">'+(m.monto>0?'$'+Math.round(m.monto/1000)+'k':'')+'</div>'+
+      '<div style="width:100%;background:'+(m.monto>0?'#2D6A4F':'#E2DDD6')+';border-radius:3px 3px 0 0;height:'+(pct||4)+'%;min-height:3px"></div>';
     graf.appendChild(bar);
     var lbl=document.createElement('div');
-    lbl.style.cssText='flex:1;text-align:center;font-size:0.68rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;text-transform:capitalize';
+    lbl.style.cssText='flex:1;text-align:center;font-size:0.62rem;color:#8A8479;font-family:\'DM Sans\',sans-serif';
     lbl.textContent=m.label;
     lbls.appendChild(lbl);
   });
 }
 
-function renderListaVentas(ventas){
-  var lista=document.getElementById('lista-ventas');
-  if(!ventas||ventas.length===0){
-    lista.innerHTML='<div style="text-align:center;padding:2.5rem 1rem">'+
-      '<div style="font-size:2.5rem;margin-bottom:0.75rem">💰</div>'+
-      '<div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:\'DM Sans\',sans-serif;margin-bottom:0.5rem">Todavía no registraste ventas</div>'+
-      '<div style="font-size:0.82rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">Tocá el botón de arriba para registrar tu primera venta.</div>'+
-      '</div>';
-    return;
-  }
-  lista.innerHTML='';
-  ventas.forEach(function(entry){
-    var d=entry.data; var id=entry.id;
-    var ganancia=d.monto-(d.costo||0);
-    var color=METODOS_COLORES[d.metodo]||'#8A8479';
-
-    var card=document.createElement('div');
-    card.style.cssText='background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:0.75rem';
-    card.innerHTML=
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'+
-        '<div style="flex:1">'+
-          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px">'+
-            '<span style="font-weight:600;color:#1A1814;font-size:0.9rem;font-family:\'DM Sans\',sans-serif">'+(d.cliente||'Sin cliente')+'</span>'+
-            (d.factura?'<span style="font-size:0.72rem;color:#8A8479;font-family:\'DM Mono\',monospace;background:#F5F2ED;padding:2px 6px;border-radius:4px">'+d.factura+'</span>':'')+
-          '</div>'+
-          (d.producto?'<div style="font-size:0.78rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">'+d.producto+'</div>':'')+
-        '</div>'+
-        '<div style="text-align:right;flex-shrink:0">'+
-          '<div style="font-size:0.95rem;font-weight:700;color:#2D6A4F;font-family:\'DM Mono\',monospace">'+fmtPeso(d.monto)+'</div>'+
-          '<div style="font-size:0.72rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">'+d.fecha+'</div>'+
-        '</div>'+
-      '</div>'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">'+
-        '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
-          '<span style="background:'+color+'20;color:'+color+';border:1px solid '+color+'40;border-radius:6px;padding:2px 8px;font-size:0.72rem;font-weight:600;font-family:\'DM Sans\',sans-serif">'+d.metodo+'</span>'+
-          (d.flete?'<span style="font-size:0.75rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">Flete: '+fmtPeso(d.flete)+'</span>':'')+
-          (d.costo?'<span style="font-size:0.75rem;color:#8A8479;font-family:\'DM Sans\',sans-serif">Gan: '+fmtPeso(ganancia)+'</span>':'')+
-        '</div>'+
-        '<div style="display:flex;gap:6px">'+
-          '<button onclick="editarVenta(\''+id+'\')" style="padding:5px 10px;background:#F5F2ED;border:none;border-radius:6px;font-size:0.75rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;color:#4B4640">✏️</button>'+
-          '<button onclick="eliminarVenta(\''+id+'\')" style="padding:5px 10px;background:#FEF2F2;border:none;border-radius:6px;font-size:0.75rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;color:#DC2626">🗑</button>'+
-        '</div>'+
-      '</div>'+
-      (d.notas?'<div style="margin-top:6px;font-size:0.75rem;color:#8A8479;font-family:\'DM Sans\',sans-serif;border-top:1px solid #F5F2ED;padding-top:6px">'+d.notas+'</div>':'')+
-    '';
-    lista.appendChild(card);
-  });
-}
-
 function editarVenta(id){
-  var entry = todasVentas.find(function(e){return e.id===id;});
-  if(!entry) return;
-  abrirModalVenta(id, entry.data);
+  var entry=todasVentas.find(function(e){ return e.id===id; });
+  if(entry) abrirModalVenta(id, entry.data);
 }
 
 function eliminarVenta(id){
-  if(!confirm('¿Eliminar esta venta?')) return;
+  if(!confirm('Eliminar esta venta?')) return;
   firebase.firestore().collection('ventas').doc(id).delete()
-    .then(function(){ cargarVentas(); })
+    .then(function(){ cerrarPanel(); cargarVentas(); })
     .catch(function(){ alert('Error al eliminar.'); });
 }
 
-// Auto-registrar venta cuando presupuesto pasa a Pagado
 function registrarVentaDesdePres(d){
   if(!window.currentUser) return;
   firebase.firestore().collection('ventas').add({
-    uid: window.currentUser.uid,
-    cliente: d.cliente||'',
-    producto: d.proyecto||'',
-    monto: d.precioTotal||0,
-    costo: 0,
-    ganancia: d.precioTotal||0,
-    metodo: 'Transferencia',
-    fecha: new Date().toISOString().split('T')[0],
-    fechaTs: firebase.firestore.FieldValue.serverTimestamp(),
-    desdePres: true
+    uid:window.currentUser.uid, cliente:d.cliente||'', producto:d.proyecto||'',
+    monto:d.precioTotal||0, costo:0, ganancia:d.precioTotal||0,
+    metodo:'Transferencia', fecha:new Date().toISOString().split('T')[0],
+    fechaTs:firebase.firestore.FieldValue.serverTimestamp(), desdePres:true
   }).catch(function(){});
 }
+
+
 
 // ==================== CARRUSEL ====================
 var SLIDES = [
@@ -3264,47 +3319,74 @@ document.addEventListener('input', function(e){
   <!-- SECCIÓN VENTAS -->
   <div id="seccion-ventas" style="display:none">
 
-    <!-- Dashboard ventas -->
-    <div id="ventas-stats" style="display:none;margin-bottom:1.5rem">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-        <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem">
-          <div style="font-size:0.72rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Total vendido</div>
-          <div id="vstat-total" style="font-size:1.3rem;font-weight:700;color:#2D6A4F;font-family:'DM Mono',monospace"></div>
-          <div id="vstat-total-sub" style="font-size:0.72rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-top:2px"></div>
+    <!-- Dashboard stats compacto -->
+    <div id="ventas-stats" style="display:none;margin-bottom:1rem">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">
+        <div style="background:#fff;border:1px solid #E2DDD6;border-radius:10px;padding:0.875rem">
+          <div style="font-size:0.65rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em">Total vendido</div>
+          <div id="vstat-total" style="font-size:1.1rem;font-weight:700;color:#2D6A4F;font-family:'DM Mono',monospace"></div>
+          <div id="vstat-total-sub" style="font-size:0.65rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-top:2px"></div>
         </div>
-        <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem">
-          <div style="font-size:0.72rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Ganancia neta</div>
-          <div id="vstat-ganancia" style="font-size:1.3rem;font-weight:700;color:#1A1814;font-family:'DM Mono',monospace"></div>
-          <div id="vstat-ganancia-sub" style="font-size:0.72rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-top:2px"></div>
+        <div style="background:#fff;border:1px solid #E2DDD6;border-radius:10px;padding:0.875rem">
+          <div style="font-size:0.65rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em">Ganancia</div>
+          <div id="vstat-ganancia" style="font-size:1.1rem;font-weight:700;color:#1A1814;font-family:'DM Mono',monospace"></div>
+          <div id="vstat-ganancia-sub" style="font-size:0.65rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-top:2px"></div>
+        </div>
+        <div style="background:#fff;border:1px solid #E2DDD6;border-radius:10px;padding:0.875rem">
+          <div style="font-size:0.65rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em">Ventas</div>
+          <div id="vstat-count" style="font-size:1.1rem;font-weight:700;color:#1A1814;font-family:'DM Mono',monospace"></div>
+          <div id="vstat-mes" style="font-size:0.65rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-top:2px"></div>
         </div>
       </div>
-      <!-- Métodos de pago -->
-      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:10px">
-        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;margin-bottom:0.75rem">Por método de pago</div>
-        <div id="vstat-metodos" style="display:flex;flex-direction:column;gap:6px"></div>
-      </div>
-      <!-- Ranking clientes -->
-      <div id="vstat-clientes-box" style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:10px">
-        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;margin-bottom:0.75rem">Top clientes</div>
-        <div id="vstat-clientes"></div>
-      </div>
-      <!-- Gráfico por mes -->
-      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:1rem">
-        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;margin-bottom:0.875rem">Ventas por mes</div>
-        <div id="vstat-grafico" style="display:flex;align-items:flex-end;gap:6px;height:80px"></div>
-        <div id="vstat-grafico-labels" style="display:flex;gap:6px;margin-top:4px"></div>
+      <!-- Gráfico por mes compacto -->
+      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:10px;padding:0.875rem;margin-bottom:8px">
+        <div style="font-size:0.72rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;margin-bottom:0.6rem">Ventas por mes</div>
+        <div id="vstat-grafico" style="display:flex;align-items:flex-end;gap:4px;height:60px"></div>
+        <div id="vstat-grafico-labels" style="display:flex;gap:4px;margin-top:3px"></div>
       </div>
     </div>
 
-    <!-- Botón nueva venta -->
-    <button onclick="abrirModalVenta()" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:12px;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:1rem">
-      + Registrar nueva venta
-    </button>
-
-    <!-- Lista ventas -->
-    <div id="lista-ventas">
-      <p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Cargando...</p>
+    <!-- Toolbar -->
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:0.75rem">
+      <input id="ventas-search" type="text" placeholder="Buscar cliente, factura..." oninput="filtrarVentas()" style="flex:1;padding:8px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:'DM Sans',sans-serif;outline:none">
+      <select id="ventas-filtro-metodo" onchange="filtrarVentas()" style="padding:8px 10px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:#4B4640">
+        <option value="">Todos los métodos</option>
+        <option value="Efectivo">Efectivo</option>
+        <option value="Transferencia MP">Transf. MP</option>
+        <option value="Transferencia">Transf. bancaria</option>
+        <option value="Tarjeta">Tarjeta</option>
+        <option value="Cripto">Cripto</option>
+      </select>
+      <button onclick="abrirModalVenta()" style="padding:8px 14px;background:#2D6A4F;color:#fff;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">+ Nueva</button>
     </div>
+
+    <!-- Contenedor tabla + panel lateral -->
+    <div id="ventas-layout" style="display:flex;gap:0;background:#fff;border:1px solid #E2DDD6;border-radius:12px;overflow:hidden;min-height:400px">
+
+      <!-- Tabla -->
+      <div id="ventas-tabla-wrap" style="flex:1;overflow-x:auto;min-width:0">
+        <table id="ventas-tabla" style="width:100%;border-collapse:collapse;font-family:'DM Sans',sans-serif;font-size:0.82rem">
+          <thead>
+            <tr style="background:#F5F2ED;border-bottom:1px solid #E2DDD6">
+              <th onclick="sortVentas('fecha')" style="padding:10px 12px;text-align:left;font-weight:600;color:#4B4640;cursor:pointer;white-space:nowrap;user-select:none">Fecha <span id="sort-fecha">↓</span></th>
+              <th onclick="sortVentas('factura')" style="padding:10px 12px;text-align:left;font-weight:600;color:#4B4640;cursor:pointer;white-space:nowrap;user-select:none">Factura <span id="sort-factura"></span></th>
+              <th onclick="sortVentas('cliente')" style="padding:10px 12px;text-align:left;font-weight:600;color:#4B4640;cursor:pointer;white-space:nowrap;user-select:none">Cliente <span id="sort-cliente"></span></th>
+              <th onclick="sortVentas('metodo')" style="padding:10px 12px;text-align:left;font-weight:600;color:#4B4640;cursor:pointer;white-space:nowrap;user-select:none">Pago <span id="sort-metodo"></span></th>
+              <th onclick="sortVentas('flete')" style="padding:10px 12px;text-align:right;font-weight:600;color:#4B4640;cursor:pointer;white-space:nowrap;user-select:none">Flete <span id="sort-flete"></span></th>
+              <th onclick="sortVentas('monto')" style="padding:10px 12px;text-align:right;font-weight:600;color:#4B4640;cursor:pointer;white-space:nowrap;user-select:none">Total <span id="sort-monto"></span></th>
+            </tr>
+          </thead>
+          <tbody id="ventas-tbody">
+            <tr><td colspan="6" style="padding:2rem;text-align:center;color:#8A8479">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Panel lateral -->
+      <div id="ventas-panel" style="display:none;width:320px;min-width:320px;border-left:1px solid #E2DDD6;overflow-y:auto"></div>
+    </div>
+
+    <div id="ventas-count" style="font-size:0.75rem;color:#8A8479;font-family:'DM Sans',sans-serif;margin-top:6px;text-align:right"></div>
   </div>
 
   </div>
