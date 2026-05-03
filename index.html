@@ -1699,6 +1699,7 @@ function guardarVenta(){
   }
 
   op.then(function(){
+    btn.disabled = false; btn.textContent = 'Guardar venta';
     cerrarModalVenta();
     cargarVentas();
   }).catch(function(e){
