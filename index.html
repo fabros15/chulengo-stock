@@ -2872,17 +2872,18 @@ function poblarSelectFilamentos(){
   // Preseleccionar PLA GST3D (básico, no silk ni matte ni especial)
   var opts=optgroup.querySelectorAll('option');
   var bestOpt=null;
-  for(var i=0;i<opts.length;i++){
-    var txt=opts[i].textContent.toLowerCase();
+  var bestIdx=-1;
+  var sel=document.getElementById('sel-material');
+  for(var i=0;i<sel.options.length;i++){
+    var txt=sel.options[i].textContent.toLowerCase();
     if(txt.includes('pla') && txt.includes('gst')){
-      // Preferir PLA básico sin variantes especiales
-      var esBasico = !txt.includes('silk') && !txt.includes('matte') && !txt.includes('wood') && !txt.includes('metal') && !txt.includes('glow') && !txt.includes('carbon');
-      if(esBasico && !bestOpt){ bestOpt=opts[i]; }
-      if(!bestOpt){ bestOpt=opts[i]; }
+      var esBasico = !txt.includes('silk') && !txt.includes('matte') && !txt.includes('wood') && !txt.includes('metal') && !txt.includes('glow') && !txt.includes('carbon') && !txt.includes('plus') && !txt.includes('+');
+      if(esBasico && bestIdx===-1){ bestIdx=i; }
+      if(bestIdx===-1){ bestIdx=i; }
     }
   }
-  if(bestOpt){
-    document.getElementById('sel-material').value=bestOpt.value;
+  if(bestIdx>-1){
+    sel.selectedIndex=bestIdx;
     onMatChange();
   }
 
