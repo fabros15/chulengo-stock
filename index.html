@@ -1557,6 +1557,8 @@ function abrirModalFilamentoPropio(){
   }
   document.getElementById('modal-fil-propio').style.display='flex';
   document.getElementById('fil-propio-nombre').value='';
+  document.getElementById('fil-propio-marca').value='';
+  document.getElementById('fil-propio-color').value='';
   document.getElementById('fil-propio-precio').value='';
   document.getElementById('fil-propio-err').textContent='';
 }
@@ -1567,28 +1569,30 @@ function cerrarModalFilamentoPropio(){
 
 function guardarFilamentoPropio(){
   var nombre = document.getElementById('fil-propio-nombre').value.trim();
+  var marca = document.getElementById('fil-propio-marca').value.trim();
+  var color = document.getElementById('fil-propio-color').value.trim();
   var precio = parseInt(document.getElementById('fil-propio-precio').value)||0;
   var err = document.getElementById('fil-propio-err');
-  if(!nombre){ err.textContent='Escribí un nombre.'; return; }
-  if(precio <= 0){ err.textContent='Ingresá un precio válido.'; return; }
+  if(!nombre){ err.textContent='Ingresa el material.'; return; }
+  if(precio <= 0){ err.textContent='Ingresa un precio valido.'; return; }
 
+  var label = nombre + (marca?' '+marca:'') + (color?' - '+color:'');
   var id = 'propio-'+Date.now();
-  filamentosPropios.push({id:id, nombre:nombre, precio:precio});
+  filamentosPropios.push({id:id, nombre:label, precio:precio});
   renderOptgroupPropios();
   guardarPrefsUsuario();
   cerrarModalFilamentoPropio();
 
-  // Seleccionarlo automáticamente
-  var sel = document.getElementById('sel-material');
-  sel.value = precio;
-  // Si no existe esa opción exacta, crear una temporal
-  var found = false;
-  for(var i=0;i<sel.options.length;i++){
-    if(sel.options[i].value==precio && sel.options[i].textContent.includes(nombre)){
-      sel.selectedIndex=i; found=true; break;
+  setTimeout(function(){
+    var opts = document.getElementById('optgroup-propios').querySelectorAll('option');
+    for(var i=0;i<opts.length;i++){
+      if(opts[i].textContent.includes(label)){
+        document.getElementById('sel-material').value = opts[i].value;
+        onMatChange();
+        break;
+      }
     }
-  }
-  onMatChange();
+  }, 100);
 }
 
 function guardarPrefsUsuario(){
@@ -2865,15 +2869,21 @@ function poblarSelectFilamentos(){
     optgroup.appendChild(o);
   });
 
-  // Preseleccionar PLA GST3D
+  // Preseleccionar PLA GST3D (básico, no silk ni matte ni especial)
   var opts=optgroup.querySelectorAll('option');
+  var bestOpt=null;
   for(var i=0;i<opts.length;i++){
     var txt=opts[i].textContent.toLowerCase();
     if(txt.includes('pla') && txt.includes('gst')){
-      document.getElementById('sel-material').value=opts[i].value;
-      onMatChange();
-      break;
+      // Preferir PLA básico sin variantes especiales
+      var esBasico = !txt.includes('silk') && !txt.includes('matte') && !txt.includes('wood') && !txt.includes('metal') && !txt.includes('glow') && !txt.includes('carbon');
+      if(esBasico && !bestOpt){ bestOpt=opts[i]; }
+      if(!bestOpt){ bestOpt=opts[i]; }
     }
+  }
+  if(bestOpt){
+    document.getElementById('sel-material').value=bestOpt.value;
+    onMatChange();
   }
 
   // Cargar favoritos si hay usuario
@@ -3075,8 +3085,18 @@ document.addEventListener('input', function(e){
       <button onclick="cerrarModalFilamentoPropio()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#8A8479">✕</button>
     </div>
     <div style="margin-bottom:0.875rem">
-      <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Nombre del filamento</label>
-      <input id="fil-propio-nombre" type="text" placeholder="Ej: PLA+ Bambu Lab" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+      <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Material</label>
+      <input id="fil-propio-nombre" type="text" placeholder="Ej: PLA, PETG, ABS..." style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0.875rem">
+      <div>
+        <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Marca</label>
+        <input id="fil-propio-marca" type="text" placeholder="Ej: Bambu Lab" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Color <span style="font-weight:400;color:#8A8479">(opcional)</span></label>
+        <input id="fil-propio-color" type="text" placeholder="Ej: Rojo" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+      </div>
     </div>
     <div style="margin-bottom:1.25rem">
       <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'DM Sans',sans-serif;display:block;margin-bottom:5px">Precio por kg</label>
