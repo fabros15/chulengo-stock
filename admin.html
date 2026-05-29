@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Chulengo Estudio</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyAmCmiHMah0Vm9Lu8mK-BnFO_42fqSUYRQ",
+  authDomain: "chulengo-stock.firebaseapp.com",
+  projectId: "chulengo-stock",
+  storageBucket: "chulengo-stock.firebasestorage.app",
+  messagingSenderId: "637663644234",
+  appId: "1:637663644234:web:e95950d415c1b0fdbfb4b3"
+});
+
+// ─── REEMPLAZÁ ESTE UID CON EL TUYO DE FIREBASE ───────────────────────
+// Para verlo: andá a Firebase Console > Authentication > Users > copiá tu UID
+var ADMIN_UID = 'TU_UID_AQUI';
+var WA = '5492804585359';
+// ──────────────────────────────────────────────────────────────────────
+
+var db = firebase.firestore();
+var currentAdmin = null;
+var allStats = {};
+
+firebase.auth().onAuthStateChanged(function(user){
+  if(!user){
+    showScreen('login');
+    return;
+  }
+  // Verificar si es admin
+  db.collection('admins').doc(user.uid).get().then(function(doc){
+    if(doc.exists || user.uid === ADMIN_UID){
+      currentAdmin = user;
+      document.getElementById('admin-name').textContent = user.displayName || user.email;
+      var av = document.getElementById('admin-avatar');
+      if(user.photoURL){ av.src=user.photoURL; av.style.display='block'; }
+      showScreen('panel');
+      loadTab('dashboard');
+    } else {
+      showScreen('denied');
+    }
+  }).catch(function(){
+    // Si no existe la colección admins, usar UID hardcodeado
+    if(user.uid === ADMIN_UID){
+      currentAdmin = user;
+      document.getElementById('admin-name').textContent = user.displayName || user.email;
+      showScreen('panel');
+      loadTab('dashboard');
+    } else {
+      showScreen('denied');
+    }
+  });
+});
+
+function loginConGoogle(){
+  firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
+}
+function logout(){
+  firebase.auth().signOut();
+  showScreen('login');
+}
+function showScreen(s){
+  document.getElementById('screen-login').style.display = s==='login'?'flex':'none';
+  document.getElementById('screen-denied').style.display = s==='denied'?'flex':'none';
+  document.getElementById('screen-panel').style.display = s==='panel'?'flex':'none';
+}
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:#0F0F11;color:#FAFAFA;min-height:100vh}
+
+/* SCREENS */
+.screen{display:none;min-height:100vh;align-items:center;justify-content:center}
+.screen-card{background:#1C1C1F;border:1px solid #2A2A2E;border-radius:20px;padding:2.5rem;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.screen-card h1{font-size:1.4rem;font-weight:700;margin-bottom:0.5rem}
+.screen-card p{font-size:0.875rem;color:#8A8479;line-height:1.6;margin-bottom:1.75rem}
+
+/* PANEL LAYOUT */
+#screen-panel{display:none;flex-direction:column;min-height:100vh}
+.admin-header{background:#1A1814;border-bottom:1px solid rgba(255,255,255,0.08);padding:0 1.5rem;height:56px;display:flex;align-items:center;gap:14px;flex-shrink:0;position:sticky;top:0;z-index:100}
+.admin-logo{width:28px;height:28px;border-radius:6px;object-fit:cover}
+.admin-title{font-size:0.9rem;font-weight:700;color:#fff;letter-spacing:-0.01em}
+.admin-badge{background:#2D6A4F;color:#fff;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:0.05em}
+.admin-user{margin-left:auto;display:flex;align-items:center;gap:8px}
+.admin-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,0.2);display:none}
+.admin-name{font-size:0.8rem;color:rgba(255,255,255,0.7);font-weight:500}
+.btn-logout{background:none;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);border-radius:7px;padding:5px 12px;font-size:0.75rem;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.15s}
+.btn-logout:hover{background:rgba(255,255,255,0.08);color:#fff}
+
+/* SIDEBAR + CONTENT */
+.panel-body{display:flex;flex:1;overflow:hidden}
+.sidebar{width:220px;background:#141416;border-right:1px solid rgba(255,255,255,0.06);padding:1rem 0;flex-shrink:0;overflow-y:auto}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 18px;cursor:pointer;font-size:0.85rem;font-weight:500;color:rgba(255,255,255,0.5);transition:all 0.15s;border-left:3px solid transparent;user-select:none}
+.sidebar-item:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.85)}
+.sidebar-item.active{color:#fff;background:rgba(45,106,79,0.15);border-left-color:#2D6A4F}
+.sidebar-icon{font-size:1.1rem;flex-shrink:0}
+.sidebar-sep{height:1px;background:rgba(255,255,255,0.06);margin:8px 16px}
+.content{flex:1;overflow-y:auto;padding:2rem 2rem 4rem;background:#0F0F11}
+
+/* CARDS & STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:2rem}
+.stat-card{background:#1C1C1F;border:1px solid #2A2A2E;border-radius:12px;padding:1.25rem}
+.stat-label{font-size:0.72rem;color:#8A8479;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+.stat-value{font-size:1.8rem;font-weight:700;font-variant-numeric:tabular-nums;color:#FAFAFA}
+.stat-sub{font-size:0.75rem;color:#8A8479;margin-top:4px}
+.stat-card.green .stat-value{color:#4ADE80}
+.stat-card.blue .stat-value{color:#60A5FA}
+.stat-card.orange .stat-value{color:#FB923C}
+.stat-card.purple .stat-value{color:#C084FC}
+
+/* SECTION HEADER */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.section-title{font-size:1.1rem;font-weight:700;color:#FAFAFA}
+.section-sub{font-size:0.82rem;color:#8A8479;margin-top:3px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:9px;font-size:0.85rem;font-weight:600;cursor:pointer;border:none;font-family:'Outfit',sans-serif;transition:all 0.15s}
+.btn-primary{background:#2D6A4F;color:#fff}
+.btn-primary:hover{background:#1B4332}
+.btn-danger{background:#7F1D1D;color:#FCA5A5;border:1px solid #B91C1C}
+.btn-danger:hover{background:#B91C1C;color:#fff}
+.btn-secondary{background:#2A2A2E;color:#D4D4D8;border:1px solid #3A3A3E}
+.btn-secondary:hover{background:#3A3A3E;color:#fff}
+.btn-wa{background:#25D366;color:#fff}
+.btn-wa:hover{background:#1ebe5d}
+.btn-sm{padding:6px 12px;font-size:0.78rem}
+
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid.cols3{grid-template-columns:1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:5px}
+.field.full{grid-column:1/-1}
+.field label{font-size:0.78rem;font-weight:600;color:#A1A1AA}
+.field input,.field select,.field textarea{background:#1C1C1F;border:1px solid #2A2A2E;border-radius:8px;padding:9px 12px;font-size:0.875rem;font-family:'Outfit',sans-serif;color:#FAFAFA;outline:none;transition:border-color 0.15s;font-variant-numeric:tabular-nums}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.15)}
+.field textarea{resize:vertical;min-height:80px}
+.field select option{background:#1C1C1F}
+
+/* FORM CARD */
+.form-card{background:#1C1C1F;border:1px solid #2A2A2E;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.form-card h3{font-size:0.9rem;font-weight:700;color:#FAFAFA;margin-bottom:1.25rem;padding-bottom:0.75rem;border-bottom:1px solid #2A2A2E}
+
+/* TABLE */
+.table-wrap{background:#1C1C1F;border:1px solid #2A2A2E;border-radius:12px;overflow:hidden}
+.table-header{display:grid;padding:10px 16px;background:#141416;font-size:0.72rem;font-weight:700;color:#8A8479;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #2A2A2E}
+.table-row{display:grid;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.1s;align-items:center}
+.table-row:last-child{border:none}
+.table-row:hover{background:rgba(255,255,255,0.03)}
+.table-empty{text-align:center;padding:3rem;color:#8A8479;font-size:0.875rem}
+
+/* BADGES */
+.pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:600;border:1px solid}
+.pill-green{background:#052e16;color:#4ADE80;border-color:#166534}
+.pill-red{background:#450a0a;color:#F87171;border-color:#7F1D1D}
+.pill-yellow{background:#422006;color:#FCD34D;border-color:#92400E}
+.pill-blue{background:#0c1a3d;color:#93C5FD;border-color:#1E3A8A}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;right:2rem;background:#2D6A4F;color:#fff;padding:12px 20px;border-radius:10px;font-size:0.875rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:9999;opacity:0;transform:translateY(10px);transition:all 0.3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.error{background:#7F1D1D}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:500;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)}
+.modal-bg.open{display:flex}
+.modal-box{background:#1C1C1F;border:1px solid #2A2A2E;border-radius:16px;padding:1.75rem;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:fadeUp 0.25s ease}
+.modal-box h3{font-size:1rem;font-weight:700;margin-bottom:1.25rem;color:#FAFAFA}
+.modal-close-btn{position:absolute;top:1rem;right:1rem;background:#2A2A2E;border:none;color:#8A8479;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center}
+
+/* LOGIN BTN */
+.btn-google{width:100%;padding:12px;background:#fff;color:#1A1814;border:none;border-radius:10px;font-size:0.95rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.15s}
+.btn-google:hover{background:#F5F5F5}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner-sm{width:16px;height:16px;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;display:inline-block}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen" style="display:flex">
+  <div class="screen-card">
+    <div style="font-size:2.5rem;margin-bottom:1rem">🔐</div>
+    <h1>Panel Admin</h1>
+    <p>Chulengo Estudio · Solo acceso autorizado</p>
+    <button class="btn-google" onclick="loginConGoogle()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Ingresar con Google
+    </button>
+  </div>
+</div>
+
+<!-- ACCESO DENEGADO -->
+<div id="screen-denied" class="screen">
+  <div class="screen-card">
+    <div style="font-size:2.5rem;margin-bottom:1rem">🚫</div>
+    <h1>Sin acceso</h1>
+    <p>Tu cuenta no tiene permisos de administrador. Contactá al dueño del sistema.</p>
+    <button class="btn" style="background:#2A2A2E;color:#D4D4D8;width:100%;justify-content:center;margin-top:0.5rem" onclick="logout()">Volver</button>
+  </div>
+</div>
+
+<!-- PANEL PRINCIPAL -->
+<div id="screen-panel" style="flex-direction:column;min-height:100vh">
+
+  <header class="admin-header">
+    <img src="img/CHULENGO_LOGOO.png" alt="Logo" class="admin-logo">
+    <span class="admin-title">Chulengo Estudio</span>
+    <span class="admin-badge">Admin</span>
+    <div class="admin-user">
+      <img id="admin-avatar" class="admin-avatar" src="" alt="">
+      <span id="admin-name"></span>
+      <button class="btn-logout" onclick="logout()">Salir</button>
+    </div>
+  </header>
+
+  <div class="panel-body">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-item active" onclick="loadTab('dashboard')" id="tab-dashboard">
+        <span class="sidebar-icon">📊</span> Dashboard
+      </div>
+      <div class="sidebar-sep"></div>
+      <div class="sidebar-item" onclick="loadTab('ofertas')" id="tab-ofertas">
+        <span class="sidebar-icon">🏷️</span> Ofertas
+      </div>
+      <div class="sidebar-item" onclick="loadTab('cupones')" id="tab-cupones">
+        <span class="sidebar-icon">🎫</span> Cupones
+      </div>
+      <div class="sidebar-sep"></div>
+      <div class="sidebar-item" onclick="loadTab('suscriptores')" id="tab-suscriptores">
+        <span class="sidebar-icon">🔔</span> Suscriptores
+      </div>
+      <div class="sidebar-sep"></div>
+      <div class="sidebar-item" onclick="loadTab('presupuestos')" id="tab-presupuestos">
+        <span class="sidebar-icon">📄</span> Presupuestos
+      </div>
+    </nav>
+
+    <!-- CONTENT -->
+    <main class="content" id="main-content">
+      <div style="text-align:center;padding:4rem;color:#8A8479">Cargando...</div>
+    </main>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+var db = firebase.firestore();
+var WA = '5492804585359';
+
+function toast(msg, isError){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(function(){ t.className = 'toast'; }, 3000);
+}
+
+function fmtPeso(n){ return new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(n||0); }
+function fmtFecha(ts){ return ts ? ts.toDate().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—'; }
+
+function setActiveTab(name){
+  document.querySelectorAll('.sidebar-item').forEach(function(el){ el.classList.remove('active'); });
+  var el = document.getElementById('tab-'+name);
+  if(el) el.classList.add('active');
+}
+
+function loadTab(name){
+  setActiveTab(name);
+  var c = document.getElementById('main-content');
+  c.innerHTML = '<div style="text-align:center;padding:4rem;color:#8A8479"><div style="width:28px;height:28px;border:2px solid #2A2A2E;border-top-color:#2D6A4F;border-radius:50%;animation:spin 0.6s linear infinite;margin:0 auto 1rem"></div>Cargando...</div>';
+  if(name === 'dashboard') loadDashboard();
+  else if(name === 'ofertas') loadOfertas();
+  else if(name === 'cupones') loadCupones();
+  else if(name === 'suscriptores') loadSuscriptores();
+  else if(name === 'presupuestos') loadPresupuestos();
+}
+
+// ══════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════
+function loadDashboard(){
+  var c = document.getElementById('main-content');
+  var totalPres = 0, montoPres = 0, totalSubs = 0, totalOfertas = 0, totalCupones = 0;
+
+  Promise.all([
+    db.collection('presupuestos').get(),
+    db.collection('suscripciones').get(),
+    db.collection('ofertas').get(),
+    db.collection('cupones').get()
+  ]).then(function(results){
+    totalPres = results[0].size;
+    results[0].forEach(function(d){ montoPres += d.data().precioTotal || 0; });
+    totalSubs = results[1].size;
+    totalOfertas = results[2].size;
+    totalCupones = results[3].size;
+
+    // Presupuestos por estado
+    var estados = {Enviado:0,Aprobado:0,Señado:0,Pagado:0,Cancelado:0};
+    results[0].forEach(function(d){ var e = d.data().estado||'Enviado'; if(estados[e]!==undefined) estados[e]++; });
+
+    // Últimos 6 meses
+    var meses = {};
+    var ahora = new Date();
+    for(var i=5;i>=0;i--){
+      var d = new Date(ahora.getFullYear(), ahora.getMonth()-i, 1);
+      meses[d.getMonth()+'-'+d.getFullYear()] = {label: d.toLocaleDateString('es-AR',{month:'short',year:'2-digit'}), count:0, monto:0};
+    }
+    results[0].forEach(function(doc){
+      var d = doc.data();
+      if(!d.fecha) return;
+      var fd = d.fecha.toDate();
+      var key = fd.getMonth()+'-'+fd.getFullYear();
+      if(meses[key]){ meses[key].count++; meses[key].monto += d.precioTotal||0; }
+    });
+    var maxMonto = Math.max.apply(null, Object.values(meses).map(function(m){return m.monto;}))||1;
+
+    c.innerHTML = `
+      <div class="section-header">
+        <div><div class="section-title">Dashboard</div><div class="section-sub">Resumen general de la plataforma</div></div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card green">
+          <div class="stat-label">Total presupuestado</div>
+          <div class="stat-value">${fmtPeso(montoPres)}</div>
+          <div class="stat-sub">En ${totalPres} presupuesto${totalPres!==1?'s':''}</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Presupuestos</div>
+          <div class="stat-value">${totalPres}</div>
+          <div class="stat-sub">${estados.Pagado} pagados · ${estados.Aprobado} aprobados</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-label">Suscriptores</div>
+          <div class="stat-value">${totalSubs}</div>
+          <div class="stat-sub">Esperando ofertas/cupones</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-label">Promociones activas</div>
+          <div class="stat-value">${totalOfertas + totalCupones}</div>
+          <div class="stat-sub">${totalOfertas} oferta${totalOfertas!==1?'s':''} · ${totalCupones} cupón/es</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem">
+        <div class="form-card" style="margin:0">
+          <h3>Presupuestos por estado</h3>
+          ${Object.keys(estados).map(function(e){
+            var pct = totalPres ? Math.round(estados[e]/totalPres*100) : 0;
+            var colors={Enviado:'#60A5FA',Aprobado:'#4ADE80',Señado:'#FCD34D',Pagado:'#34D399',Cancelado:'#F87171'};
+            return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:70px;font-size:0.78rem;color:#A1A1AA;flex-shrink:0">'+e+'</div><div style="flex:1;background:#2A2A2E;border-radius:4px;height:8px;overflow:hidden"><div style="width:'+pct+'%;background:'+colors[e]+';height:100%;border-radius:4px;transition:width 0.5s"></div></div><div style="font-size:0.78rem;color:#FAFAFA;font-variant-numeric:tabular-nums;width:18px;text-align:right">'+estados[e]+'</div></div>';
+          }).join('')}
+        </div>
+        <div class="form-card" style="margin:0">
+          <h3>Presupuestos por mes</h3>
+          <div style="display:flex;align-items:flex-end;gap:6px;height:100px">
+            ${Object.values(meses).map(function(m){
+              var pct = Math.round(m.monto/maxMonto*100)||3;
+              return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px"><div style="font-size:0.65rem;color:#8A8479">'+fmtPeso(m.monto).replace('$','')+'</div><div style="width:100%;background:'+(m.monto>0?'#2D6A4F':'#2A2A2E')+';border-radius:4px 4px 0 0;height:'+pct+'%;transition:height 0.5s"></div><div style="font-size:0.65rem;color:#8A8479;text-align:center">'+m.label+'</div></div>';
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }).catch(function(e){ c.innerHTML='<div style="color:#F87171;padding:2rem">Error cargando dashboard: '+e.message+'</div>'; });
+}
+
+// ══════════════════════════════════════════════
+// OFERTAS
+// ══════════════════════════════════════════════
+function loadOfertas(){
+  var c = document.getElementById('main-content');
+  db.collection('ofertas').orderBy('fechaCreacion','desc').get().then(function(snap){
+    var items = [];
+    snap.forEach(function(d){ items.push({id:d.id, data:d.data()}); });
+
+    c.innerHTML = `
+      <div class="section-header">
+        <div><div class="section-title">Ofertas</div><div class="section-sub">${items.length} oferta${items.length!==1?'s':''} creada${items.length!==1?'s':''}</div></div>
+        <button class="btn btn-primary" onclick="abrirModalOferta()">+ Nueva oferta</button>
+      </div>
+
+      <div class="form-card">
+        <div class="table-wrap">
+          <div class="table-header" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr auto">
+            <span>Nombre</span><span>Descuento</span><span>Vigencia</span><span>Estado</span><span>Notificados</span><span>Acciones</span>
+          </div>
+          ${items.length === 0 ? '<div class="table-empty">No hay ofertas todavía. ¡Creá la primera!</div>' :
+            items.map(function(item){
+              var d = item.data;
+              var activa = d.activa !== false;
+              var vencida = d.vigenciaHasta && d.vigenciaHasta.toDate && d.vigenciaHasta.toDate() < new Date();
+              return '<div class="table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr auto">'+
+                '<div><div style="font-weight:600;font-size:0.875rem">'+d.nombre+'</div><div style="font-size:0.75rem;color:#8A8479;margin-top:2px">'+( d.descripcion||'' )+'</div></div>'+
+                '<div style="color:#4ADE80;font-weight:700;font-size:0.9rem">-'+(d.descuento||0)+'%</div>'+
+                '<div style="font-size:0.8rem;color:#A1A1AA">'+(d.vigenciaHasta ? fmtFecha(d.vigenciaHasta) : 'Sin límite')+'</div>'+
+                '<div>'+(vencida ? '<span class="pill pill-red">Vencida</span>' : activa ? '<span class="pill pill-green">Activa</span>' : '<span class="pill pill-yellow">Pausada</span>')+'</div>'+
+                '<div style="font-size:0.8rem;color:#A1A1AA">'+(d.notificados||0)+' enviados</div>'+
+                '<div style="display:flex;gap:6px">'+
+                  '<button class="btn btn-sm btn-secondary" onclick="editarOferta(\''+item.id+'\')">✏️</button>'+
+                  '<button class="btn btn-sm btn-danger" onclick="eliminarOferta(\''+item.id+'\')">🗑</button>'+
+                '</div>'+
+              '</div>';
+            }).join('')}
+        </div>
+      </div>
+    `;
+  }).catch(function(e){ c.innerHTML='<div style="color:#F87171;padding:2rem">Error: '+e.message+'</div>'; });
+}
+
+function abrirModalOferta(ofertaId, datos){
+  var isEdit = !!ofertaId;
+  var d = datos || {};
+  var modal = document.createElement('div');
+  modal.className = 'modal-bg open';
+  modal.id = 'modal-oferta';
+  modal.innerHTML = `
+    <div class="modal-box" style="position:relative;max-width:560px">
+      <button class="modal-close-btn" onclick="document.getElementById('modal-oferta').remove()">✕</button>
+      <h3>${isEdit ? '✏️ Editar oferta' : '+ Nueva oferta'}</h3>
+      <div class="form-grid" style="margin-bottom:1rem">
+        <div class="field full"><label>Nombre de la oferta</label><input id="of-nombre" type="text" placeholder="Ej: Black Friday PLA" value="${d.nombre||''}"></div>
+        <div class="field full"><label>Descripción (visible para el cliente)</label><textarea id="of-desc" placeholder="Ej: 20% de descuento en todos los PLA esta semana">${d.descripcion||''}</textarea></div>
+        <div class="field"><label>% de descuento</label><input id="of-descuento" type="number" min="1" max="99" placeholder="Ej: 20" value="${d.descuento||''}"></div>
+        <div class="field"><label>Vigencia hasta (opcional)</label><input id="of-vigencia" type="date" value="${d.vigenciaHasta&&d.vigenciaHasta.toDate?d.vigenciaHasta.toDate().toISOString().split('T')[0]:''}"></div>
+        <div class="field"><label>Productos aplicables</label><input id="of-productos" type="text" placeholder="Ej: Todos los PLA, o dejar vacío para todo" value="${d.productos||''}"></div>
+        <div class="field"><label>Estado</label>
+          <select id="of-activa">
+            <option value="1" ${d.activa!==false?'selected':''}>Activa</option>
+            <option value="0" ${d.activa===false?'selected':''}>Pausada</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:0.75rem">
+        <button class="btn btn-secondary" onclick="document.getElementById('modal-oferta').remove()">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarOferta('${ofertaId||''}')">
+          ${isEdit ? 'Guardar cambios' : 'Crear oferta'}
+        </button>
+      </div>
+      <div style="border-top:1px solid #2A2A2E;padding-top:0.75rem;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-wa btn-sm" onclick="notificarSuscriptores('oferta','${ofertaId||''}')">
+          💬 Notificar suscriptores por WA
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function guardarOferta(id){
+  var nombre = document.getElementById('of-nombre').value.trim();
+  if(!nombre){ toast('Ingresá un nombre para la oferta', true); return; }
+  var datos = {
+    nombre: nombre,
+    descripcion: document.getElementById('of-desc').value.trim(),
+    descuento: parseInt(document.getElementById('of-descuento').value)||0,
+    productos: document.getElementById('of-productos').value.trim(),
+    activa: document.getElementById('of-activa').value === '1',
+    fechaCreacion: id ? firebase.firestore.FieldValue.serverTimestamp() : firebase.firestore.FieldValue.serverTimestamp()
+  };
+  var vigencia = document.getElementById('of-vigencia').value;
+  if(vigencia) datos.vigenciaHasta = firebase.firestore.Timestamp.fromDate(new Date(vigencia));
+
+  var promise = id ? db.collection('ofertas').doc(id).update(datos) : db.collection('ofertas').add(datos);
+  promise.then(function(){
+    document.getElementById('modal-oferta').remove();
+    toast(id ? 'Oferta actualizada ✓' : 'Oferta creada ✓');
+    loadOfertas();
+  }).catch(function(e){ toast('Error: '+e.message, true); });
+}
+
+function editarOferta(id){
+  db.collection('ofertas').doc(id).get().then(function(doc){
+    abrirModalOferta(id, doc.data());
+  });
+}
+
+function eliminarOferta(id){
+  if(!confirm('¿Eliminar esta oferta?')) return;
+  db.collection('ofertas').doc(id).delete().then(function(){ toast('Oferta eliminada'); loadOfertas(); });
+}
+
+// ══════════════════════════════════════════════
+// CUPONES
+// ══════════════════════════════════════════════
+function loadCupones(){
+  var c = document.getElementById('main-content');
+  db.collection('cupones').orderBy('fechaCreacion','desc').get().then(function(snap){
+    var items = [];
+    snap.forEach(function(d){ items.push({id:d.id, data:d.data()}); });
+
+    c.innerHTML = `
+      <div class="section-header">
+        <div><div class="section-title">Cupones</div><div class="section-sub">${items.length} cupón/es creado/s</div></div>
+        <button class="btn btn-primary" onclick="abrirModalCupon()">+ Nuevo cupón</button>
+      </div>
+      <div class="form-card">
+        <div class="table-wrap">
+          <div class="table-header" style="grid-template-columns:1.5fr 1fr 1fr 1fr 1fr 1fr auto">
+            <span>Código</span><span>Descuento</span><span>Usos</span><span>Vigencia</span><span>Estado</span><span>Asignado a</span><span>Acciones</span>
+          </div>
+          ${items.length === 0 ? '<div class="table-empty">No hay cupones todavía.</div>' :
+            items.map(function(item){
+              var d = item.data;
+              var activo = d.activo !== false;
+              var vencido = d.vigenciaHasta && d.vigenciaHasta.toDate && d.vigenciaHasta.toDate() < new Date();
+              var usosRestantes = d.usosMax ? (d.usosMax - (d.usosActuales||0)) : '∞';
+              return '<div class="table-row" style="grid-template-columns:1.5fr 1fr 1fr 1fr 1fr 1fr auto">'+
+                '<div><code style="background:#2A2A2E;padding:3px 8px;border-radius:5px;font-size:0.82rem;font-weight:700;letter-spacing:0.05em;color:#60A5FA">'+d.codigo+'</code></div>'+
+                '<div style="color:#4ADE80;font-weight:700">-'+(d.descuento||0)+'%</div>'+
+                '<div style="font-size:0.8rem;color:#A1A1AA">'+(d.usosActuales||0)+(d.usosMax?'/'+d.usosMax:' usos')+'</div>'+
+                '<div style="font-size:0.8rem;color:#A1A1AA">'+(d.vigenciaHasta ? fmtFecha(d.vigenciaHasta) : 'Sin límite')+'</div>'+
+                '<div>'+(vencido ? '<span class="pill pill-red">Vencido</span>' : activo ? '<span class="pill pill-green">Activo</span>' : '<span class="pill pill-yellow">Pausado</span>')+'</div>'+
+                '<div style="font-size:0.78rem;color:#A1A1AA">'+(d.emailAsignado||'Público')+'</div>'+
+                '<div style="display:flex;gap:6px">'+
+                  '<button class="btn btn-sm btn-secondary" onclick="editarCupon(\''+item.id+'\')">✏️</button>'+
+                  '<button class="btn btn-sm btn-wa btn-sm" onclick="enviarCuponWA(\''+d.codigo+'\',\''+d.descuento+'\',\''+( d.emailAsignado||'' )+'\')">💬</button>'+
+                  '<button class="btn btn-sm btn-danger" onclick="eliminarCupon(\''+item.id+'\')">🗑</button>'+
+                '</div>'+
+              '</div>';
+            }).join('')}
+        </div>
+      </div>
+    `;
+  }).catch(function(e){ c.innerHTML='<div style="color:#F87171;padding:2rem">Error: '+e.message+'</div>'; });
+}
+
+function generarCodigo(){
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var code = 'CHU-';
+  for(var i=0;i<5;i++) code += chars[Math.floor(Math.random()*chars.length)];
+  document.getElementById('cup-codigo').value = code;
+}
+
+function abrirModalCupon(cuponId, datos){
+  var isEdit = !!cuponId;
+  var d = datos || {};
+  var modal = document.createElement('div');
+  modal.className = 'modal-bg open';
+  modal.id = 'modal-cupon';
+  modal.innerHTML = `
+    <div class="modal-box" style="position:relative;max-width:540px">
+      <button class="modal-close-btn" onclick="document.getElementById('modal-cupon').remove()">✕</button>
+      <h3>${isEdit ? '✏️ Editar cupón' : '+ Nuevo cupón'}</h3>
+      <div class="form-grid" style="margin-bottom:1rem">
+        <div class="field">
+          <label>Código del cupón</label>
+          <div style="display:flex;gap:6px">
+            <input id="cup-codigo" type="text" placeholder="Ej: CHU-VERANO" value="${d.codigo||''}" style="text-transform:uppercase;font-weight:700;letter-spacing:0.05em">
+            <button class="btn btn-secondary btn-sm" onclick="generarCodigo()" style="white-space:nowrap;flex-shrink:0">🎲 Generar</button>
+          </div>
+        </div>
+        <div class="field"><label>% de descuento</label><input id="cup-descuento" type="number" min="1" max="99" placeholder="Ej: 15" value="${d.descuento||''}"></div>
+        <div class="field"><label>Vigencia hasta (opcional)</label><input id="cup-vigencia" type="date" value="${d.vigenciaHasta&&d.vigenciaHasta.toDate?d.vigenciaHasta.toDate().toISOString().split('T')[0]:''}"></div>
+        <div class="field"><label>Usos máximos (vacío = ilimitado)</label><input id="cup-usos" type="number" min="1" placeholder="Ej: 10" value="${d.usosMax||''}"></div>
+        <div class="field full"><label>Asignar a email específico (opcional — si es público, dejalo vacío)</label><input id="cup-email" type="email" placeholder="cliente@email.com" value="${d.emailAsignado||''}"></div>
+        <div class="field full"><label>Descripción / nota interna</label><textarea id="cup-desc" placeholder="Uso interno, el cliente no lo ve">${d.descripcion||''}</textarea></div>
+        <div class="field"><label>Estado</label>
+          <select id="cup-activo">
+            <option value="1" ${d.activo!==false?'selected':''}>Activo</option>
+            <option value="0" ${d.activo===false?'selected':''}>Pausado</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="document.getElementById('modal-cupon').remove()">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarCupon('${cuponId||''}')">
+          ${isEdit ? 'Guardar cambios' : 'Crear cupón'}
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function guardarCupon(id){
+  var codigo = (document.getElementById('cup-codigo').value||'').trim().toUpperCase();
+  if(!codigo){ toast('Ingresá un código', true); return; }
+  var datos = {
+    codigo: codigo,
+    descuento: parseInt(document.getElementById('cup-descuento').value)||0,
+    emailAsignado: document.getElementById('cup-email').value.trim(),
+    descripcion: document.getElementById('cup-desc').value.trim(),
+    activo: document.getElementById('cup-activo').value === '1',
+    usosActuales: 0,
+    fechaCreacion: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  var usosMax = parseInt(document.getElementById('cup-usos').value);
+  if(usosMax > 0) datos.usosMax = usosMax;
+  var vigencia = document.getElementById('cup-vigencia').value;
+  if(vigencia) datos.vigenciaHasta = firebase.firestore.Timestamp.fromDate(new Date(vigencia));
+
+  var promise = id ? db.collection('cupones').doc(id).update(datos) : db.collection('cupones').add(datos);
+  promise.then(function(){
+    document.getElementById('modal-cupon').remove();
+    toast(id ? 'Cupón actualizado ✓' : 'Cupón creado ✓');
+    loadCupones();
+  }).catch(function(e){ toast('Error: '+e.message, true); });
+}
+
+function editarCupon(id){
+  db.collection('cupones').doc(id).get().then(function(doc){ abrirModalCupon(id, doc.data()); });
+}
+function eliminarCupon(id){
+  if(!confirm('¿Eliminar este cupón?')) return;
+  db.collection('cupones').doc(id).delete().then(function(){ toast('Cupón eliminado'); loadCupones(); });
+}
+function enviarCuponWA(codigo, descuento, email){
+  var msg = '¡Hola! 🎫 Te enviamos un cupón de descuento exclusivo de Chulengo Estudio:\n\n*Código: '+codigo+'*\n*Descuento: '+descuento+'%*\n\nUsalo en tu próximo pedido. Consultanos por los productos disponibles!';
+  window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg), '_blank');
+}
+
+// ══════════════════════════════════════════════
+// SUSCRIPTORES
+// ══════════════════════════════════════════════
+function loadSuscriptores(){
+  var c = document.getElementById('main-content');
+  db.collection('suscripciones').get().then(function(snap){
+    var items = [];
+    snap.forEach(function(d){ items.push({id:d.id, data:d.data()}); });
+    var oferta = items.filter(function(i){ return i.data.oferta; });
+    var cupon  = items.filter(function(i){ return i.data.cupon; });
+
+    c.innerHTML = `
+      <div class="section-header">
+        <div><div class="section-title">Suscriptores</div><div class="section-sub">${items.length} usuario${items.length!==1?'s':''} esperando novedades</div></div>
+        <button class="btn btn-wa" onclick="notificarTodos()">💬 Notificar todos por WA</button>
+      </div>
+
+      <div class="stats-grid" style="grid-template-columns:1fr 1fr;margin-bottom:1.5rem">
+        <div class="stat-card orange"><div class="stat-label">Suscriptos a Ofertas</div><div class="stat-value">${oferta.length}</div></div>
+        <div class="stat-card purple"><div class="stat-label">Suscriptos a Cupones</div><div class="stat-value">${cupon.length}</div></div>
+      </div>
+
+      <div class="form-card">
+        <div class="table-wrap">
+          <div class="table-header" style="grid-template-columns:2fr 1fr 1fr 1fr auto">
+            <span>Usuario</span><span>Ofertas</span><span>Cupones</span><span>Fecha</span><span>Contactar</span>
+          </div>
+          ${items.length === 0 ? '<div class="table-empty">No hay suscriptores todavía.</div>' :
+            items.map(function(item){
+              var d = item.data;
+              return '<div class="table-row" style="grid-template-columns:2fr 1fr 1fr 1fr auto">'+
+                '<div><div style="font-weight:600;font-size:0.875rem">'+(d.nombre||'Sin nombre')+'</div><div style="font-size:0.75rem;color:#8A8479;margin-top:2px">'+d.email+'</div></div>'+
+                '<div>'+(d.oferta?'<span class="pill pill-green">Sí</span>':'<span style="color:#8A8479;font-size:0.8rem">No</span>')+'</div>'+
+                '<div>'+(d.cupon?'<span class="pill pill-purple" style="background:#2e1065;color:#C084FC;border-color:#6b21a8">Sí</span>':'<span style="color:#8A8479;font-size:0.8rem">No</span>')+'</div>'+
+                '<div style="font-size:0.8rem;color:#A1A1AA">'+fmtFecha(d.fecha)+'</div>'+
+                '<div style="display:flex;gap:6px">'+
+                  '<button class="btn btn-sm btn-wa" onclick="contactarSuscriptor(\''+d.nombre+'\',\''+d.email+'\')">💬 WA</button>'+
+                '</div>'+
+              '</div>';
+            }).join('')}
+        </div>
+      </div>
+    `;
+  }).catch(function(e){ c.innerHTML='<div style="color:#F87171;padding:2rem">Error: '+e.message+'</div>'; });
+}
+
+function contactarSuscriptor(nombre, email){
+  var msg = '¡Hola '+nombre+'! 👋 Te escribimos desde Chulengo Estudio con una novedad que te puede interesar.';
+  window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg), '_blank');
+}
+
+function notificarTodos(){
+  var msg = '¡Hola! 👋 Te escribimos desde Chulengo Estudio. Tenemos novedades que te pueden interesar. ¡Pasate a ver!';
+  window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg), '_blank');
+}
+
+function notificarSuscriptores(tipo, ofertaId){
+  if(ofertaId){
+    db.collection(tipo==='oferta'?'ofertas':'cupones').doc(ofertaId).get().then(function(doc){
+      var d = doc.data();
+      var msg = '🏷️ ¡Nueva oferta en Chulengo Estudio!\n\n*'+d.nombre+'*\n'+( d.descripcion||'' )+'\n\nDescuento: *'+d.descuento+'%*'+(d.vigenciaHasta?' · Hasta: '+fmtFecha(d.vigenciaHasta):'')+'\n\nConsultanos por los productos disponibles!';
+      window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg), '_blank');
+    });
+  } else {
+    var msg = '🏷️ ¡Tenemos una nueva oferta en Chulengo Estudio! Consultanos para más detalles.';
+    window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg), '_blank');
+  }
+}
+
+// ══════════════════════════════════════════════
+// PRESUPUESTOS
+// ══════════════════════════════════════════════
+function loadPresupuestos(){
+  var c = document.getElementById('main-content');
+  var filtroEstado = 'Todos';
+  var busqueda = '';
+
+  db.collection('presupuestos').orderBy('fecha','desc').get().then(function(snap){
+    var todos = [];
+    snap.forEach(function(d){ todos.push({id:d.id, data:d.data()}); });
+
+    function render(){
+      var filtered = todos.filter(function(e){
+        if(filtroEstado!=='Todos' && e.data.estado!==filtroEstado) return false;
+        if(busqueda){ var hay=(e.data.proyecto||'').toLowerCase().includes(busqueda)||(e.data.cliente||'').toLowerCase().includes(busqueda)||(e.data.email||'').toLowerCase().includes(busqueda); if(!hay) return false; }
+        return true;
+      });
+      var montof = filtered.reduce(function(s,e){return s+(e.data.precioTotal||0);},0);
+
+      var estadosColor={'Enviado':'pill-blue','Aprobado':'pill-green','Señado':'pill-yellow','Pagado':'pill-green','Cancelado':'pill-red'};
+      document.getElementById('pres-count').textContent = filtered.length+' de '+todos.length;
+      document.getElementById('pres-monto').textContent = fmtPeso(montof);
+
+      var tbody = document.getElementById('pres-tbody');
+      if(!tbody) return;
+      tbody.innerHTML = filtered.length === 0 ? '<div class="table-empty">No hay presupuestos con ese filtro.</div>' :
+        filtered.map(function(item){
+          var d = item.data; var estado = d.estado||'Enviado';
+          return '<div class="table-row" style="grid-template-columns:2fr 1.5fr 1fr 1fr 1fr auto">'+
+            '<div><div style="font-weight:600;font-size:0.875rem">'+(d.proyecto||'Sin nombre')+'</div><div style="font-size:0.75rem;color:#8A8479;margin-top:2px">'+(d.nombre||d.email||'')+'</div></div>'+
+            '<div style="font-size:0.8rem;color:#A1A1AA">'+(d.cliente||'—')+'</div>'+
+            '<div style="color:#4ADE80;font-weight:700;font-size:0.875rem">'+fmtPeso(d.precioTotal)+'</div>'+
+            '<div>'+fmtFecha(d.fecha)+'</div>'+
+            '<div><span class="pill '+(estadosColor[estado]||'pill-blue')+'">'+estado+'</span></div>'+
+            '<div style="display:flex;gap:5px">'+
+              '<button class="btn btn-sm btn-wa" onclick="waPresupuesto(\''+d.proyecto+'\',\''+fmtPeso(d.precioTotal)+'\')">💬</button>'+
+              '<button class="btn btn-sm btn-danger" onclick="eliminarPres(\''+item.id+'\')">🗑</button>'+
+            '</div>'+
+          '</div>';
+        }).join('');
+    }
+
+    var ESTADOS_PRES = ['Todos','Enviado','Aprobado','Señado','Pagado','Cancelado'];
+    c.innerHTML = `
+      <div class="section-header">
+        <div>
+          <div class="section-title">Todos los presupuestos</div>
+          <div class="section-sub"><span id="pres-count">0</span> resultados · <span id="pres-monto"></span></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+        <input type="text" id="pres-search" placeholder="Buscar proyecto, cliente o email..." style="flex:1;min-width:200px;background:#1C1C1F;border:1px solid #2A2A2E;border-radius:8px;padding:8px 12px;color:#FAFAFA;font-family:'Outfit',sans-serif;font-size:0.875rem;outline:none" oninput="busqueda=this.value.toLowerCase();render()">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${ESTADOS_PRES.map(function(e){
+            return '<button class="btn btn-sm btn-secondary" id="fpres-'+e+'" onclick="filtroEstado=\''+e+'\';document.querySelectorAll(\'[id^=fpres]\').forEach(function(b){b.style.background=\'\'});this.style.background=\'#2D6A4F\';render()">'+(e==='Todos'?'Todos':e)+'</button>';
+          }).join('')}
+        </div>
+      </div>
+      <div class="form-card">
+        <div class="table-wrap">
+          <div class="table-header" style="grid-template-columns:2fr 1.5fr 1fr 1fr 1fr auto">
+            <span>Proyecto</span><span>Cliente</span><span>Total</span><span>Fecha</span><span>Estado</span><span>Acciones</span>
+          </div>
+          <div id="pres-tbody"></div>
+        </div>
+      </div>
+    `;
+    document.getElementById('fpres-Todos').style.background = '#2D6A4F';
+    render();
+  }).catch(function(e){ c.innerHTML='<div style="color:#F87171;padding:2rem">Error: '+e.message+'</div>'; });
+}
+
+function waPresupuesto(proyecto, monto){
+  var msg = 'Hola! Te contactamos por el presupuesto de *'+proyecto+'* por '+monto+'. ¿Tenes alguna consulta?';
+  window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
+}
+function eliminarPres(id){
+  if(!confirm('¿Eliminar este presupuesto?')) return;
+  db.collection('presupuestos').doc(id).delete().then(function(){ toast('Presupuesto eliminado'); loadPresupuestos(); });
+}
+</script>
+</body>
+</html>
