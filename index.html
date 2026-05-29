@@ -62,6 +62,8 @@ document.addEventListener('DOMContentLoaded', function(){
       var modal = document.getElementById('google-login-modal');
       if(modal) modal.style.display='none';
       if(window._pendingPDF){ window._pendingPDF=false; abrirPDFModal(); }
+      // Auto-cargar preset de calculadora
+      setTimeout(function(){ cargarPresetCalc(); }, 500);
       if(window._pendingAviso){
         var pa=window._pendingAviso; window._pendingAviso=null;
         var btn=pa.btnId?document.getElementById(pa.btnId):document.getElementById('btn-avisar-'+pa.tipo+'-mail');
@@ -599,7 +601,11 @@ select:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12)}
 }
 .calc-container{max-width:1200px;margin:0 auto;padding:1.5rem 1rem 3rem;display:grid;grid-template-columns:1fr 360px;gap:1.5rem;align-items:start}
 .calc-form-col{min-width:0;padding-bottom:60vh}
-.calc-result-col{position:-webkit-sticky;position:sticky;top:100px;align-self:start}
+.calc-result-col{position:-webkit-sticky;position:sticky;top:100px;align-self:start;max-height:calc(100vh - 110px);overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(45,106,79,0.3) transparent;border-radius:12px}
+.calc-result-col::-webkit-scrollbar{width:4px}
+.calc-result-col::-webkit-scrollbar-track{background:transparent}
+.calc-result-col::-webkit-scrollbar-thumb{background:rgba(45,106,79,0.35);border-radius:4px}
+.calc-result-col::-webkit-scrollbar-thumb:hover{background:rgba(45,106,79,0.6)}
 @media(max-width:900px){
   .calc-container{grid-template-columns:1fr;display:block}
   .calc-result-col{position:static;margin-top:1rem}
@@ -954,6 +960,10 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
         </div>
         <div class="field"><label>Costo por minuto calculado</label><input type="text" id="costo-min-calc" readonly class="readonly-field" placeholder="—"></div>
       </div>
+      <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:4px">
+        <button id="btn-guardar-preset" onclick="guardarPresetCalc()" style="flex:1;padding:7px 12px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#9A3412;display:flex;align-items:center;justify-content:center;gap:6px">⭐ Guardar como mi configuración</button>
+        <button id="btn-cargar-preset" onclick="cargarPresetCalc()" style="display:none;flex:1;padding:7px 12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#166534;display:flex;align-items:center;justify-content:center;gap:6px">↺ Cargar mi configuración</button>
+      </div>
       <div class="field">
           <label>Tiempo de impresión <span class="tip" data-tip="El tiempo total que tarda la impresora. Lo ves en el slicer. Si hay varios archivos o copias, sumá todos los tiempos.">?</span></label>
           <div style="display:flex;gap:8px;align-items:center">
@@ -1041,6 +1051,23 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       <div class="res-row" id="row-va" style="display:none"><span class="res-lbl">Valor agregado</span><span class="res-val" id="r-va">—</span></div>
       <div class="res-total"><span class="res-total-lbl">Costo total</span><span class="res-total-val" id="r-total">—</span></div>
       <div class="res-precio"><div class="res-precio-lbl">Precio de venta sugerido</div><div class="res-precio-val" id="r-precio">—</div></div>
+
+      <div style="background:#FFE600;border-radius:10px;padding:1rem;margin-top:0.75rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+          <span style="font-size:0.78rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif">🛒 Precio para Mercado Libre</span>
+          <select id="ml-tipo" onchange="calcularML()" style="background:rgba(0,0,0,0.1);border:none;border-radius:6px;padding:4px 8px;font-size:0.72rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;cursor:pointer;outline:none">
+            <option value="0.1275">Clásica (~12.75%)</option>
+            <option value="0.1699" selected>Premium (~17%)</option>
+            <option value="custom">Personalizada</option>
+          </select>
+        </div>
+        <div id="ml-custom-row" style="display:none;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+          <input type="number" id="ml-comision-custom" min="1" max="99" value="15" placeholder="%" oninput="calcularML()" style="width:65px;padding:5px 8px;border:1px solid rgba(0,0,0,0.15);border-radius:6px;font-size:0.85rem;font-family:Outfit,sans-serif;background:rgba(255,255,255,0.6);outline:none;color:#1A1814">
+          <span style="font-size:0.78rem;color:#1A1814;font-family:Outfit,sans-serif">% comisión</span>
+        </div>
+        <div style="font-size:1.6rem;font-weight:800;color:#1A1814;font-family:Outfit,sans-serif;font-variant-numeric:tabular-nums" id="r-precio-ml">—</div>
+        <div style="font-size:0.7rem;color:rgba(0,0,0,0.5);font-family:Outfit,sans-serif;margin-top:3px;line-height:1.4" id="r-precio-ml-sub"></div>
+      </div>
       <button class="btn-pdf" onclick="agregarItemPresupuesto()" style="background:#2D6A4F;margin-bottom:8px">
         <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Agregar al presupuesto
@@ -1424,11 +1451,88 @@ function renderListaPresupuestos(docs){
 
 var itemsPresupuesto = [];
 function agregarItemPresupuesto(){
-  var precioRaw = document.getElementById('r-precio').textContent.replace(/[^0-9.,]/g,''); var precio = parseFloat(precioRaw.replace(/\./g,'').replace(',','.')) || 0;
-  if(precio <= 0){ alert('Primero completá el cálculo para obtener un precio.'); return; }
-  var nombre = prompt('Nombre de este ítem (ej: Estatuilla dragón):','');
-  if(nombre === null) return; if(!nombre.trim()) nombre = 'Ítem ' + (itemsPresupuesto.length + 1);
-  itemsPresupuesto.push({ nombre: nombre.trim(), precio: Math.round(precio) }); renderItemsPresupuesto();
+  var precioRaw = document.getElementById('r-precio').textContent.replace(/[^0-9.,]/g,'');
+  var precio = parseFloat(precioRaw.replace(/\./g,'').replace(',','.')) || 0;
+  if(precio <= 0){
+    // Show nice error in modal
+    abrirModalNombreItem(0);
+    return;
+  }
+  abrirModalNombreItem(precio);
+}
+
+function abrirModalNombreItem(precio){
+  var existing = document.getElementById('modal-nombre-item');
+  if(existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'modal-nombre-item';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:16px;padding:1.75rem;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.2s ease';
+
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:0.5rem';
+  title.textContent = precio <= 0 ? 'Completá el cálculo primero' : '¿Cómo se llama este ítem?';
+  box.appendChild(title);
+
+  if(precio <= 0){
+    var err = document.createElement('div');
+    err.style.cssText = 'background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 14px;font-size:0.85rem;color:#B91C1C;font-family:Outfit,sans-serif;margin-bottom:1rem';
+    err.textContent = 'Completá todos los campos del formulario para obtener un precio de venta.';
+    box.appendChild(err);
+    var btnOk = document.createElement('button');
+    btnOk.textContent = 'Entendido';
+    btnOk.style.cssText = 'float:right;padding:9px 20px;background:#1A1814;border:none;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#fff';
+    btnOk.onclick = function(){ modal.remove(); };
+    box.appendChild(btnOk);
+  } else {
+    var hint = document.createElement('div');
+    hint.style.cssText = 'font-size:0.82rem;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:1.25rem';
+    hint.textContent = 'Ej: Estatuilla dragón, Tapa celular, Soporte de pared...';
+    box.appendChild(hint);
+
+    var inp = document.createElement('input');
+    inp.id = 'input-nombre-item';
+    inp.type = 'text';
+    inp.placeholder = 'Nombre del ítem';
+    inp.style.cssText = 'width:100%;padding:10px 14px;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.95rem;font-family:Outfit,sans-serif;color:#1A1814;outline:none;box-sizing:border-box;margin-bottom:1.25rem';
+    inp.addEventListener('keydown', function(e){ if(e.key==='Enter') confirmarItemPresupuesto(precio); });
+    box.appendChild(inp);
+
+    var btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:10px;justify-content:flex-end';
+
+    var btnCancel = document.createElement('button');
+    btnCancel.textContent = 'Cancelar';
+    btnCancel.style.cssText = 'padding:9px 20px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#1A1814';
+    btnCancel.onclick = function(){ modal.remove(); };
+
+    var btnAdd = document.createElement('button');
+    btnAdd.textContent = '+ Agregar';
+    btnAdd.style.cssText = 'padding:9px 20px;background:#2D6A4F;border:none;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#fff';
+    btnAdd.onclick = function(){ confirmarItemPresupuesto(precio); };
+
+    btnRow.appendChild(btnCancel);
+    btnRow.appendChild(btnAdd);
+    box.appendChild(btnRow);
+
+    setTimeout(function(){ inp.focus(); }, 50);
+  }
+
+  modal.appendChild(box);
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+function confirmarItemPresupuesto(precio){
+  var inp = document.getElementById('input-nombre-item');
+  var nombre = inp ? inp.value.trim() : '';
+  if(!nombre) nombre = 'Ítem ' + (itemsPresupuesto.length + 1);
+  itemsPresupuesto.push({ nombre: nombre, precio: Math.round(precio) });
+  renderItemsPresupuesto();
+  document.getElementById('modal-nombre-item').remove();
 }
 function eliminarItemPresupuesto(idx){ itemsPresupuesto.splice(idx, 1); renderItemsPresupuesto(); }
 function renderItemsPresupuesto(){
@@ -1725,12 +1829,73 @@ function calcular(){
   var rv=document.getElementById('row-va');rv.style.display=document.getElementById('tog-va').checked?'flex':'none'; if(document.getElementById('tog-va').checked)document.getElementById('r-va').textContent=fmt(cVA);
   document.getElementById('rep-mat').textContent=pct(cFinal>0?cMat/cFinal*100:0); document.getElementById('rep-imp').textContent=pct(cFinal>0?cImp/cFinal*100:0);
   document.getElementById('rep-elec').textContent=pct(cFinal>0?cElec/cFinal*100:0); document.getElementById('rep-mo').textContent=pct(cFinal>0?cMO/cFinal*100:0);
+  calcularML();
+}
+
+function calcularML(){
+  var precioEl = document.getElementById('r-precio');
+  if(!precioEl) return;
+  var precioRaw = precioEl.textContent.replace(/[^0-9.,]/g,'');
+  var precio = parseFloat(precioRaw.replace(/\./g,'').replace(',','.')) || 0;
+  var mlPrecioEl = document.getElementById('r-precio-ml');
+  var mlSubEl = document.getElementById('r-precio-ml-sub');
+  if(!mlPrecioEl || precio <= 0){ if(mlPrecioEl) mlPrecioEl.textContent = '—'; return; }
+
+  var tipoSel = document.getElementById('ml-tipo');
+  var customRow = document.getElementById('ml-custom-row');
+  var comision;
+  if(tipoSel.value === 'custom'){
+    customRow.style.display = 'block';
+    comision = (parseFloat(document.getElementById('ml-comision-custom').value) || 15) / 100;
+  } else {
+    customRow.style.display = 'none';
+    comision = parseFloat(tipoSel.value);
+  }
+
+  // Precio que necesitás publicar para recibir tu precio sugerido después de la comisión
+  var precioML = precio / (1 - comision);
+  // ML suele cobrar también ~3% de procesamiento de pagos (Mercado Pago)
+  // Pero ya está incluido en los porcentajes oficiales de cada tipo
+
+  mlPrecioEl.textContent = fmtPeso(Math.ceil(precioML / 10) * 10); // redondear a $10
+  var pctLabel = Math.round(comision * 100);
+  mlSubEl.textContent = 'Publicando a este precio, después de la comisión del ' + pctLabel + '% recibís tu precio sugerido de ' + fmtPeso(precio);
 }
 calcElec();
+// Intentar cargar preset guardado localmente
+(function(){
+  var local = null;
+  try{ local = JSON.parse(localStorage.getItem('chulengo_calc_preset')||'null'); }catch(e){}
+  if(local){ setTimeout(function(){ cargarPresetCalc(local); }, 800); }
+  else {
+    // Verificar si hay preset guardado para mostrar el botón cargar
+    try{ if(localStorage.getItem('chulengo_calc_preset')) actualizarBtnPreset(true); }catch(e){}
+  }
+})();
 function fixBrokenImages(){ document.querySelectorAll('.card-img-wrap img').forEach(function(im){ if(im.complete && im.naturalWidth===0){ im.style.display='none'; } }); }
 window.addEventListener('load', fixBrokenImages); setTimeout(fixBrokenImages, 2000);
 document.addEventListener('keydown', function(e){ if(e.target.type === 'number' && ['e','E','+','-'].includes(e.key)){ e.preventDefault(); } });
 document.addEventListener('input', function(e){ if(e.target.type === 'number' && e.target.value < 0){ e.target.value = 0; } });
+(function(){
+  function blockWheel(e){
+    // Solo bloquear si el input NO está enfocado (activo)
+    // Si está enfocado, dejar que la página scrollee normalmente
+    if(document.activeElement === e.target) return;
+    e.preventDefault();
+  }
+  document.addEventListener('mouseover', function(e){
+    if(e.target.type==='number') e.target.addEventListener('wheel', blockWheel, {passive:false});
+  });
+  document.addEventListener('mouseout', function(e){
+    if(e.target.type==='number') e.target.removeEventListener('wheel', blockWheel);
+  });
+  // Cuando el input está enfocado y el usuario scrollea, hacer blur para que la página scrollee
+  document.addEventListener('wheel', function(e){
+    if(e.target.type==='number' && document.activeElement===e.target){
+      e.target.blur();
+    }
+  }, {passive:true});
+})();
 
 function toggleUserDropdown(e){
   e.stopPropagation();
@@ -1747,6 +1912,102 @@ function closeDropdown(){
   if(chev) chev.style.transform='';
 }
 document.addEventListener('click',function(){ closeDropdown(); });
+
+function guardarPresetCalc(){
+  var config = {
+    impresora: document.getElementById('sel-imp').value,
+    precioImp: document.getElementById('precio-imp').value||'',
+    vidaUtil: document.getElementById('vida-util').value||'8640',
+    wImp: document.getElementById('w-imp').value||'180',
+    wPc: document.getElementById('w-pc').value||'500',
+    wMon: document.getElementById('w-mon').value||'65',
+    wLuz: document.getElementById('w-luz').value||'30',
+    kwhCosto: document.getElementById('costo-kwh').value||'516.13',
+    moHora: document.getElementById('mo-hora').value||'10000',
+    margenError: document.getElementById('margen-error').value||'15',
+    ganancia: document.getElementById('ganancia').value||'100'
+  };
+  // Guardar local siempre
+  try{ localStorage.setItem('chulengo_calc_preset', JSON.stringify(config)); }catch(e){}
+  // Guardar en Firebase si está logueado
+  if(window.currentUser){
+    firebase.firestore().collection('usuarios').doc(window.currentUser.uid)
+      .set({ configCalc: config }, { merge: true })
+      .then(function(){
+        mostrarToastCalc('✓ Configuración guardada en tu perfil');
+      }).catch(function(){ mostrarToastCalc('✓ Guardado localmente'); });
+  } else {
+    mostrarToastCalc('✓ Guardado en este dispositivo (iniciá sesión para sincronizar)');
+  }
+  actualizarBtnPreset(true);
+}
+
+function cargarPresetCalc(config){
+  if(!config){
+    // Intentar desde Firebase primero, luego local
+    if(window.currentUser){
+      firebase.firestore().collection('usuarios').doc(window.currentUser.uid).get()
+        .then(function(doc){
+          if(doc.exists && doc.data().configCalc){
+            cargarPresetCalc(doc.data().configCalc);
+          } else {
+            var local = JSON.parse(localStorage.getItem('chulengo_calc_preset')||'null');
+            if(local) cargarPresetCalc(local);
+          }
+        }).catch(function(){
+          var local = JSON.parse(localStorage.getItem('chulengo_calc_preset')||'null');
+          if(local) cargarPresetCalc(local);
+        });
+    } else {
+      var local = JSON.parse(localStorage.getItem('chulengo_calc_preset')||'null');
+      if(local) cargarPresetCalc(local);
+    }
+    return;
+  }
+  // Aplicar config
+  if(config.impresora !== undefined){
+    var sel = document.getElementById('sel-imp');
+    sel.value = config.impresora;
+    onImpChange();
+  }
+  if(config.precioImp) document.getElementById('precio-imp').value = config.precioImp;
+  if(config.vidaUtil)  document.getElementById('vida-util').value  = config.vidaUtil;
+  if(config.wImp)   document.getElementById('w-imp').value   = config.wImp;
+  if(config.wPc)    document.getElementById('w-pc').value    = config.wPc;
+  if(config.wMon)   document.getElementById('w-mon').value   = config.wMon;
+  if(config.wLuz)   document.getElementById('w-luz').value   = config.wLuz;
+  if(config.kwhCosto) document.getElementById('costo-kwh').value = config.kwhCosto;
+  if(config.moHora)   document.getElementById('mo-hora').value   = config.moHora;
+  if(config.margenError) document.getElementById('margen-error').value = config.margenError;
+  if(config.ganancia)    document.getElementById('ganancia').value     = config.ganancia;
+  calcElec();
+  mostrarToastCalc('✓ Tu configuración fue cargada');
+  actualizarBtnPreset(true);
+}
+
+function actualizarBtnPreset(tienePreset){
+  var btnCargar = document.getElementById('btn-cargar-preset');
+  if(!btnCargar) return;
+  if(tienePreset){
+    btnCargar.style.display = 'flex';
+    var btnGuardar = document.getElementById('btn-guardar-preset');
+    if(btnGuardar) btnGuardar.textContent = '⭐ Actualizar mi configuración';
+  }
+}
+
+function mostrarToastCalc(msg){
+  var t = document.getElementById('toast-calc');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'toast-calc';
+    t.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1A1814;color:#fff;padding:10px 20px;border-radius:10px;font-size:0.875rem;font-weight:600;z-index:9999;font-family:Outfit,sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:opacity 0.3s';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.style.opacity = '0'; }, 2500);
+}
 
 function toggleDark(){
   var isDark = document.body.classList.toggle('dark');
