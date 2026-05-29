@@ -597,7 +597,13 @@ select:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12)}
   .carousel-desc{display:none}
   .carousel-overlay{padding:1rem}
 }
-.calc-container{max-width:720px;margin:0 auto;padding:1.5rem 1rem 3rem}
+.calc-container{max-width:1200px;margin:0 auto;padding:1.5rem 1rem 3rem;display:grid;grid-template-columns:1fr 360px;gap:1.5rem;align-items:start}
+.calc-form-col{min-width:0}
+.calc-result-col{position:sticky;top:120px}
+@media(max-width:900px){
+  .calc-container{grid-template-columns:1fr;display:block}
+  .calc-result-col{position:static;margin-top:1rem}
+}
 .calc-section{background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
 .calc-section h2{font-size:0.95rem;font-weight:700;color:#1A1814;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:2px solid #F5F2ED;letter-spacing:-0.01em}
 .field{margin-bottom:1rem}
@@ -1007,7 +1013,9 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       <div class="field"><label>% de ganancia deseada<span class="tip" data-tip="100% significa que vendés al doble del costo. 50% significa que ganás la mitad del costo.">?</span></label><input type="number" id="ganancia" value="100" oninput="calcular()"></div>
     </div>
 
-    <div class="resultado" id="resultado" style="display:none">
+    </div><!-- /calc-form-col -->
+    <div class="calc-result-col">
+    <div class="resultado" id="resultado" style="background:#1A1814;border-radius:12px;padding:1.5rem;color:#fff;display:block">
       <h2>Resumen de costos</h2>
       <div class="res-row"><span class="res-lbl">Material</span><span class="res-val" id="r-mat">—</span></div>
       <div class="res-row"><span class="res-lbl">Amortización impresora</span><span class="res-val" id="r-imp">—</span></div>
@@ -1045,6 +1053,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
         <div class="rep-item"><div class="rep-lbl">Mano de obra</div><div class="rep-val" id="rep-mo">—</div></div>
       </div>
     </div>
+    </div><!-- /calc-result-col -->
   </div>
 </div>
 
@@ -1653,14 +1662,27 @@ function calcular(){
   var tiempo=parseFloat(document.getElementById('tiempo').value)||0; var margen=parseFloat(document.getElementById('margen-error').value)||0;
   var moHora=parseFloat(document.getElementById('mo-hora').value)||0; var moTiempo=parseFloat(document.getElementById('mo-tiempo').value)||0;
   var ganancia=parseFloat(document.getElementById('ganancia').value)||0;
-  if(!pkgil||!peso||!tiempo){document.getElementById('resultado').style.display='none';return;}
+  if(!pkgil||!peso||!tiempo){var res = document.getElementById('resultado');
+    res.style.display='block';
+    document.getElementById('r-mat').textContent='—';
+    document.getElementById('r-imp').textContent='—';
+    document.getElementById('r-elec').textContent='—';
+    document.getElementById('r-mo').textContent='—';
+    document.getElementById('r-fallo').textContent='—';
+    document.getElementById('r-total').textContent='—';
+    document.getElementById('r-precio').textContent='—';
+    document.getElementById('rep-mat').textContent='—';
+    document.getElementById('rep-imp').textContent='—';
+    document.getElementById('rep-elec').textContent='—';
+    document.getElementById('rep-mo').textContent='—';
+    return;}
   var cMat=(pkgil/1000)*peso; var cImp=costoMinImp*tiempo; var cElec=costoMinElec*tiempo; var cMO=(moHora/60)*moTiempo;
   var cPos=0; if(document.getElementById('tog-pos').checked){ cPos=(parseFloat(document.getElementById('pos-horas').value)||0)*(parseFloat(document.getElementById('pos-costo').value)||0); }
   var cIns=0; document.querySelectorAll('.insumo-item').forEach(function(el){ var ins=el.querySelectorAll('input[type=number]'); var ct=parseFloat(ins[0].value)||0,rinde=parseFloat(ins[1].value)||1; cIns+=ct/rinde; });
   var sub=cMat+cImp+cElec+cMO+cPos+cIns; var cFallo=sub*(margen/100); var cFinal=sub+cFallo;
   var cVA=0; if(document.getElementById('tog-va').checked){ cVA=cFinal*((parseFloat(document.getElementById('va-porc').value)||0)/100); cFinal+=cVA; }
   var precio=cFinal*(1+(ganancia/100));
-  document.getElementById('resultado').style.display='block';
+  // resultado always visible
   document.getElementById('r-mat').textContent=fmt(cMat); document.getElementById('r-imp').textContent=fmt(cImp);
   document.getElementById('r-elec').textContent=fmt(cElec); document.getElementById('r-mo').textContent=fmt(cMO);
   document.getElementById('r-fallo').textContent=fmt(cFallo); document.getElementById('r-total').textContent=fmt(cFinal); document.getElementById('r-precio').textContent=fmt(precio);
