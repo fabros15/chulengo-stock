@@ -599,11 +599,7 @@ select:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12)}
 }
 .calc-container{max-width:1200px;margin:0 auto;padding:1.5rem 1rem 3rem;display:grid;grid-template-columns:1fr 360px;gap:1.5rem;align-items:start}
 .calc-form-col{min-width:0;padding-bottom:60vh}
-.calc-result-col{position:-webkit-sticky;position:sticky;top:100px;align-self:start;max-height:calc(100vh - 110px);overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(45,106,79,0.3) transparent;border-radius:12px}
-.calc-result-col::-webkit-scrollbar{width:4px}
-.calc-result-col::-webkit-scrollbar-track{background:transparent}
-.calc-result-col::-webkit-scrollbar-thumb{background:rgba(45,106,79,0.35);border-radius:4px}
-.calc-result-col::-webkit-scrollbar-thumb:hover{background:rgba(45,106,79,0.6)}
+.calc-result-col{position:-webkit-sticky;position:sticky;top:100px;align-self:start}
 @media(max-width:900px){
   .calc-container{grid-template-columns:1fr;display:block}
   .calc-result-col{position:static;margin-top:1rem}
@@ -1428,51 +1424,11 @@ function renderListaPresupuestos(docs){
 
 var itemsPresupuesto = [];
 function agregarItemPresupuesto(){
-  var precioRaw = document.getElementById('r-precio').textContent.replace(/[^0-9.,]/g,'');
-  var precio = parseFloat(precioRaw.replace(/\./g,'').replace(',','.')) || 0;
-  if(precio <= 0){
-    // Show nice error in modal
-    abrirModalNombreItem(0);
-    return;
-  }
-  abrirModalNombreItem(precio);
-}
-
-function abrirModalNombreItem(precio){
-  var existing = document.getElementById('modal-nombre-item');
-  if(existing) existing.remove();
-  var modal = document.createElement('div');
-  modal.id = 'modal-nombre-item';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)';
-  modal.innerHTML =
-    '<div style="background:#fff;border-radius:16px;padding:1.75rem;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.2s ease">' +
-      '<div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:0.5rem">¿Cómo se llama este ítem?</div>' +
-      (precio <= 0
-        ? '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 14px;font-size:0.85rem;color:#B91C1C;font-family:Outfit,sans-serif;margin-bottom:1rem">Primero completá el cálculo para obtener un precio.</div>'
-        : '<div style="font-size:0.82rem;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:1.25rem">Ej: Estatuilla dragón, Tapa para celular, Soporte de pared...</div>'
-      ) +
-      (precio > 0
-        ? '<input id="input-nombre-item" type="text" placeholder="Nombre del ítem" autofocus style="width:100%;padding:10px 14px;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.95rem;font-family:Outfit,sans-serif;color:#1A1814;outline:none;box-sizing:border-box;margin-bottom:1.25rem" onkeydown="if(event.key==='Enter')confirmarItemPresupuesto(' + precio + ')">' +
-          '<div style="display:flex;gap:10px;justify-content:flex-end">' +
-            '<button onclick="document.getElementById('modal-nombre-item').remove()" style="padding:9px 20px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#1A1814">Cancelar</button>' +
-            '<button onclick="confirmarItemPresupuesto(' + precio + ')" style="padding:9px 20px;background:#2D6A4F;border:none;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#fff">+ Agregar</button>' +
-          '</div>'
-        : '<div style="display:flex;justify-content:flex-end"><button onclick="document.getElementById('modal-nombre-item').remove()" style="padding:9px 20px;background:#1A1814;border:none;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#fff">Entendido</button></div>'
-      ) +
-    '</div>';
-  document.body.appendChild(modal);
-  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
-  var inp = document.getElementById('input-nombre-item');
-  if(inp) setTimeout(function(){ inp.focus(); }, 50);
-}
-
-function confirmarItemPresupuesto(precio){
-  var inp = document.getElementById('input-nombre-item');
-  var nombre = inp ? inp.value.trim() : '';
-  if(!nombre) nombre = 'Ítem ' + (itemsPresupuesto.length + 1);
-  itemsPresupuesto.push({ nombre: nombre, precio: Math.round(precio) });
-  renderItemsPresupuesto();
-  document.getElementById('modal-nombre-item').remove();
+  var precioRaw = document.getElementById('r-precio').textContent.replace(/[^0-9.,]/g,''); var precio = parseFloat(precioRaw.replace(/\./g,'').replace(',','.')) || 0;
+  if(precio <= 0){ alert('Primero completá el cálculo para obtener un precio.'); return; }
+  var nombre = prompt('Nombre de este ítem (ej: Estatuilla dragón):','');
+  if(nombre === null) return; if(!nombre.trim()) nombre = 'Ítem ' + (itemsPresupuesto.length + 1);
+  itemsPresupuesto.push({ nombre: nombre.trim(), precio: Math.round(precio) }); renderItemsPresupuesto();
 }
 function eliminarItemPresupuesto(idx){ itemsPresupuesto.splice(idx, 1); renderItemsPresupuesto(); }
 function renderItemsPresupuesto(){
