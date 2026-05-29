@@ -42,12 +42,22 @@ document.addEventListener('DOMContentLoaded', function(){
       var chip=document.getElementById('user-chip');
       if(chip){
         chip.style.display='flex';
-        var chipName=document.getElementById('user-chip-name');
-        if(chipName) chipName.textContent=(user.displayName||user.email||'').split(' ')[0];
-        var chipAvatar=document.getElementById('user-chip-avatar');
-        var chipPlaceholder=document.getElementById('user-chip-placeholder');
-        if(user.photoURL&&chipAvatar){ chipAvatar.src=user.photoURL; chipAvatar.style.display='block'; if(chipPlaceholder) chipPlaceholder.style.display='none'; }
-        else if(chipPlaceholder){ chipPlaceholder.textContent=(user.displayName||user.email||'?')[0].toUpperCase(); }
+        var firstName=(user.displayName||user.email||'').split(' ')[0];
+        var initials=(user.displayName||user.email||'?')[0].toUpperCase();
+        document.getElementById('user-chip-name').textContent=firstName;
+        document.getElementById('dd-name').textContent=user.displayName||user.email||'Usuario';
+        document.getElementById('dd-email').textContent=user.email||'';
+        if(user.photoURL){
+          document.getElementById('user-chip-avatar').src=user.photoURL;
+          document.getElementById('user-chip-avatar').style.display='block';
+          document.getElementById('user-chip-placeholder').style.display='none';
+          document.getElementById('dd-avatar').src=user.photoURL;
+          document.getElementById('dd-avatar').style.display='block';
+          document.getElementById('dd-avatar-ph').style.display='none';
+        } else {
+          document.getElementById('user-chip-placeholder').textContent=initials;
+          document.getElementById('dd-avatar-ph').textContent=initials;
+        }
       }
       var modal = document.getElementById('google-login-modal');
       if(modal) modal.style.display='none';
@@ -419,12 +429,25 @@ body{font-family:'Outfit',sans-serif;background:#F5F2ED;color:#1A1814;min-height
 .header-actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
 #btn-dark{background:none!important;border:1px solid rgba(255,255,255,0.18)!important;color:#fff!important;border-radius:8px!important;padding:7px 10px!important;font-size:1rem!important;cursor:pointer!important;line-height:1!important;display:flex!important;align-items:center!important}
 #btn-dark:hover{background:rgba(255,255,255,0.1)!important}
-.user-chip{display:none;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 12px;cursor:pointer;transition:background 0.15s}
-.user-chip:hover{background:rgba(255,255,255,0.15)}
-.user-avatar{width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.3)}
-.user-name{font-size:0.8rem;font-weight:600;color:#fff;font-family:'Outfit',sans-serif;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.user-avatar-placeholder{width:26px;height:26px;border-radius:50%;background:#2D6A4F;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;flex-shrink:0}
-#btn-salir{background:rgba(255,255,255,0.08)!important;border:1px solid rgba(255,255,255,0.15)!important;color:rgba(255,255,255,0.8)!important;border-radius:8px!important;padding:7px 14px!important;font-size:0.78rem!important;font-family:'Outfit',sans-serif!important;cursor:pointer!important;display:none!important;align-items:center!important;gap:6px!important}
+.user-chip{display:none;align-items:center;gap:8px;background:none;border:none;padding:4px 6px;cursor:pointer;border-radius:8px;transition:background 0.15s;position:relative}
+.user-chip:hover{background:rgba(255,255,255,0.08)}
+.user-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,0.3)}
+.user-name{font-size:0.85rem;font-weight:600;color:#fff;font-family:'Outfit',sans-serif;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-chevron{font-size:0.65rem;color:rgba(255,255,255,0.5);transition:transform 0.2s;flex-shrink:0}
+.user-avatar-placeholder{width:30px;height:30px;border-radius:50%;background:#2D6A4F;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;flex-shrink:0}
+.user-dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.25);min-width:240px;z-index:999;overflow:hidden;animation:fadeUp 0.15s ease}
+.user-dropdown.open{display:block}
+.user-dropdown-header{padding:1rem 1.25rem;border-bottom:1px solid #F0EDE8;display:flex;align-items:center;gap:10px}
+.user-dropdown-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #E2DDD6;flex-shrink:0}
+.user-dropdown-avatar-ph{width:40px;height:40px;border-radius:50%;background:#2D6A4F;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#fff;flex-shrink:0}
+.user-dropdown-name{font-size:0.9rem;font-weight:700;color:#1A1814;font-family:'Outfit',sans-serif}
+.user-dropdown-email{font-size:0.75rem;color:#8A8479;font-family:'Outfit',sans-serif;margin-top:2px}
+.user-dropdown-item{display:flex;align-items:center;gap:10px;padding:10px 1.25rem;font-size:0.875rem;color:#1A1814;font-family:'Outfit',sans-serif;cursor:pointer;transition:background 0.1s;border:none;background:none;width:100%;text-align:left}
+.user-dropdown-item:hover{background:#F5F2ED}
+.user-dropdown-item.danger{color:#DC2626}
+.user-dropdown-item.danger:hover{background:#FEF2F2}
+.user-dropdown-sep{height:1px;background:#F0EDE8;margin:4px 0}
+#btn-salir{display:none!important}
 #btn-salir:hover{background:rgba(255,255,255,0.15)!important;color:#fff!important}
 #btn-entrar{background:#2D6A4F!important;border:none!important;color:#fff!important;border-radius:8px!important;padding:7px 16px!important;font-size:0.82rem!important;font-family:'Outfit',sans-serif!important;cursor:pointer!important;display:flex!important;align-items:center!important;gap:6px!important;font-weight:600!important}
 #btn-entrar:hover{background:#1B4332!important}
@@ -780,12 +803,36 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
     </div>
     <div class="header-actions">
       <button id="btn-dark" onclick="toggleDark()" title="Modo oscuro">🌙</button>
-      <div class="user-chip" id="user-chip" onclick="showPage('cuenta',document.getElementById('tab-cuenta'));cargarMisPresupuestos()">
+      <div class="user-chip" id="user-chip" onclick="toggleUserDropdown(event)">
         <img id="user-chip-avatar" class="user-avatar" src="" style="display:none">
         <div id="user-chip-placeholder" class="user-avatar-placeholder">?</div>
         <span id="user-chip-name" class="user-name">Usuario</span>
+        <span class="user-chevron" id="user-chevron">▼</span>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-header">
+            <img id="dd-avatar" class="user-dropdown-avatar" src="" style="display:none">
+            <div id="dd-avatar-ph" class="user-dropdown-avatar-ph">?</div>
+            <div>
+              <div class="user-dropdown-name" id="dd-name">Usuario</div>
+              <div class="user-dropdown-email" id="dd-email"></div>
+            </div>
+          </div>
+          <div class="user-dropdown-sep"></div>
+          <button class="user-dropdown-item" onclick="closeDropdown();showPage('cuenta',document.getElementById('tab-cuenta'));cargarMisPresupuestos()">
+            📄 Mis presupuestos
+          </button>
+          <button class="user-dropdown-item" onclick="closeDropdown();showPage('ofertas',document.querySelector('.nav-tab:nth-child(2)'))">
+            🏷️ Ofertas disponibles
+          </button>
+          <button class="user-dropdown-item" onclick="closeDropdown();showPage('cupones',document.querySelector('.nav-tab:nth-child(3)'))">
+            🎫 Mis cupones
+          </button>
+          <div class="user-dropdown-sep"></div>
+          <button class="user-dropdown-item danger" onclick="closeDropdown();doLogout()">
+            🚪 Cerrar sesión
+          </button>
+        </div>
       </div>
-      <button id="btn-salir" onclick="doLogout()">Salir</button>
       <button onclick="document.getElementById('google-login-modal').style.display='flex'" id="btn-entrar">Iniciar sesión</button>
     </div>
   </div>
@@ -1627,6 +1674,22 @@ function fixBrokenImages(){ document.querySelectorAll('.card-img-wrap img').forE
 window.addEventListener('load', fixBrokenImages); setTimeout(fixBrokenImages, 2000);
 document.addEventListener('keydown', function(e){ if(e.target.type === 'number' && ['e','E','+','-'].includes(e.key)){ e.preventDefault(); } });
 document.addEventListener('input', function(e){ if(e.target.type === 'number' && e.target.value < 0){ e.target.value = 0; } });
+
+function toggleUserDropdown(e){
+  e.stopPropagation();
+  var dd=document.getElementById('user-dropdown');
+  var chev=document.getElementById('user-chevron');
+  var isOpen=dd.classList.contains('open');
+  dd.classList.toggle('open');
+  if(chev) chev.style.transform=isOpen?'':'rotate(180deg)';
+}
+function closeDropdown(){
+  var dd=document.getElementById('user-dropdown');
+  var chev=document.getElementById('user-chevron');
+  if(dd) dd.classList.remove('open');
+  if(chev) chev.style.transform='';
+}
+document.addEventListener('click',function(){ closeDropdown(); });
 
 function toggleDark(){
   var isDark = document.body.classList.toggle('dark');
