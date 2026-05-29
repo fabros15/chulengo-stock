@@ -403,8 +403,8 @@ body{font-family:'Outfit',sans-serif;background:#F5F2ED;color:#1A1814;min-height
 .nav-tab{padding:10px 18px;font-size:0.875rem;font-weight:500;cursor:pointer;border:none;background:transparent;color:#8A8479;transition:all 0.15s;font-family:'Outfit',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px}
 .nav-tab.active{color:#1A1814;border-bottom-color:#2D6A4F;font-weight:600}
 .nav-tab:hover:not(.active){color:#1A1814;background:#FAFAFA}
-.promo-pill{display:inline-flex;align-items:center;gap:8px;background:#FFF7ED;color:#9A3412;font-size:0.78rem;font-weight:500;padding:5px 12px;border-radius:20px;border:1px solid #FED7AA}
-.promo-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:#2D6A4F;display:inline-block;flex-shrink:0}
+.promo-pill{display:inline-flex;align-items:center;gap:8px;background:#1D4ED8;color:#fff;font-size:0.78rem;font-weight:500;padding:5px 12px;border-radius:20px;border:1px solid #2563EB}
+.promo-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:#93C5FD;display:inline-block;flex-shrink:0}
 .page{display:none}
 .page.active{display:block}
 .filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.75rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
@@ -647,6 +647,85 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
   .row2,.row3{grid-template-columns:1fr}
   .insumo-item{grid-template-columns:1fr 1fr 36px}
 }
+
+/* DARK MODE */
+body.dark{background:#0F0F0F;color:#FAFAFA}
+body.dark .site-header{background:#1A1814;box-shadow:0 1px 0 #2A2520}
+body.dark .site-title{color:#FAFAFA}
+body.dark #btn-salir{border-color:#3A3530!important;color:#A09890!important}
+body.dark #btn-salir:hover{background:#2A2520!important;color:#FAFAFA!important}
+body.dark #btn-entrar{background:#2D6A4F!important}
+body.dark #btn-dark{border-color:#3A3530;color:#FAFAFA}
+body.dark .nav-tabs{border-top-color:#2A2520}
+body.dark .nav-tab{color:#8A8479}
+body.dark .nav-tab.active{color:#FAFAFA;border-bottom-color:#2D6A4F}
+body.dark .nav-tab:hover:not(.active){color:#FAFAFA;background:#2A2520}
+body.dark .filters-bar{background:#1C1C1C;border-bottom-color:#2A2520}
+body.dark input[type=text]{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
+body.dark input[type=text]:focus{border-color:#2D6A4F;background:#2A2520}
+body.dark select{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
+body.dark .stats-bar{background:#161616;border-bottom-color:#2A2520;color:#8A8479}
+body.dark .stats-bar b{color:#FAFAFA}
+body.dark .grid{background:transparent}
+body.dark .card{background:#1C1C1C;border-color:#2A2520}
+body.dark .card:hover{border-color:#3A3530;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+body.dark .card-title{color:#FAFAFA}
+body.dark .card-meta{color:#8A8479}
+body.dark .card-meta b{color:#D4D4D4}
+body.dark .stock-line{color:#8A8479}
+body.dark .stock-line b{color:#FAFAFA}
+body.dark .prices{border-top-color:#2A2520}
+body.dark .price-val{color:#FAFAFA}
+body.dark .calc-section{background:#1C1C1C;border-color:#2A2520}
+body.dark .calc-section h2{color:#FAFAFA;border-bottom-color:#2A2520}
+body.dark input[type=number]{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
+body.dark input[type=number]:focus{border-color:#2D6A4F;background:#2A2520}
+body.dark .calc-section select{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
+body.dark .field label{color:#FAFAFA}
+body.dark .label-hint{color:#8A8479}
+body.dark .toggle-lbl{color:#FAFAFA}
+body.dark .toggle-hint{color:#8A8479}
+body.dark .tslider{background:#3A3530}
+body.dark .readonly-field{background:#1B3A2B!important;color:#4ADE80!important;border-color:#2D6A4F!important}
+body.dark .btn-add{border-color:#3A3530;color:#8A8479}
+body.dark .btn-add:hover{border-color:#2D6A4F;color:#2D6A4F}
+body.dark .tip{background:#2A2520;color:#8A8479}
+body.dark .modal{background:#1C1C1C}
+body.dark .modal-title{color:#FAFAFA}
+body.dark .modal-meta{color:#8A8479}
+body.dark .pdf-modal{background:#1C1C1C}
+body.dark .pdf-modal h3{color:#FAFAFA;border-bottom-color:#2A2520}
+body.dark .pdf-modal label{color:#FAFAFA}
+body.dark .pdf-modal input,.pdf-modal textarea{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
+body.dark .carrito-panel{background:#1C1C1C}
+body.dark .carrito-header{border-bottom-color:#2A2520}
+body.dark .carrito-header h3{color:#FAFAFA}
+body.dark .carrito-cerrar{background:#2A2520;color:#8A8479}
+body.dark .carrito-item{border-bottom-color:#2A2520}
+body.dark .carrito-item-nombre{color:#FAFAFA}
+body.dark .carrito-item-sub{color:#8A8479}
+body.dark .carrito-item-precio{color:#FAFAFA}
+body.dark .ctrl-btn{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
+body.dark .carrito-footer{border-top-color:#2A2520}
+body.dark .carrito-total-lbl{color:#FAFAFA}
+body.dark .carrito-total-val{color:#FAFAFA}
+body.dark .ficha-back-bar{background:#1A1814;border-bottom-color:#2A2520}
+body.dark .ficha-back-btn{color:#FAFAFA}
+body.dark .ficha-body{background:#0F0F0F}
+body.dark .ficha-precios{background:#1C1C1C;border-color:#2A2520}
+body.dark .fpp-lbl{color:#8A8479}
+body.dark .fpp-val{color:#FAFAFA}
+body.dark .ftitulo{color:#FAFAFA;border-bottom-color:#2A2520}
+body.dark .fdesc{color:#A09890}
+body.dark .ftag{background:#1C1C1C;color:#D4D4D4;border-color:#2A2520}
+body.dark .fspec{background:#1C1C1C}
+body.dark .fspec-lbl{color:#8A8479}
+body.dark .fspec-val{color:#FAFAFA}
+body.dark .fspecs{background:#2A2520;border-color:#2A2520}
+body.dark footer{border-top-color:#2A2520;color:#8A8479}
+body.dark .pres-filtro{background:#1C1C1C;border-color:#2A2520;color:#8A8479}
+body.dark .pres-filtro.active,.pres-filtro:hover{background:#FAFAFA;color:#1A1814}
+body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
 </style></head>
 <body>
 <div id="app" style="display:none">
@@ -655,8 +734,9 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
   <div class="header-top">
     <img src="img/CHULENGO_LOGOO.png" alt="Logo" class="logo">
     <span class="site-title">Chulengo Estudio</span>
-    <button id="btn-salir" onclick="doLogout()" style="display:none">Salir</button>
-    <button onclick="document.getElementById('google-login-modal').style.display='flex'" id="btn-entrar" style="display:flex">Iniciar sesión</button>
+    <button id="btn-dark" onclick="toggleDark()" title="Modo oscuro" style="background:none;border:1px solid #E2DDD6;border-radius:8px;padding:5px 10px;font-size:1rem;cursor:pointer;margin-left:auto;line-height:1;display:flex;align-items:center">🌙</button>
+    <button id="btn-salir" onclick="doLogout()" style="display:none;margin-left:0">Salir</button>
+    <button onclick="document.getElementById('google-login-modal').style.display='flex'" id="btn-entrar" style="display:flex;margin-left:0">Iniciar sesión</button>
   </div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('stock',this)">🛒 Ver productos</button>
@@ -1411,6 +1491,21 @@ function fixBrokenImages(){ document.querySelectorAll('.card-img-wrap img').forE
 window.addEventListener('load', fixBrokenImages); setTimeout(fixBrokenImages, 2000);
 document.addEventListener('keydown', function(e){ if(e.target.type === 'number' && ['e','E','+','-'].includes(e.key)){ e.preventDefault(); } });
 document.addEventListener('input', function(e){ if(e.target.type === 'number' && e.target.value < 0){ e.target.value = 0; } });
+
+function toggleDark(){
+  var isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('chulengo_dark', isDark ? '1' : '0');
+  document.getElementById('btn-dark').textContent = isDark ? '☀️' : '🌙';
+}
+(function(){
+  if(localStorage.getItem('chulengo_dark')==='1'){
+    document.body.classList.add('dark');
+    document.addEventListener('DOMContentLoaded',function(){
+      var btn=document.getElementById('btn-dark');
+      if(btn) btn.textContent='☀️';
+    });
+  }
+})();
 </script>
 
 <!-- FICHA PAGE -->
