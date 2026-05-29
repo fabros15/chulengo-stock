@@ -128,11 +128,11 @@ function eliminarPresupuesto(docId, el){
 
 function cargarMisPresupuestos(){
   if(!window.currentUser){
-    document.getElementById('lista-presupuestos').innerHTML='<p style="color:#71717A;font-size:0.85rem;text-align:center;padding:2rem">Iniciá sesión para ver tus presupuestos.</p>';
+    document.getElementById('lista-presupuestos').innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Iniciá sesión para ver tus presupuestos.</p>';
     return;
   }
   var lista = document.getElementById('lista-presupuestos');
-  lista.innerHTML='<p style="color:#71717A;font-size:0.85rem;text-align:center;padding:2rem">Cargando...</p>';
+  lista.innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Cargando...</p>';
   firebase.firestore().collection('presupuestos').where('uid','==',window.currentUser.uid).get()
     .then(function(snap){
       todosPresupuestos=[];
@@ -206,7 +206,7 @@ function renderCarritoBody(){
     html+='<div class="carrito-item">'+
       '<div class="carrito-item-info">'+
         '<div class="carrito-item-nombre">'+item.material+' - '+item.denom+'</div>'+
-        '<div class="carrito-item-sub">'+item.marca+' · '+item.present+(usaOferta?' · <span style="color:#16A34A;font-weight:600">precio oferta</span>':'')+'</div>'+
+        '<div class="carrito-item-sub">'+item.marca+' · '+item.present+(usaOferta?' · <span style="color:#2D6A4F;font-weight:600">precio oferta</span>':'')+'</div>'+
       '</div>'+
       '<div class="carrito-item-controles">'+
         '<button class="ctrl-btn" onclick="cambiarQty(&quot;'+id+'&quot;,-1)">−</button>'+
@@ -390,133 +390,133 @@ function generarPDF(sendWA){
 <style>
 *{box-sizing:border-box;margin:0;padding:0;max-width:100%}
 html{overflow-x:hidden;width:100%}
-body{font-family:'Outfit',sans-serif;background:#F4F4F5;color:#09090B;min-height:100vh;overflow-x:hidden;width:100%;-webkit-overflow-scrolling:touch}
-.site-header{background:#fff;color:#09090B;padding:0 1.25rem;position:-webkit-sticky;position:sticky;top:0;z-index:100;width:100%;box-shadow:0 1px 0 #E4E4E7}
+body{font-family:'Outfit',sans-serif;background:#F5F2ED;color:#1A1814;min-height:100vh;overflow-x:hidden;width:100%;-webkit-overflow-scrolling:touch}
+.site-header{background:#fff;color:#1A1814;padding:0 1.25rem;position:-webkit-sticky;position:sticky;top:0;z-index:100;width:100%;box-shadow:0 1px 0 #E2DDD6}
 .header-top{display:flex;align-items:center;gap:12px;height:56px}
-.site-title{font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;color:#09090B;letter-spacing:-0.01em}
+.site-title{font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;color:#1A1814;letter-spacing:-0.01em}
 .logo{width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0}
-#btn-salir{background:none!important;border:1px solid #E4E4E7!important;color:#52525B!important;border-radius:8px!important;padding:5px 12px!important;font-size:0.78rem!important;font-family:'Outfit',sans-serif!important;cursor:pointer!important;display:flex!important;align-items:center!important;gap:6px!important;margin-left:auto!important}
-#btn-salir:hover{background:#F4F4F5!important;color:#09090B!important}
-#btn-entrar{background:#09090B!important;border:none!important;color:#fff!important;border-radius:8px!important;padding:5px 12px!important;font-size:0.78rem!important;font-family:'Outfit',sans-serif!important;cursor:pointer!important;display:flex!important;align-items:center!important;gap:6px!important;margin-left:auto!important}
-#btn-entrar:hover{background:#27272A!important}
-.nav-tabs{display:flex;gap:0;border-top:1px solid #F4F4F5}
-.nav-tab{padding:10px 18px;font-size:0.875rem;font-weight:500;cursor:pointer;border:none;background:transparent;color:#71717A;transition:all 0.15s;font-family:'Outfit',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px}
-.nav-tab.active{color:#09090B;border-bottom-color:#EA580C;font-weight:600}
-.nav-tab:hover:not(.active){color:#09090B;background:#FAFAFA}
+#btn-salir{background:none!important;border:1px solid #E2DDD6!important;color:#52525B!important;border-radius:8px!important;padding:5px 12px!important;font-size:0.78rem!important;font-family:'Outfit',sans-serif!important;cursor:pointer!important;display:flex!important;align-items:center!important;gap:6px!important;margin-left:auto!important}
+#btn-salir:hover{background:#F5F2ED!important;color:#1A1814!important}
+#btn-entrar{background:#1A1814!important;border:none!important;color:#fff!important;border-radius:8px!important;padding:5px 12px!important;font-size:0.78rem!important;font-family:'Outfit',sans-serif!important;cursor:pointer!important;display:flex!important;align-items:center!important;gap:6px!important;margin-left:auto!important}
+#btn-entrar:hover{background:#2A2520!important}
+.nav-tabs{display:flex;gap:0;border-top:1px solid #F5F2ED}
+.nav-tab{padding:10px 18px;font-size:0.875rem;font-weight:500;cursor:pointer;border:none;background:transparent;color:#8A8479;transition:all 0.15s;font-family:'Outfit',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px}
+.nav-tab.active{color:#1A1814;border-bottom-color:#2D6A4F;font-weight:600}
+.nav-tab:hover:not(.active){color:#1A1814;background:#FAFAFA}
 .promo-pill{display:inline-flex;align-items:center;gap:8px;background:#FFF7ED;color:#9A3412;font-size:0.78rem;font-weight:500;padding:5px 12px;border-radius:20px;border:1px solid #FED7AA}
-.promo-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:#EA580C;display:inline-block;flex-shrink:0}
+.promo-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:#2D6A4F;display:inline-block;flex-shrink:0}
 .page{display:none}
 .page.active{display:block}
-.filters-bar{background:#fff;border-bottom:1px solid #E4E4E7;padding:0.75rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
+.filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.75rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
 .search-wrap{position:relative;flex:1;min-width:180px}
-.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#A1A1AA;pointer-events:none}
-input[type=text]{width:100%;padding:8px 12px 8px 34px;border:1px solid #E4E4E7;border-radius:8px;font-size:0.875rem;font-family:'Outfit',sans-serif;background:#F9F9F9;color:#09090B;outline:none;transition:all 0.2s}
-input[type=text]:focus{border-color:#EA580C;box-shadow:0 0 0 3px rgba(234,88,12,0.1);background:#fff}
-select{padding:8px 12px;border:1px solid #E4E4E7;border-radius:8px;font-size:0.82rem;font-family:'Outfit',sans-serif;background:#F9F9F9;color:#09090B;cursor:pointer;outline:none;transition:all 0.2s}
-select:focus{border-color:#EA580C;box-shadow:0 0 0 3px rgba(234,88,12,0.1)}
-.stats-bar{padding:0.5rem 1rem;display:flex;gap:1.25rem;font-size:0.78rem;color:#71717A;font-family:'Outfit',sans-serif;background:#FAFAFA;border-bottom:1px solid #E4E4E7;flex-wrap:wrap}
-.stats-bar b{color:#09090B}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#A09890;pointer-events:none}
+input[type=text]{width:100%;padding:8px 12px 8px 34px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.875rem;font-family:'Outfit',sans-serif;background:#F5F2ED;color:#1A1814;outline:none;transition:all 0.2s}
+input[type=text]:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12);background:#fff}
+select{padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-family:'Outfit',sans-serif;background:#F5F2ED;color:#1A1814;cursor:pointer;outline:none;transition:all 0.2s}
+select:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12)}
+.stats-bar{padding:0.5rem 1rem;display:flex;gap:1.25rem;font-size:0.78rem;color:#8A8479;font-family:'Outfit',sans-serif;background:#FAFAFA;border-bottom:1px solid #E2DDD6;flex-wrap:wrap}
+.stats-bar b{color:#1A1814}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;padding:1.5rem 1rem}
-.card{background:#fff;border:1px solid #E4E4E7;border-radius:12px;padding:1rem;display:flex;flex-direction:column;gap:6px;transition:all 0.2s;animation:fadeUp 0.3s ease both}
+.card{background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;display:flex;flex-direction:column;gap:6px;transition:all 0.2s;animation:fadeUp 0.3s ease both}
 .card:hover{box-shadow:0 8px 24px rgba(0,0,0,0.1);transform:translateY(-2px);border-color:#D4D4D8;cursor:pointer}
 .card.out-of-stock{opacity:0.75}
 .card.out-of-stock:hover{opacity:0.9}
-.card-img-wrap{position:relative;height:130px;margin-bottom:4px;border-radius:8px;background:#F9F9F9;overflow:hidden}
-.card-img-wrap::before{content:'Sin foto';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#A1A1AA;font-size:0.75rem;border-radius:8px}
+.card-img-wrap{position:relative;height:130px;margin-bottom:4px;border-radius:8px;background:#F5F2ED;overflow:hidden}
+.card-img-wrap::before{content:'Sin foto';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#A09890;font-size:0.75rem;border-radius:8px}
 .card-img{width:100%;height:130px;object-fit:cover;border-radius:8px;display:block;position:relative;z-index:1}
-.card-img[style*="visibility:hidden"]{background:#F9F9F9}
-.card-img-ph{display:flex;align-items:center;justify-content:center;background:#F9F9F9;color:#A1A1AA;font-size:0.75rem;border-radius:8px;margin-bottom:4px;height:130px}
+.card-img[style*="visibility:hidden"]{background:#F5F2ED}
+.card-img-ph{display:flex;align-items:center;justify-content:center;background:#F5F2ED;color:#A09890;font-size:0.75rem;border-radius:8px;margin-bottom:4px;height:130px}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.card-title{font-size:0.83rem;font-weight:600;line-height:1.4;flex:1;color:#09090B}
+.card-title{font-size:0.83rem;font-weight:600;line-height:1.4;flex:1;color:#1A1814}
 .badge{font-size:0.68rem;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;font-family:'Outfit',sans-serif}
-.b-ok{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0}
+.b-ok{background:#F0FDF4;color:#1B4332;border:1px solid #BBF7D0}
 .b-low{background:#FFFBEB;color:#B45309;border:1px solid #FDE68A}
 .b-out{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
-.card-meta{font-size:0.76rem;color:#71717A;line-height:1.6}
-.card-meta b{color:#3F3F46;font-weight:500}
+.card-meta{font-size:0.76rem;color:#8A8479;line-height:1.6}
+.card-meta b{color:#4B4640;font-weight:500}
 .color-chip{display:inline-flex;align-items:center;gap:5px}
 .cdot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(0,0,0,0.1);flex-shrink:0;display:inline-block}
-.stock-line{font-variant-numeric:tabular-nums;font-size:0.75rem;color:#71717A}
-.stock-line b{color:#09090B}
-.prices{border-top:1px solid #F4F4F5;padding-top:8px;margin-top:2px;display:flex;flex-direction:column;gap:4px}
+.stock-line{font-variant-numeric:tabular-nums;font-size:0.75rem;color:#8A8479}
+.stock-line b{color:#1A1814}
+.prices{border-top:1px solid #F5F2ED;padding-top:8px;margin-top:2px;display:flex;flex-direction:column;gap:4px}
 .price-row{display:flex;justify-content:space-between;align-items:center}
-.price-label{font-size:0.72rem;color:#71717A;display:flex;align-items:center;gap:5px}
+.price-label{font-size:0.72rem;color:#8A8479;display:flex;align-items:center;gap:5px}
 .ptag{font-size:0.65rem;background:#FFF7ED;color:#9A3412;padding:1px 6px;border-radius:6px;font-weight:600;border:1px solid #FED7AA}
-.price-val{font-variant-numeric:tabular-nums;font-size:0.9rem;font-weight:700;color:#09090B}
-.price-val.green{color:#16A34A}
-.notify-hint{margin-top:4px;font-size:0.72rem;color:#EA580C;font-weight:500}
-.ver-ficha-hint{margin-top:4px;font-size:0.7rem;color:#71717A}
-.empty{grid-column:1/-1;text-align:center;padding:4rem;color:#71717A;font-size:0.9rem}
-.loading{text-align:center;padding:5rem 2rem;color:#71717A}
-.spinner{width:28px;height:28px;border:2px solid #E4E4E7;border-top-color:#EA580C;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 1rem}
+.price-val{font-variant-numeric:tabular-nums;font-size:0.9rem;font-weight:700;color:#1A1814}
+.price-val.green{color:#2D6A4F}
+.notify-hint{margin-top:4px;font-size:0.72rem;color:#2D6A4F;font-weight:500}
+.ver-ficha-hint{margin-top:4px;font-size:0.7rem;color:#8A8479}
+.empty{grid-column:1/-1;text-align:center;padding:4rem;color:#8A8479;font-size:0.9rem}
+.loading{text-align:center;padding:5rem 2rem;color:#8A8479}
+.spinner{width:28px;height:28px;border:2px solid #E2DDD6;border-top-color:#2D6A4F;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 1rem}
 .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:999;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)}
 .modal-overlay.open{display:flex}
 .modal{background:#fff;border-radius:16px;padding:1.5rem;max-width:380px;width:100%;animation:fadeUp 0.25s ease;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
-.modal-close{position:absolute;top:1rem;right:1rem;background:#F4F4F5;border:none;font-size:0.9rem;cursor:pointer;color:#71717A;padding:0;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
-.modal-close:hover{background:#E4E4E7;color:#09090B}
+.modal-close{position:absolute;top:1rem;right:1rem;background:#F5F2ED;border:none;font-size:0.9rem;cursor:pointer;color:#8A8479;padding:0;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:#E2DDD6;color:#1A1814}
 .modal-img{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:1rem}
 .modal-tag{display:inline-block;background:#FEF2F2;color:#B91C1C;font-size:0.72rem;font-weight:600;padding:3px 10px;border-radius:6px;margin-bottom:0.75rem}
-.modal-title{font-size:1rem;font-weight:700;color:#09090B;margin-bottom:6px}
-.modal-meta{font-size:0.82rem;color:#71717A;margin-bottom:1.25rem;line-height:1.6}
-.modal-meta b{color:#09090B}
+.modal-title{font-size:1rem;font-weight:700;color:#1A1814;margin-bottom:6px}
+.modal-meta{font-size:0.82rem;color:#8A8479;margin-bottom:1.25rem;line-height:1.6}
+.modal-meta b{color:#1A1814}
 .btn-wa{display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:10px;padding:13px 20px;font-size:0.95rem;font-weight:700;width:100%;cursor:pointer;text-decoration:none;font-family:'Outfit',sans-serif;transition:background 0.2s}
 .btn-wa:hover{background:#1ebe5d}
-.pres-filtro{padding:5px 12px;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer;border:1px solid #E4E4E7;background:#fff;color:#71717A;font-family:'Outfit',sans-serif;transition:all 0.15s}
-.pres-filtro.active,.pres-filtro:hover{background:#09090B;color:#fff;border-color:#09090B}
+.pres-filtro{padding:5px 12px;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer;border:1px solid #E2DDD6;background:#fff;color:#8A8479;font-family:'Outfit',sans-serif;transition:all 0.15s}
+.pres-filtro.active,.pres-filtro:hover{background:#1A1814;color:#fff;border-color:#1A1814}
 .estado-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;border:1px solid transparent}
 .estado-Enviado{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE}
-.estado-Aprobado{background:#F0FDF4;color:#15803D;border-color:#BBF7D0}
+.estado-Aprobado{background:#F0FDF4;color:#1B4332;border-color:#BBF7D0}
 .estado-Senado{background:#FFFBEB;color:#B45309;border-color:#FDE68A}
-.estado-Pagado{background:#DCFCE7;color:#15803D;border-color:#86EFAC}
+.estado-Pagado{background:#DCFCE7;color:#1B4332;border-color:#86EFAC}
 .estado-Cancelado{background:#FEF2F2;color:#B91C1C;border-color:#FECACA}
-.ficha-back-bar{background:#fff;border-bottom:1px solid #E4E4E7;padding:0.75rem 1.25rem;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
-.ficha-back-btn{background:none;border:none;color:#09090B;font-size:0.875rem;cursor:pointer;padding:4px;line-height:1;display:flex;align-items:center;gap:8px;font-family:'Outfit',sans-serif;font-weight:500}
-.ficha-back-btn:hover{color:#EA580C}
-.ficha-img{width:100%;max-height:280px;object-fit:contain;background:#F9F9F9}
-.ficha-img-placeholder{width:100%;height:160px;background:linear-gradient(135deg,#F9F9F9,#F4F4F5);display:flex;align-items:center;justify-content:center;font-size:3rem}
+.ficha-back-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.75rem 1.25rem;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.ficha-back-btn{background:none;border:none;color:#1A1814;font-size:0.875rem;cursor:pointer;padding:4px;line-height:1;display:flex;align-items:center;gap:8px;font-family:'Outfit',sans-serif;font-weight:500}
+.ficha-back-btn:hover{color:#2D6A4F}
+.ficha-img{width:100%;max-height:280px;object-fit:contain;background:#F5F2ED}
+.ficha-img-placeholder{width:100%;height:160px;background:linear-gradient(135deg,#F5F2ED,#F5F2ED);display:flex;align-items:center;justify-content:center;font-size:3rem}
 .ficha-body{padding:1.25rem;max-width:680px;margin:0 auto;padding-bottom:6rem}
 .ficha-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.875rem}
 .ficha-badge{font-size:0.72rem;font-weight:600;padding:4px 10px;border-radius:6px;border:1px solid}
 .fb-mat{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE}
-.fb-marca{background:#F0FDF4;color:#15803D;border-color:#BBF7D0}
+.fb-marca{background:#F0FDF4;color:#1B4332;border-color:#BBF7D0}
 .fb-color{background:#FFF7ED;color:#9A3412;border-color:#FED7AA}
-.ficha-nombre{font-size:1.2rem;font-weight:700;color:#09090B;margin-bottom:4px;line-height:1.3;letter-spacing:-0.02em}
-.ficha-sub{font-size:0.85rem;color:#71717A;margin-bottom:1.25rem}
-.ficha-precios{background:#F9F9F9;border-radius:12px;padding:1rem;margin-bottom:1.25rem;display:flex;gap:1rem;border:1px solid #E4E4E7}
+.ficha-nombre{font-size:1.2rem;font-weight:700;color:#1A1814;margin-bottom:4px;line-height:1.3;letter-spacing:-0.02em}
+.ficha-sub{font-size:0.85rem;color:#8A8479;margin-bottom:1.25rem}
+.ficha-precios{background:#F5F2ED;border-radius:12px;padding:1rem;margin-bottom:1.25rem;display:flex;gap:1rem;border:1px solid #E2DDD6}
 .fpp-item{flex:1;text-align:center}
-.fpp-lbl{font-size:0.7rem;color:#71717A;margin-bottom:3px;font-weight:500}
-.fpp-val{font-variant-numeric:tabular-nums;font-size:1rem;font-weight:700;color:#09090B}
-.fpp-val.oferta{color:#16A34A;font-size:1.1rem}
-.fpp-tag{font-size:0.62rem;background:#F0FDF4;color:#15803D;padding:2px 8px;border-radius:6px;display:inline-block;margin-top:3px;font-weight:600;border:1px solid #BBF7D0}
+.fpp-lbl{font-size:0.7rem;color:#8A8479;margin-bottom:3px;font-weight:500}
+.fpp-val{font-variant-numeric:tabular-nums;font-size:1rem;font-weight:700;color:#1A1814}
+.fpp-val.oferta{color:#2D6A4F;font-size:1.1rem}
+.fpp-tag{font-size:0.62rem;background:#F0FDF4;color:#1B4332;padding:2px 8px;border-radius:6px;display:inline-block;margin-top:3px;font-weight:600;border:1px solid #BBF7D0}
 .ficha-stock{display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;font-weight:600;margin-bottom:1.25rem;padding:5px 12px;border-radius:8px}
-.ftitulo{font-size:0.72rem;font-weight:700;color:#09090B;text-transform:uppercase;letter-spacing:0.08em;margin:1.25rem 0 0.75rem;padding-bottom:6px;border-bottom:2px solid #F4F4F5}
-.fdesc{font-size:0.875rem;color:#3F3F46;line-height:1.75;margin-bottom:1rem}
+.ftitulo{font-size:0.72rem;font-weight:700;color:#1A1814;text-transform:uppercase;letter-spacing:0.08em;margin:1.25rem 0 0.75rem;padding-bottom:6px;border-bottom:2px solid #F5F2ED}
+.fdesc{font-size:0.875rem;color:#4B4640;line-height:1.75;margin-bottom:1rem}
 .falerta{display:block;width:100%;box-sizing:border-box;border-radius:8px;padding:10px 14px;font-size:0.82rem;margin-bottom:0.75rem;line-height:1.6;border-left:3px solid;word-wrap:break-word;overflow-wrap:break-word}
 .falerta.warn{background:#FFFBEB;border-color:#F59E0B;color:#78350F}
 .falerta.tip{background:#EFF6FF;border-color:#3B82F6;color:#1E3A8A}
-.falerta.success{background:#F0FDF4;border-color:#22C55E;color:#15803D}
+.falerta.success{background:#F0FDF4;border-color:#22C55E;color:#1B4332}
 .fusos{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:1rem}
 .fuso{border-radius:8px;padding:8px 10px;font-size:0.78rem;line-height:1.4;border:1px solid}
-.fuso.bueno{background:#F0FDF4;color:#15803D;border-color:#BBF7D0}
+.fuso.bueno{background:#F0FDF4;color:#1B4332;border-color:#BBF7D0}
 .fuso.malo{background:#FEF2F2;color:#B91C1C;border-color:#FECACA}
 .ftags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
-.ftag{font-size:0.75rem;background:#F9F9F9;color:#3F3F46;padding:5px 10px;border-radius:6px;border:1px solid #E4E4E7;font-weight:500}
-.fspecs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#E4E4E7;border:1px solid #E4E4E7;border-radius:10px;overflow:hidden;margin-bottom:1rem}
+.ftag{font-size:0.75rem;background:#F5F2ED;color:#4B4640;padding:5px 10px;border-radius:6px;border:1px solid #E2DDD6;font-weight:500}
+.fspecs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#E2DDD6;border:1px solid #E2DDD6;border-radius:10px;overflow:hidden;margin-bottom:1rem}
 .fspec{background:#fff;padding:10px 12px}
-.fspec-lbl{font-size:0.7rem;color:#71717A;margin-bottom:2px;font-weight:500}
-.fspec-val{font-size:0.82rem;font-weight:600;color:#09090B;font-variant-numeric:tabular-nums}
-.ficha-footer{position:fixed;bottom:0;left:0;right:0;padding:1rem 1.25rem;border-top:1px solid #E4E4E7;background:#fff;display:flex;gap:10px;z-index:100}
-.btn-ficha-agregar{flex:1;padding:13px;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;border:none;background:#09090B;color:#fff;transition:background 0.2s}
-.btn-ficha-agregar:hover{background:#27272A}
-.btn-ficha-agregar.en-carrito{background:#EA580C}
+.fspec-lbl{font-size:0.7rem;color:#8A8479;margin-bottom:2px;font-weight:500}
+.fspec-val{font-size:0.82rem;font-weight:600;color:#1A1814;font-variant-numeric:tabular-nums}
+.ficha-footer{position:fixed;bottom:0;left:0;right:0;padding:1rem 1.25rem;border-top:1px solid #E2DDD6;background:#fff;display:flex;gap:10px;z-index:100}
+.btn-ficha-agregar{flex:1;padding:13px;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;border:none;background:#1A1814;color:#fff;transition:background 0.2s}
+.btn-ficha-agregar:hover{background:#2A2520}
+.btn-ficha-agregar.en-carrito{background:#2D6A4F}
 .btn-ficha-wa{padding:13px 16px;border-radius:10px;background:#25D366;color:#fff;border:none;cursor:pointer;font-size:0.85rem;font-weight:700;font-family:'Outfit',sans-serif;text-decoration:none;display:flex;align-items:center}
-.carousel-wrap{position:relative;width:100%;overflow:hidden;background:#09090B;line-height:0}
+.carousel-wrap{position:relative;width:100%;overflow:hidden;background:#1A1814;line-height:0}
 .carousel-track{display:flex;transition:transform 0.5s cubic-bezier(.4,0,.2,1);will-change:transform}
 .carousel-slide{min-width:100%;position:relative;overflow:hidden;cursor:pointer}
 .carousel-slide img{width:100%;height:auto;display:block}
 .carousel-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0.6) 0%,rgba(0,0,0,0.2) 60%,rgba(0,0,0,0) 100%);display:flex;align-items:center;padding:2rem;pointer-events:none}
 .carousel-content{max-width:480px;color:#fff}
-.carousel-tag{display:inline-block;background:rgba(234,88,12,0.85);border-radius:5px;padding:3px 10px;font-size:0.7rem;font-weight:700;font-family:'Outfit',sans-serif;margin-bottom:0.75rem;letter-spacing:0.07em;text-transform:uppercase}
+.carousel-tag{display:inline-block;background:rgba(45,106,79,0.9);border-radius:5px;padding:3px 10px;font-size:0.7rem;font-weight:700;font-family:'Outfit',sans-serif;margin-bottom:0.75rem;letter-spacing:0.07em;text-transform:uppercase}
 .carousel-titulo{font-size:1.75rem;font-weight:800;font-family:'Outfit',sans-serif;line-height:1.15;margin-bottom:0.5rem;text-shadow:0 2px 8px rgba(0,0,0,0.3);letter-spacing:-0.03em}
 .carousel-desc{font-size:0.88rem;font-family:'Outfit',sans-serif;opacity:0.85;margin-bottom:1.25rem;line-height:1.5}
 .carousel-cta{display:inline-block;padding:10px 20px;border-radius:8px;font-size:0.875rem;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;text-decoration:none;border:none;transition:opacity 0.2s}
@@ -527,7 +527,7 @@ select:focus{border-color:#EA580C;box-shadow:0 0 0 3px rgba(234,88,12,0.1)}
 .carousel-next{right:12px}
 .carousel-dots{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10}
 .carousel-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.4);border:none;cursor:pointer;padding:0;transition:all 0.2s}
-.carousel-dot.active{background:#EA580C;width:18px;border-radius:3px}
+.carousel-dot.active{background:#2D6A4F;width:18px;border-radius:3px}
 @media(max-width:600px){
   .carousel-slide img{height:210px;object-fit:cover;object-position:center}
   .carousel-titulo{font-size:1.15rem}
@@ -535,108 +535,108 @@ select:focus{border-color:#EA580C;box-shadow:0 0 0 3px rgba(234,88,12,0.1)}
   .carousel-overlay{padding:1rem}
 }
 .calc-container{max-width:720px;margin:0 auto;padding:1.5rem 1rem 3rem}
-.calc-section{background:#fff;border:1px solid #E4E4E7;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
-.calc-section h2{font-size:0.95rem;font-weight:700;color:#09090B;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:2px solid #F4F4F5;letter-spacing:-0.01em}
+.calc-section{background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.calc-section h2{font-size:0.95rem;font-weight:700;color:#1A1814;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:2px solid #F5F2ED;letter-spacing:-0.01em}
 .field{margin-bottom:1rem}
 .field:last-child{margin-bottom:0}
-.field label{display:block;font-size:0.82rem;font-weight:600;color:#09090B;margin-bottom:5px}
-.label-hint{font-size:0.75rem;color:#71717A;font-weight:400;margin-left:4px}
-input[type=number]{width:100%;padding:9px 12px;border:1px solid #E4E4E7;border-radius:8px;font-size:0.88rem;font-family:'Outfit',sans-serif;background:#F9F9F9;color:#09090B;outline:none;transition:all 0.2s;font-variant-numeric:tabular-nums}
-input[type=number]:focus{border-color:#EA580C;box-shadow:0 0 0 3px rgba(234,88,12,0.1);background:#fff}
+.field label{display:block;font-size:0.82rem;font-weight:600;color:#1A1814;margin-bottom:5px}
+.label-hint{font-size:0.75rem;color:#8A8479;font-weight:400;margin-left:4px}
+input[type=number]{width:100%;padding:9px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.88rem;font-family:'Outfit',sans-serif;background:#F5F2ED;color:#1A1814;outline:none;transition:all 0.2s;font-variant-numeric:tabular-nums}
+input[type=number]:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12);background:#fff}
 .calc-section select{width:100%;padding:9px 12px;margin-bottom:0}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
-.toggle-lbl{font-size:0.88rem;font-weight:600;color:#09090B}
-.toggle-hint{font-size:0.76rem;color:#71717A;margin-top:2px}
+.toggle-lbl{font-size:0.88rem;font-weight:600;color:#1A1814}
+.toggle-hint{font-size:0.76rem;color:#8A8479;margin-top:2px}
 .toggle{position:relative;width:44px;height:24px;flex-shrink:0}
 .toggle input{opacity:0;width:0;height:0}
 .tslider{position:absolute;inset:0;background:#D4D4D8;border-radius:24px;cursor:pointer;transition:0.2s}
 .tslider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
-.toggle input:checked+.tslider{background:#EA580C}
+.toggle input:checked+.tslider{background:#2D6A4F}
 .toggle input:checked+.tslider:before{transform:translateX(20px)}
 .insumo-item{display:grid;grid-template-columns:1fr 110px 110px 36px;gap:8px;align-items:center;margin-bottom:8px}
 .btn-remove{background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;width:36px;height:36px;cursor:pointer;font-size:1rem;color:#B91C1C;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.btn-add{display:flex;align-items:center;gap:6px;background:none;border:1px dashed #D4D4D8;border-radius:8px;padding:8px 14px;font-size:0.82rem;color:#71717A;cursor:pointer;width:100%;justify-content:center;margin-top:4px;transition:all 0.2s;font-family:'Outfit',sans-serif}
-.btn-add:hover{border-color:#EA580C;color:#EA580C}
-.badge-info{display:inline-block;background:#F4F4F5;color:#71717A;font-size:0.72rem;padding:2px 8px;border-radius:6px;font-weight:500;margin-left:6px}
-.tip{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:#E4E4E7;border-radius:50%;font-size:0.65rem;color:#71717A;cursor:help;margin-left:4px;position:relative;flex-shrink:0;vertical-align:middle}
-.tip:hover::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 6px);background:#09090B;color:#fff;font-size:0.75rem;padding:6px 10px;border-radius:8px;white-space:normal;width:220px;z-index:10;line-height:1.4;font-family:'Outfit',sans-serif;font-weight:400}
-.resultado{background:#09090B;border-radius:12px;padding:1.5rem;margin-top:1.5rem;color:#fff}
-.resultado h2{color:#fff;border-bottom:1px solid #27272A;padding-bottom:0.75rem;margin-bottom:0.75rem;font-size:0.95rem}
+.btn-add{display:flex;align-items:center;gap:6px;background:none;border:1px dashed #D4D4D8;border-radius:8px;padding:8px 14px;font-size:0.82rem;color:#8A8479;cursor:pointer;width:100%;justify-content:center;margin-top:4px;transition:all 0.2s;font-family:'Outfit',sans-serif}
+.btn-add:hover{border-color:#2D6A4F;color:#2D6A4F}
+.badge-info{display:inline-block;background:#F5F2ED;color:#8A8479;font-size:0.72rem;padding:2px 8px;border-radius:6px;font-weight:500;margin-left:6px}
+.tip{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:#E2DDD6;border-radius:50%;font-size:0.65rem;color:#8A8479;cursor:help;margin-left:4px;position:relative;flex-shrink:0;vertical-align:middle}
+.tip:hover::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 6px);background:#1A1814;color:#fff;font-size:0.75rem;padding:6px 10px;border-radius:8px;white-space:normal;width:220px;z-index:10;line-height:1.4;font-family:'Outfit',sans-serif;font-weight:400}
+.resultado{background:#1A1814;border-radius:12px;padding:1.5rem;margin-top:1.5rem;color:#fff}
+.resultado h2{color:#fff;border-bottom:1px solid #2A2520;padding-bottom:0.75rem;margin-bottom:0.75rem;font-size:0.95rem}
 .res-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1A1A1A;font-size:0.875rem}
 .res-row:last-of-type{border:none}
-.res-lbl{color:#A1A1AA}
+.res-lbl{color:#A09890}
 .res-val{font-family:'Outfit',sans-serif;font-weight:600;font-variant-numeric:tabular-nums}
-.res-total{display:flex;justify-content:space-between;align-items:center;margin-top:1rem;padding-top:1rem;border-top:2px solid #27272A}
+.res-total{display:flex;justify-content:space-between;align-items:center;margin-top:1rem;padding-top:1rem;border-top:2px solid #2A2520}
 .res-total-lbl{font-size:1rem;font-weight:700}
-.res-total-val{font-variant-numeric:tabular-nums;font-size:1.4rem;font-weight:700;color:#4ADE80}
-.res-precio{background:#EA580C;border-radius:10px;padding:1rem;margin-top:1rem;text-align:center}
+.res-total-val{font-variant-numeric:tabular-nums;font-size:1.4rem;font-weight:700;color:#4ade80}
+.res-precio{background:#2D6A4F;border-radius:10px;padding:1rem;margin-top:1rem;text-align:center}
 .res-precio-lbl{font-size:0.8rem;color:rgba(255,255,255,0.75);margin-bottom:4px}
 .res-precio-val{font-variant-numeric:tabular-nums;font-size:2rem;font-weight:700;color:#fff}
 .res-rep{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:1rem}
-.rep-item{background:#18181B;border-radius:8px;padding:10px;text-align:center;border:1px solid #27272A}
-.rep-lbl{font-size:0.7rem;color:#71717A;margin-bottom:2px}
+.rep-item{background:#18181B;border-radius:8px;padding:10px;text-align:center;border:1px solid #2A2520}
+.rep-lbl{font-size:0.7rem;color:#8A8479;margin-bottom:2px}
 .rep-val{font-variant-numeric:tabular-nums;font-size:0.9rem;font-weight:600}
-.readonly-field{background:#F0FDF4!important;color:#15803D!important;font-variant-numeric:tabular-nums;font-weight:600!important}
-footer{text-align:center;padding:2rem;font-size:0.75rem;color:#71717A;font-family:'Outfit',sans-serif;border-top:1px solid #E4E4E7;margin-top:1rem}
+.readonly-field{background:#F0FDF4!important;color:#1B4332!important;font-variant-numeric:tabular-nums;font-weight:600!important}
+footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-family:'Outfit',sans-serif;border-top:1px solid #E2DDD6;margin-top:1rem}
 #page-ficha.active ~ footer{display:none}
-.btn-agregar{margin-top:6px;width:100%;padding:8px;border:1.5px solid #09090B;border-radius:8px;background:transparent;color:#09090B;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.15s}
-.btn-agregar:hover{background:#09090B;color:#fff}
-.btn-agregar.en-carrito{background:#EA580C;color:#fff;border-color:#EA580C}
+.btn-agregar{margin-top:6px;width:100%;padding:8px;border:1.5px solid #1A1814;border-radius:8px;background:transparent;color:#1A1814;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.15s}
+.btn-agregar:hover{background:#1A1814;color:#fff}
+.btn-agregar.en-carrito{background:#2D6A4F;color:#fff;border-color:#2D6A4F}
 .carrito-flotante{position:fixed;bottom:1.5rem;right:1.5rem;z-index:200;display:none}
 .carrito-flotante.visible{display:block}
-.carrito-btn{background:#09090B;color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);transition:transform 0.2s}
+.carrito-btn{background:#1A1814;color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);transition:transform 0.2s}
 .carrito-btn:hover{transform:scale(1.04)}
-.carrito-count{background:#EA580C;color:#fff;border-radius:50%;width:22px;height:22px;font-size:0.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.carrito-count{background:#2D6A4F;color:#fff;border-radius:50%;width:22px;height:22px;font-size:0.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .carrito-panel{position:fixed;bottom:0;right:0;width:100%;max-width:420px;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -4px 30px rgba(0,0,0,0.12);z-index:300;transform:translateY(100%);transition:transform 0.3s ease;max-height:85vh;display:flex;flex-direction:column}
 .carrito-panel.open{transform:translateY(0)}
-.carrito-header{padding:1rem 1.25rem;border-bottom:1px solid #E4E4E7;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.carrito-header{padding:1rem 1.25rem;border-bottom:1px solid #E2DDD6;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .carrito-header h3{font-size:1rem;font-weight:700;letter-spacing:-0.01em}
-.carrito-cerrar{background:#F4F4F5;border:none;font-size:1rem;cursor:pointer;color:#71717A;padding:0;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
-.carrito-cerrar:hover{background:#E4E4E7}
+.carrito-cerrar{background:#F5F2ED;border:none;font-size:1rem;cursor:pointer;color:#8A8479;padding:0;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.carrito-cerrar:hover{background:#E2DDD6}
 .carrito-body{overflow-y:auto;flex:1;padding:1rem 1.25rem}
-.carrito-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F4F4F5}
+.carrito-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F5F2ED}
 .carrito-item:last-child{border:none}
 .carrito-item-info{flex:1;min-width:0}
-.carrito-item-nombre{font-size:0.82rem;font-weight:600;color:#09090B;line-height:1.3}
-.carrito-item-sub{font-size:0.74rem;color:#71717A;margin-top:2px}
-.carrito-item-precio{font-variant-numeric:tabular-nums;font-size:0.85rem;font-weight:700;color:#09090B;text-align:right;flex-shrink:0}
+.carrito-item-nombre{font-size:0.82rem;font-weight:600;color:#1A1814;line-height:1.3}
+.carrito-item-sub{font-size:0.74rem;color:#8A8479;margin-top:2px}
+.carrito-item-precio{font-variant-numeric:tabular-nums;font-size:0.85rem;font-weight:700;color:#1A1814;text-align:right;flex-shrink:0}
 .carrito-item-controles{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.ctrl-btn{width:28px;height:28px;border-radius:50%;border:1px solid #E4E4E7;background:#F9F9F9;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:600;color:#09090B;transition:all 0.15s}
-.ctrl-btn:hover{background:#09090B;color:#fff;border-color:#09090B}
+.ctrl-btn{width:28px;height:28px;border-radius:50%;border:1px solid #E2DDD6;background:#F5F2ED;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:600;color:#1A1814;transition:all 0.15s}
+.ctrl-btn:hover{background:#1A1814;color:#fff;border-color:#1A1814}
 .ctrl-qty{font-variant-numeric:tabular-nums;font-size:0.9rem;font-weight:700;min-width:20px;text-align:center}
-.carrito-footer{padding:1rem 1.25rem;border-top:1px solid #E4E4E7;flex-shrink:0}
+.carrito-footer{padding:1rem 1.25rem;border-top:1px solid #E2DDD6;flex-shrink:0}
 .oferta-banner{background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:8px 12px;font-size:0.78rem;color:#9A3412;margin-bottom:1rem;display:none;font-weight:500}
 .oferta-banner.visible{display:block}
 .carrito-total{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
 .carrito-total-lbl{font-size:0.9rem;font-weight:600}
-.carrito-total-val{font-variant-numeric:tabular-nums;font-size:1.25rem;font-weight:700;color:#09090B}
+.carrito-total-val{font-variant-numeric:tabular-nums;font-size:1.25rem;font-weight:700;color:#1A1814}
 .btn-pedir{display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;width:100%;cursor:pointer;font-family:'Outfit',sans-serif;transition:background 0.2s;text-decoration:none}
 .btn-pedir:hover{background:#1ebe5d}
-.carrito-vacio{text-align:center;padding:2rem;color:#71717A;font-size:0.9rem}
+.carrito-vacio{text-align:center;padding:2rem;color:#8A8479;font-size:0.9rem}
 .overlay-carrito{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:250;backdrop-filter:blur(2px)}
 .overlay-carrito.open{display:block}
-.btn-pdf{display:flex;align-items:center;justify-content:center;gap:8px;background:#09090B;color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.9rem;font-weight:600;width:100%;cursor:pointer;font-family:'Outfit',sans-serif;transition:background 0.2s;margin-top:10px}
-.btn-pdf:hover{background:#27272A}
+.btn-pdf{display:flex;align-items:center;justify-content:center;gap:8px;background:#1A1814;color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.9rem;font-weight:600;width:100%;cursor:pointer;font-family:'Outfit',sans-serif;transition:background 0.2s;margin-top:10px}
+.btn-pdf:hover{background:#2A2520}
 .pdf-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)}
 .pdf-modal-overlay.open{display:flex}
 .pdf-modal{background:#fff;border-radius:16px;padding:1.5rem;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;position:relative;animation:fadeUp 0.25s ease;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
-.pdf-modal h3{font-size:1rem;font-weight:700;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid #E4E4E7}
+.pdf-modal h3{font-size:1rem;font-weight:700;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid #E2DDD6}
 .pdf-modal .field{margin-bottom:0.875rem}
-.pdf-modal label{display:block;font-size:0.82rem;font-weight:600;color:#09090B;margin-bottom:4px}
-.pdf-modal input,.pdf-modal textarea{width:100%;padding:8px 12px;border:1px solid #E4E4E7;border-radius:8px;font-size:0.85rem;font-family:'Outfit',sans-serif;background:#F9F9F9;color:#09090B;outline:none;transition:all 0.2s}
-.pdf-modal input:focus,.pdf-modal textarea:focus{border-color:#EA580C;box-shadow:0 0 0 3px rgba(234,88,12,0.1);background:#fff}
+.pdf-modal label{display:block;font-size:0.82rem;font-weight:600;color:#1A1814;margin-bottom:4px}
+.pdf-modal input,.pdf-modal textarea{width:100%;padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:'Outfit',sans-serif;background:#F5F2ED;color:#1A1814;outline:none;transition:all 0.2s}
+.pdf-modal input:focus,.pdf-modal textarea:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12);background:#fff}
 .pdf-modal textarea{resize:vertical;min-height:70px}
 .color-row{display:flex;gap:10px;align-items:center}
-.color-row input[type=color]{width:44px;height:36px;padding:2px;border:1px solid #E4E4E7;border-radius:8px;cursor:pointer;background:#F9F9F9}
+.color-row input[type=color]{width:44px;height:36px;padding:2px;border:1px solid #E2DDD6;border-radius:8px;cursor:pointer;background:#F5F2ED}
 .color-row input[type=text]{flex:1}
 .pdf-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn-generar{display:flex;align-items:center;justify-content:center;gap:8px;background:#09090B;color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.95rem;font-weight:700;width:100%;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:1rem;transition:background 0.2s}
-.btn-generar:hover{background:#27272A}
-.pdf-close{position:absolute;top:1rem;right:1rem;background:#F4F4F5;border:none;font-size:1rem;cursor:pointer;color:#71717A;padding:0;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
-.preview-color{width:24px;height:24px;border-radius:50%;border:1px solid #E4E4E7;flex-shrink:0}
-.logo-preview{width:60px;height:60px;object-fit:contain;border:1px solid #E4E4E7;border-radius:8px;margin-top:6px;display:none}
+.btn-generar{display:flex;align-items:center;justify-content:center;gap:8px;background:#1A1814;color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.95rem;font-weight:700;width:100%;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:1rem;transition:background 0.2s}
+.btn-generar:hover{background:#2A2520}
+.pdf-close{position:absolute;top:1rem;right:1rem;background:#F5F2ED;border:none;font-size:1rem;cursor:pointer;color:#8A8479;padding:0;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.preview-color{width:24px;height:24px;border-radius:50%;border:1px solid #E2DDD6;flex-shrink:0}
+.logo-preview{width:60px;height:60px;object-fit:contain;border:1px solid #E2DDD6;border-radius:8px;margin-top:6px;display:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 .card:nth-child(1){animation-delay:0.03s}.card:nth-child(2){animation-delay:0.06s}.card:nth-child(3){animation-delay:0.09s}.card:nth-child(4){animation-delay:0.12s}.card:nth-child(5){animation-delay:0.15s}.card:nth-child(6){animation-delay:0.18s}.card:nth-child(7){animation-delay:0.21s}.card:nth-child(8){animation-delay:0.24s}.card:nth-child(9){animation-delay:0.27s}.card:nth-child(10){animation-delay:0.30s}.card:nth-child(11){animation-delay:0.33s}.card:nth-child(12){animation-delay:0.36s}
@@ -674,7 +674,7 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#71717A;font-famil
     <div class="carousel-dots" id="carousel-dots"></div>
   </div>
 
-  <div style="background:#fff;padding:0.75rem 1.25rem 1rem;border-bottom:1px solid #E4E4E7;display:flex;flex-wrap:wrap;gap:8px">
+  <div style="background:#fff;padding:0.75rem 1.25rem 1rem;border-bottom:1px solid #E2DDD6;display:flex;flex-wrap:wrap;gap:8px">
     <div class="promo-pill">Precio oferta disponible comprando 2 kg o más de cualquier color, material o marca</div>
     <div class="promo-pill">Envíos en el día a Trelew</div>
   </div>
@@ -713,7 +713,7 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#71717A;font-famil
         </select>
         <div style="display:flex;gap:8px;margin-top:6px">
           <button id="btn-fav-fil" onclick="toggleFavoritoFilamento()" style="display:none;flex:1;padding:6px 10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;color:#B45309">☆ Guardar en favoritos</button>
-          <button onclick="abrirModalFilamentoPropio()" style="flex:1;padding:6px 10px;background:#F9F9F9;border:1px solid #E4E4E7;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;color:#3F3F46">+ Agregar mi filamento</button>
+          <button onclick="abrirModalFilamentoPropio()" style="flex:1;padding:6px 10px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;color:#4B4640">+ Agregar mi filamento</button>
         </div>
       </div>
       <div class="field" id="campo-custom-mat" style="display:none">
@@ -791,7 +791,7 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#71717A;font-famil
 
     <div class="calc-section">
       <h2>Insumos adicionales <span class="badge-info">opcional</span></h2>
-      <p style="font-size:0.8rem;color:#71717A;margin-bottom:1rem;line-height:1.5">Agregá materiales que usás en la pieza. Indicá el costo total del producto y cuántas piezas estimás que podés hacer con él.</p>
+      <p style="font-size:0.8rem;color:#8A8479;margin-bottom:1rem;line-height:1.5">Agregá materiales que usás en la pieza. Indicá el costo total del producto y cuántas piezas estimás que podés hacer con él.</p>
       <div id="lista-insumos"></div>
       <button class="btn-add" onclick="agregarInsumo()">+ Agregar insumo</button>
     </div>
@@ -842,15 +842,15 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#71717A;font-famil
         <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Agregar al presupuesto
       </button>
-      <div id="presupuesto-items-box" style="display:none;background:#F9F9F9;border-radius:12px;padding:1rem;margin-bottom:8px;border:1px solid #E4E4E7">
+      <div id="presupuesto-items-box" style="display:none;background:#F5F2ED;border-radius:12px;padding:1rem;margin-bottom:8px;border:1px solid #E2DDD6">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-          <span style="font-size:0.85rem;font-weight:600;color:#09090B;font-family:'Outfit',sans-serif">Items del presupuesto</span>
+          <span style="font-size:0.85rem;font-weight:600;color:#1A1814;font-family:'Outfit',sans-serif">Items del presupuesto</span>
           <button onclick="limpiarPresupuesto()" style="background:none;border:none;color:#DC2626;font-size:0.75rem;cursor:pointer;font-family:'Outfit',sans-serif">Limpiar todo</button>
         </div>
         <div id="presupuesto-items-lista"></div>
-        <div style="border-top:1px solid #E4E4E7;margin-top:0.75rem;padding-top:0.75rem;display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:0.85rem;font-weight:600;color:#09090B;font-family:'Outfit',sans-serif">Total presupuesto</span>
-          <span id="presupuesto-total" style="font-variant-numeric:tabular-nums;font-size:1rem;font-weight:700;color:#16A34A;font-family:'Outfit',sans-serif"></span>
+        <div style="border-top:1px solid #E2DDD6;margin-top:0.75rem;padding-top:0.75rem;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:0.85rem;font-weight:600;color:#1A1814;font-family:'Outfit',sans-serif">Total presupuesto</span>
+          <span id="presupuesto-total" style="font-variant-numeric:tabular-nums;font-size:1rem;font-weight:700;color:#2D6A4F;font-family:'Outfit',sans-serif"></span>
         </div>
       </div>
       <button id="btn-generar-pdf" class="btn-pdf" onclick="abrirPDFModal()" style="display:none">
@@ -928,11 +928,11 @@ function calcularEstadisticas(docs){
     if(porEstado[est]===0)return;
     var pct=Math.round(porEstado[est]/docs.length*100);
     var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:8px';
-    row.innerHTML='<div style="width:80px;font-size:0.78rem;color:#3F3F46;font-family:Outfit,sans-serif;flex-shrink:0">'+est+'</div>'+
-      '<div style="flex:1;background:#F4F4F5;border-radius:4px;height:8px;overflow:hidden">'+
+    row.innerHTML='<div style="width:80px;font-size:0.78rem;color:#4B4640;font-family:Outfit,sans-serif;flex-shrink:0">'+est+'</div>'+
+      '<div style="flex:1;background:#F5F2ED;border-radius:4px;height:8px;overflow:hidden">'+
         '<div style="width:'+pct+'%;background:'+colores[est]+';height:100%;border-radius:4px;transition:width 0.5s"></div>'+
       '</div>'+
-      '<div style="font-size:0.78rem;color:#09090B;font-family:monospace;width:20px;text-align:right">'+porEstado[est]+'</div>';
+      '<div style="font-size:0.78rem;color:#1A1814;font-family:monospace;width:20px;text-align:right">'+porEstado[est]+'</div>';
     estadosEl.appendChild(row);
   });
   var clientes={};
@@ -950,10 +950,10 @@ function calcularEstadisticas(docs){
   keys.forEach(function(k){
     var m=meses[k]; var pct=Math.round(m.count/maxCount*100);
     var bar=document.createElement('div'); bar.style.cssText='flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px';
-    bar.innerHTML='<div style="font-size:0.68rem;color:#71717A;font-family:monospace">'+(m.count||'')+'</div>'+
-      '<div style="width:100%;background:'+(m.count>0?'#EA580C':'#E4E4E7')+';border-radius:4px 4px 0 0;height:'+(pct||4)+'%;min-height:4px;transition:height 0.5s"></div>';
+    bar.innerHTML='<div style="font-size:0.68rem;color:#8A8479;font-family:monospace">'+(m.count||'')+'</div>'+
+      '<div style="width:100%;background:'+(m.count>0?'#2D6A4F':'#E2DDD6')+';border-radius:4px 4px 0 0;height:'+(pct||4)+'%;min-height:4px;transition:height 0.5s"></div>';
     grafico.appendChild(bar);
-    var lbl=document.createElement('div'); lbl.style.cssText='flex:1;text-align:center;font-size:0.68rem;color:#71717A;font-family:Outfit,sans-serif;text-transform:capitalize';
+    var lbl=document.createElement('div'); lbl.style.cssText='flex:1;text-align:center;font-size:0.68rem;color:#8A8479;font-family:Outfit,sans-serif;text-transform:capitalize';
     lbl.textContent=m.label; labels.appendChild(lbl);
   });
 }
@@ -1019,7 +1019,7 @@ function guardarPrefsUsuario(){
 }
 
 var SLIDES = [
-  { img: 'banner/banner3.png', tag: 'Servicio', titulo: 'Calculadora de costos 3D', desc: 'Calculá el costo exacto de tu impresión y generá un presupuesto profesional en PDF.', btnTxt: 'Ir a la calculadora', btnColor: '#09090B', btnAccion: function(){ showPage('calc', document.querySelectorAll('.nav-tab')[1]); } },
+  { img: 'banner/banner3.png', tag: 'Servicio', titulo: 'Calculadora de costos 3D', desc: 'Calculá el costo exacto de tu impresión y generá un presupuesto profesional en PDF.', btnTxt: 'Ir a la calculadora', btnColor: '#1A1814', btnAccion: function(){ showPage('calc', document.querySelectorAll('.nav-tab')[1]); } },
   { img: 'banner/banner1.png', tag: 'Novedades', titulo: 'Dorado Silk GST3D', desc: 'PLA+ Sedoso con acabado metálico premium. Black Edition, hecho en Argentina.', btnTxt: 'Ver producto', btnColor: '#D4AF37', btnAccion: function(){ showPage('stock', document.querySelector('.nav-tab')); setTimeout(function(){ var search = document.getElementById('search'); if(search){ search.value = 'Dorado Silk GST3D'; search.dispatchEvent(new Event('input')); } }, 100); } }
 ];
 
@@ -1030,7 +1030,7 @@ function initCarrusel(){
   SLIDES.forEach(function(slide, i){
     var div = document.createElement('div'); div.className = 'carousel-slide'; div.style.cursor = 'pointer';
     var img = document.createElement('img'); img.src = slide.img; img.alt = slide.titulo;
-    img.onerror = function(){ this.style.display='none'; div.style.background='linear-gradient(135deg,#09090B 0%,#27272A 100%)'; div.style.height='280px'; };
+    img.onerror = function(){ this.style.display='none'; div.style.background='linear-gradient(135deg,#1A1814 0%,#2A2520 100%)'; div.style.height='280px'; };
     div.appendChild(img); div.addEventListener('click', (function(s){ return function(){ s.btnAccion(); }; })(slide)); track.appendChild(div);
     var dot = document.createElement('button'); dot.className = 'carousel-dot'+(i===0?' active':'');
     dot.onclick = (function(idx){ return function(){ irASlide(idx); }; })(i); dots.appendChild(dot);
@@ -1078,11 +1078,11 @@ function renderListaPresupuestos(docs){
     if(todosPresupuestos.length === 0){
       lista.innerHTML='<div style="text-align:center;padding:2.5rem 1rem">'+
         '<div style="font-size:2.5rem;margin-bottom:0.75rem">📄</div>'+
-        '<div style="font-size:0.95rem;font-weight:600;color:#09090B;font-family:Outfit,sans-serif;margin-bottom:0.5rem">Todavía no generaste ningún presupuesto</div>'+
-        '<div style="font-size:0.82rem;color:#71717A;font-family:Outfit,sans-serif;margin-bottom:1.25rem">Usá la calculadora para calcular el costo y generar un presupuesto para tu cliente.</div>'+
-        '<button onclick="showPage(\'calc\',document.querySelectorAll(\'.nav-tab\')[1])" style="background:#09090B;color:#fff;border:none;border-radius:10px;padding:11px 24px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">Ir a la calculadora</button>'+
+        '<div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:0.5rem">Todavía no generaste ningún presupuesto</div>'+
+        '<div style="font-size:0.82rem;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:1.25rem">Usá la calculadora para calcular el costo y generar un presupuesto para tu cliente.</div>'+
+        '<button onclick="showPage(\'calc\',document.querySelectorAll(\'.nav-tab\')[1])" style="background:#1A1814;color:#fff;border:none;border-radius:10px;padding:11px 24px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">Ir a la calculadora</button>'+
         '</div>';
-    } else { lista.innerHTML='<p style="color:#71717A;font-size:0.85rem;text-align:center;padding:2rem">No hay presupuestos con ese filtro.</p>'; }
+    } else { lista.innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">No hay presupuestos con ese filtro.</p>'; }
     return;
   }
   lista.innerHTML='';
@@ -1092,19 +1092,19 @@ function renderListaPresupuestos(docs){
     var items=d.items&&d.items.length>0?d.items:[{nombre:d.proyecto||'',precio:d.precioTotal||0}];
     var estado=d.estado||'Enviado'; var estadoClase=ESTADO_CLASE[estado]||estado;
     var card=document.createElement('div'); card.className='pres-card';
-    card.style.cssText='background:#fff;border:1px solid #E4E4E7;border-radius:12px;margin-bottom:0.75rem;overflow:hidden';
+    card.style.cssText='background:#fff;border:1px solid #E2DDD6;border-radius:12px;margin-bottom:0.75rem;overflow:hidden';
     var header=document.createElement('div'); header.style.cssText='padding:1rem;display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer;user-select:none;gap:10px';
     var hLeft=document.createElement('div'); hLeft.style.cssText='flex:1;min-width:0';
     hLeft.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap">'+
-      '<span style="font-weight:600;color:#09090B;font-size:0.9rem;font-family:Outfit,sans-serif">'+(d.proyecto||'Sin nombre')+'</span>'+
-      (d.cliente?'<span style="font-size:0.75rem;color:#71717A;font-family:Outfit,sans-serif">· '+d.cliente+'</span>':'')+
-      '</div><div style="font-size:0.75rem;color:#71717A;font-family:Outfit,sans-serif">'+fecha+' · '+fmtPeso(d.precioTotal)+'</div>';
+      '<span style="font-weight:600;color:#1A1814;font-size:0.9rem;font-family:Outfit,sans-serif">'+(d.proyecto||'Sin nombre')+'</span>'+
+      (d.cliente?'<span style="font-size:0.75rem;color:#8A8479;font-family:Outfit,sans-serif">· '+d.cliente+'</span>':'')+
+      '</div><div style="font-size:0.75rem;color:#8A8479;font-family:Outfit,sans-serif">'+fecha+' · '+fmtPeso(d.precioTotal)+'</div>';
     var hBadge=document.createElement('span'); hBadge.className='estado-badge header-estado-badge estado-'+estadoClase; hBadge.textContent=estado;
-    var hChev=document.createElement('span'); hChev.style.cssText='color:#71717A;font-size:1.1rem;transition:transform 0.2s;flex-shrink:0;margin-top:2px'; hChev.textContent='▾';
+    var hChev=document.createElement('span'); hChev.style.cssText='color:#8A8479;font-size:1.1rem;transition:transform 0.2s;flex-shrink:0;margin-top:2px'; hChev.textContent='▾';
     header.appendChild(hLeft); header.appendChild(hBadge); header.appendChild(hChev);
-    var detalle=document.createElement('div'); detalle.style.cssText='display:none;border-top:1px solid #F4F4F5;padding:1rem';
+    var detalle=document.createElement('div'); detalle.style.cssText='display:none;border-top:1px solid #F5F2ED;padding:1rem';
     var estadoGrp=document.createElement('div'); estadoGrp.setAttribute('data-estado-group','1'); estadoGrp.style.cssText='margin-bottom:0.875rem';
-    estadoGrp.innerHTML='<div style="font-size:0.72rem;font-weight:600;color:#71717A;font-family:Outfit,sans-serif;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Estado</div>';
+    estadoGrp.innerHTML='<div style="font-size:0.72rem;font-weight:600;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Estado</div>';
     var estadoBtns=document.createElement('div'); estadoBtns.style.cssText='display:flex;gap:6px;flex-wrap:wrap';
     ESTADOS.forEach(function(est){
       var cls=ESTADO_CLASE[est]||est; var btn=document.createElement('button');
@@ -1115,16 +1115,16 @@ function renderListaPresupuestos(docs){
     estadoGrp.appendChild(estadoBtns); detalle.appendChild(estadoGrp);
     var itemsDiv=document.createElement('div'); itemsDiv.style.cssText='margin-bottom:0.75rem';
     items.forEach(function(item){
-      var row=document.createElement('div'); row.style.cssText='display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F4F4F5;font-size:0.82rem;font-family:Outfit,sans-serif';
-      row.innerHTML='<span style="color:#09090B">'+item.nombre+'</span><span style="color:#16A34A;font-variant-numeric:tabular-nums;font-weight:600">'+fmtPeso(item.precio)+'</span>';
+      var row=document.createElement('div'); row.style.cssText='display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F5F2ED;font-size:0.82rem;font-family:Outfit,sans-serif';
+      row.innerHTML='<span style="color:#1A1814">'+item.nombre+'</span><span style="color:#2D6A4F;font-variant-numeric:tabular-nums;font-weight:600">'+fmtPeso(item.precio)+'</span>';
       itemsDiv.appendChild(row);
     });
-    if(items.length>1){ var tot=document.createElement('div'); tot.style.cssText='display:flex;justify-content:space-between;padding:6px 0;font-size:0.88rem;font-weight:700;font-family:Outfit,sans-serif'; tot.innerHTML='<span>Total</span><span style="color:#16A34A;font-variant-numeric:tabular-nums">'+fmtPeso(d.precioTotal)+'</span>'; itemsDiv.appendChild(tot); }
+    if(items.length>1){ var tot=document.createElement('div'); tot.style.cssText='display:flex;justify-content:space-between;padding:6px 0;font-size:0.88rem;font-weight:700;font-family:Outfit,sans-serif'; tot.innerHTML='<span>Total</span><span style="color:#2D6A4F;font-variant-numeric:tabular-nums">'+fmtPeso(d.precioTotal)+'</span>'; itemsDiv.appendChild(tot); }
     detalle.appendChild(itemsDiv);
-    if(d.descripcion){var desc=document.createElement('div');desc.style.cssText='font-size:0.8rem;color:#71717A;font-family:Outfit,sans-serif;margin-bottom:0.75rem';desc.textContent=d.descripcion;detalle.appendChild(desc);}
-    if(d.condiciones){var cond=document.createElement('div');cond.style.cssText='font-size:0.78rem;color:#3F3F46;font-family:Outfit,sans-serif;margin-bottom:0.75rem';cond.innerHTML='<b>Condiciones:</b> '+d.condiciones;detalle.appendChild(cond);}
+    if(d.descripcion){var desc=document.createElement('div');desc.style.cssText='font-size:0.8rem;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:0.75rem';desc.textContent=d.descripcion;detalle.appendChild(desc);}
+    if(d.condiciones){var cond=document.createElement('div');cond.style.cssText='font-size:0.78rem;color:#4B4640;font-family:Outfit,sans-serif;margin-bottom:0.75rem';cond.innerHTML='<b>Condiciones:</b> '+d.condiciones;detalle.appendChild(cond);}
     var acciones=document.createElement('div'); acciones.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin-top:0.5rem';
-    var btnPDF=document.createElement('button'); btnPDF.style.cssText='flex:1;min-width:120px;padding:9px;background:#09090B;color:#fff;border:none;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px'; btnPDF.textContent='📄 Descargar PDF'; btnPDF.addEventListener('click',function(){regenerarPDF(id,d);});
+    var btnPDF=document.createElement('button'); btnPDF.style.cssText='flex:1;min-width:120px;padding:9px;background:#1A1814;color:#fff;border:none;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px'; btnPDF.textContent='📄 Descargar PDF'; btnPDF.addEventListener('click',function(){regenerarPDF(id,d);});
     var btnWA=document.createElement('a'); btnWA.style.cssText='flex:1;min-width:120px;padding:9px;background:#25D366;color:#fff;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none'; btnWA.textContent='💬 Enviar WA'; btnWA.target='_blank';
     var waMsg='Hola! Te envio el presupuesto de *'+(d.proyecto||'tu pedido')+'* por '+fmtPeso(d.precioTotal)+'.'; btnWA.href='https://wa.me/'+WA+'?text='+encodeURIComponent(waMsg);
     var btnDel=document.createElement('button'); btnDel.style.cssText='padding:9px 14px;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;border-radius:8px;font-size:0.82rem;cursor:pointer;font-family:Outfit,sans-serif'; btnDel.textContent='🗑'; btnDel.addEventListener('click',function(){eliminarPresupuesto(id,btnDel);});
@@ -1150,9 +1150,9 @@ function renderItemsPresupuesto(){
   var total = 0;
   itemsPresupuesto.forEach(function(item, idx){
     total += item.precio;
-    var row = document.createElement('div'); row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #E4E4E7';
-    row.innerHTML = '<span style="font-size:0.82rem;color:#09090B;font-family:Outfit,sans-serif;flex:1">' + item.nombre + '</span>' +
-      '<span style="font-variant-numeric:tabular-nums;font-size:0.82rem;color:#16A34A;margin:0 12px;font-weight:600">' + fmtPeso(item.precio) + '</span>' +
+    var row = document.createElement('div'); row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #E2DDD6';
+    row.innerHTML = '<span style="font-size:0.82rem;color:#1A1814;font-family:Outfit,sans-serif;flex:1">' + item.nombre + '</span>' +
+      '<span style="font-variant-numeric:tabular-nums;font-size:0.82rem;color:#2D6A4F;margin:0 12px;font-weight:600">' + fmtPeso(item.precio) + '</span>' +
       '<button onclick="eliminarItemPresupuesto(' + idx + ')" style="background:none;border:none;color:#DC2626;cursor:pointer;font-size:0.9rem;padding:2px 6px">✕</button>';
     lista.appendChild(row);
   });
@@ -1207,7 +1207,7 @@ function _abrirFichaSinHistorial(d){
   var enCarrito=carrito[cartId];
   var cont=document.getElementById('ficha-contenido'); cont.innerHTML='';
   var backBar=mk('div','ficha-back-bar'); var backBtn=mk('button','ficha-back-btn','← Volver a productos'); backBtn.onclick=cerrarProducto; backBar.appendChild(backBtn); cont.appendChild(backBar);
-  if(d.img){ var img=document.createElement('img'); img.className='ficha-img'; img.src='img/'+d.img.split('/').pop(); img.onerror=function(){this.onerror=null;this.src=IMG_PLACEHOLDER;this.style.objectFit='contain';this.style.padding='1rem';this.style.background='#F9F9F9';}; cont.appendChild(img); }
+  if(d.img){ var img=document.createElement('img'); img.className='ficha-img'; img.src='img/'+d.img.split('/').pop(); img.onerror=function(){this.onerror=null;this.src=IMG_PLACEHOLDER;this.style.objectFit='contain';this.style.padding='1rem';this.style.background='#F5F2ED';}; cont.appendChild(img); }
   else if(ficha){ var ph=mk('div','ficha-img-placeholder'); ph.textContent=ficha.emoji||''; cont.appendChild(ph); }
   var body=mk('div','ficha-body');
   var badges=mk('div','ficha-badges'); badges.appendChild(mk('span','ficha-badge fb-mat',d.material)); badges.appendChild(mk('span','ficha-badge fb-marca',d.marca));
@@ -1219,7 +1219,7 @@ function _abrirFichaSinHistorial(d){
   var pi1=mk('div','fpp-item'); pi1.appendChild(mk('div','fpp-lbl','Precio unitario')); pi1.appendChild(mk('div','fpp-val',fmtPeso(lista))); precios.appendChild(pi1);
   if(hayOferta){ var pi2=mk('div','fpp-item'); pi2.appendChild(mk('div','fpp-lbl','Precio oferta')); pi2.appendChild(mk('div','fpp-val oferta',fmtPeso(oferta))); pi2.appendChild(mk('div','fpp-tag','2 kg o mas')); precios.appendChild(pi2); }
   body.appendChild(precios);
-  var stMap={ok:'background:#F0FDF4;color:#15803D',low:'background:#FFFBEB;color:#B45309',out:'background:#FEF2F2;color:#B91C1C'};
+  var stMap={ok:'background:#F0FDF4;color:#1B4332',low:'background:#FFFBEB;color:#B45309',out:'background:#FEF2F2;color:#B91C1C'};
   var sb=mk('span','ficha-stock',getLbl(d.stock)+(isOut?'':' · '+stockN+' u.')); sb.setAttribute('style',stMap[getSt(d.stock)]); body.appendChild(sb);
   if(ficha){
     body.appendChild(mk('div','ftitulo','Sobre este material')); body.appendChild(mk('div','fdesc',ficha.desc));
@@ -1323,7 +1323,7 @@ function render(){
 function openModal(idx){
   var d=FILTERED[idx];if(!d)return;
   var img=document.getElementById('modal-img');
-  if(d.img){img.src='img/'+d.img.split('/').pop();img.style.display='block';img.onerror=function(){this.onerror=null;this.src=IMG_PLACEHOLDER;this.style.objectFit='contain';this.style.padding='1rem';this.style.background='#F9F9F9';};}
+  if(d.img){img.src='img/'+d.img.split('/').pop();img.style.display='block';img.onerror=function(){this.onerror=null;this.src=IMG_PLACEHOLDER;this.style.objectFit='contain';this.style.padding='1rem';this.style.background='#F5F2ED';};}
   else{img.style.display='none';}
   document.getElementById('modal-title').textContent=d.material+' - '+d.denom;
   document.getElementById('modal-meta').innerHTML='<b>'+d.marca+'</b> · '+d.present+' · '+(d.color&&d.color!=='*n/a'?d.color:'Sin color');
@@ -1419,16 +1419,16 @@ document.addEventListener('input', function(e){ if(e.target.type === 'number' &&
 <!-- MODAL LOGIN GOOGLE -->
 <div id="google-login-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:3000;align-items:center;justify-content:center;padding:1.5rem">
   <div style="background:#fff;border-radius:20px;padding:2rem;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
-    <button onclick="document.getElementById('google-login-modal').style.display='none'" style="float:right;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#71717A;margin-top:-8px">✕</button>
+    <button onclick="document.getElementById('google-login-modal').style.display='none'" style="float:right;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#8A8479;margin-top:-8px">✕</button>
     <div style="clear:both"></div>
     <div style="font-size:2.5rem;margin-bottom:0.75rem">📄</div>
-    <div style="font-size:1.1rem;font-weight:700;color:#09090B;font-family:'Outfit',sans-serif;margin-bottom:0.5rem">Guardá tus presupuestos</div>
-    <div style="font-size:0.82rem;color:#71717A;font-family:'Outfit',sans-serif;line-height:1.6;margin-bottom:1.5rem">Iniciá sesión gratis con Google para generar presupuestos en PDF y guardar el historial de tus cálculos.</div>
-    <button onclick="loginConGoogle()" style="width:100%;padding:12px;background:#fff;color:#09090B;border:1.5px solid #E4E4E7;border-radius:10px;font-size:0.95rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:0.75rem;transition:background 0.2s" onmouseover="this.style.background='#F9F9F9'" onmouseout="this.style.background='#fff'">
+    <div style="font-size:1.1rem;font-weight:700;color:#1A1814;font-family:'Outfit',sans-serif;margin-bottom:0.5rem">Guardá tus presupuestos</div>
+    <div style="font-size:0.82rem;color:#8A8479;font-family:'Outfit',sans-serif;line-height:1.6;margin-bottom:1.5rem">Iniciá sesión gratis con Google para generar presupuestos en PDF y guardar el historial de tus cálculos.</div>
+    <button onclick="loginConGoogle()" style="width:100%;padding:12px;background:#fff;color:#1A1814;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.95rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:0.75rem;transition:background 0.2s" onmouseover="this.style.background='#F5F2ED'" onmouseout="this.style.background='#fff'">
       <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
       Continuar con Google
     </button>
-    <div style="font-size:0.75rem;color:#A1A1AA;font-family:'Outfit',sans-serif">Es gratis y tarda 5 segundos</div>
+    <div style="font-size:0.75rem;color:#A09890;font-family:'Outfit',sans-serif">Es gratis y tarda 5 segundos</div>
   </div>
 </div>
 
@@ -1436,22 +1436,22 @@ document.addEventListener('input', function(e){ if(e.target.type === 'number' &&
 <div id="modal-fil-propio" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;align-items:center;justify-content:center;padding:1.5rem">
   <div style="background:#fff;border-radius:16px;padding:1.5rem;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
-      <div style="font-size:1rem;font-weight:700;color:#09090B;font-family:'Outfit',sans-serif">Agregar mi filamento</div>
-      <button onclick="cerrarModalFilamentoPropio()" style="background:#F4F4F5;border:none;font-size:1rem;cursor:pointer;color:#71717A;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center">✕</button>
+      <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:'Outfit',sans-serif">Agregar mi filamento</div>
+      <button onclick="cerrarModalFilamentoPropio()" style="background:#F5F2ED;border:none;font-size:1rem;cursor:pointer;color:#8A8479;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center">✕</button>
     </div>
     <div style="margin-bottom:0.875rem">
-      <label style="font-size:0.8rem;font-weight:600;color:#09090B;font-family:'Outfit',sans-serif;display:block;margin-bottom:5px">Nombre del filamento</label>
-      <input id="fil-propio-nombre" type="text" placeholder="Ej: PLA+ Bambu Lab" style="width:100%;padding:10px 12px;border:1.5px solid #E4E4E7;border-radius:8px;font-size:0.9rem;font-family:'Outfit',sans-serif;outline:none;box-sizing:border-box">
+      <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'Outfit',sans-serif;display:block;margin-bottom:5px">Nombre del filamento</label>
+      <input id="fil-propio-nombre" type="text" placeholder="Ej: PLA+ Bambu Lab" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Outfit',sans-serif;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:1.25rem">
-      <label style="font-size:0.8rem;font-weight:600;color:#09090B;font-family:'Outfit',sans-serif;display:block;margin-bottom:5px">Precio por kg</label>
+      <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'Outfit',sans-serif;display:block;margin-bottom:5px">Precio por kg</label>
       <div style="position:relative">
-        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#71717A;font-size:0.88rem">$</span>
-        <input id="fil-propio-precio" type="number" min="0" placeholder="Ej: 28000" style="width:100%;padding:10px 12px 10px 24px;border:1.5px solid #E4E4E7;border-radius:8px;font-size:0.9rem;font-family:'Outfit',sans-serif;outline:none;box-sizing:border-box">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.88rem">$</span>
+        <input id="fil-propio-precio" type="number" min="0" placeholder="Ej: 28000" style="width:100%;padding:10px 12px 10px 24px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Outfit',sans-serif;outline:none;box-sizing:border-box">
       </div>
     </div>
     <div id="fil-propio-err" style="color:#DC2626;font-size:0.78rem;font-family:'Outfit',sans-serif;margin-bottom:0.75rem;min-height:1rem"></div>
-    <button onclick="guardarFilamentoPropio()" style="width:100%;padding:11px;background:#09090B;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer">Guardar filamento</button>
+    <button onclick="guardarFilamentoPropio()" style="width:100%;padding:11px;background:#1A1814;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer">Guardar filamento</button>
   </div>
 </div>
 
@@ -1479,9 +1479,9 @@ document.addEventListener('input', function(e){ if(e.target.type === 'number' &&
     <button class="pdf-close" onclick="cerrarPDFModal()">✕</button>
     <h3>Generar presupuesto PDF</h3>
     <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 12px;font-size:0.78rem;color:#1E3A8A;margin-bottom:1rem">Tu configuración de marca se guarda automáticamente en este dispositivo.</div>
-    <h3 style="font-size:0.88rem;color:#71717A;border:none;padding:0;margin-bottom:0.75rem">Tu marca</h3>
+    <h3 style="font-size:0.88rem;color:#8A8479;border:none;padding:0;margin-bottom:0.75rem">Tu marca</h3>
     <div class="field"><label>Nombre de tu empresa / emprendimiento</label><input type="text" id="pdf-empresa" placeholder="Ej: Impresos 3D Patagonia"></div>
-    <div class="field"><label>Logo <span style="font-size:0.75rem;color:#71717A;font-weight:400">(opcional, PNG o JPG)</span></label><input type="file" id="pdf-logo-file" accept="image/*" onchange="previewLogo(this)" style="background:#fff;padding:6px"><img id="pdf-logo-preview" class="logo-preview"></div>
+    <div class="field"><label>Logo <span style="font-size:0.75rem;color:#8A8479;font-weight:400">(opcional, PNG o JPG)</span></label><input type="file" id="pdf-logo-file" accept="image/*" onchange="previewLogo(this)" style="background:#fff;padding:6px"><img id="pdf-logo-preview" class="logo-preview"></div>
     <div class="pdf-row2">
       <div class="field"><label>Color primario</label><div class="color-row"><input type="color" id="pdf-color1" value="#1A1814" oninput="document.getElementById('pdf-color1-hex').value=this.value"><input type="text" id="pdf-color1-hex" value="#1A1814" placeholder="#1A1814" oninput="document.getElementById('pdf-color1').value=this.value"></div></div>
       <div class="field"><label>Color secundario</label><div class="color-row"><input type="color" id="pdf-color2" value="#2D6A4F" oninput="document.getElementById('pdf-color2-hex').value=this.value"><input type="text" id="pdf-color2-hex" value="#2D6A4F" placeholder="#2D6A4F" oninput="document.getElementById('pdf-color2').value=this.value"></div></div>
@@ -1491,26 +1491,26 @@ document.addEventListener('input', function(e){ if(e.target.type === 'number' &&
       <div class="field"><label>Email</label><input type="text" id="pdf-email" placeholder="Ej: hola@empresa.com"></div>
     </div>
     <div class="field"><label>Instagram / Web</label><input type="text" id="pdf-web" placeholder="Ej: @miempresa o www.miempresa.com"></div>
-    <h3 style="font-size:0.88rem;color:#71717A;border:none;padding:0;margin:1rem 0 0.75rem">Datos del presupuesto</h3>
-    <div class="field"><label>Cliente <span style="font-size:0.75rem;color:#71717A;font-weight:400">(opcional)</span></label><input type="text" id="pdf-cliente" placeholder="Ej: Juan García, Empresa XYZ"></div>
+    <h3 style="font-size:0.88rem;color:#8A8479;border:none;padding:0;margin:1rem 0 0.75rem">Datos del presupuesto</h3>
+    <div class="field"><label>Cliente <span style="font-size:0.75rem;color:#8A8479;font-weight:400">(opcional)</span></label><input type="text" id="pdf-cliente" placeholder="Ej: Juan García, Empresa XYZ"></div>
     <div class="field"><label>Nombre del proyecto / pieza</label><input type="text" id="pdf-proyecto" placeholder="Ej: Estatuilla personalizada - Dragón"></div>
-    <div class="field"><label>Descripción para el cliente <span style="font-size:0.75rem;color:#71717A;font-weight:400">(opcional)</span></label><textarea id="pdf-descripcion" placeholder="Ej: Figura impresa en PLA, acabado liso, pintada a mano con base incluida."></textarea></div>
+    <div class="field"><label>Descripción para el cliente <span style="font-size:0.75rem;color:#8A8479;font-weight:400">(opcional)</span></label><textarea id="pdf-descripcion" placeholder="Ej: Figura impresa en PLA, acabado liso, pintada a mano con base incluida."></textarea></div>
     <div class="pdf-row2">
       <div class="field"><label>Cantidad de piezas</label><input type="number" id="pdf-cantidad" value="1" min="1"></div>
       <div class="field"><label>Validez del presupuesto</label><input type="text" id="pdf-validez" placeholder="Ej: 7 días"></div>
     </div>
     <div class="field">
-      <label>Precio unitario <span style="font-size:0.75rem;color:#71717A;font-weight:400">(podés modificarlo antes de generar)</span></label>
-      <div style="position:relative"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#71717A;font-size:0.88rem;pointer-events:none">$</span><input type="number" id="pdf-precio-unit" min="0" step="1" placeholder="Ej: 9000" oninput="actualizarDescuento()" style="padding-left:24px;background:#EFF6FF;border-color:#BFDBFE;font-weight:600;font-size:1rem;color:#1E3A8A"></div>
+      <label>Precio unitario <span style="font-size:0.75rem;color:#8A8479;font-weight:400">(podés modificarlo antes de generar)</span></label>
+      <div style="position:relative"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.88rem;pointer-events:none">$</span><input type="number" id="pdf-precio-unit" min="0" step="1" placeholder="Ej: 9000" oninput="actualizarDescuento()" style="padding-left:24px;background:#EFF6FF;border-color:#BFDBFE;font-weight:600;font-size:1rem;color:#1E3A8A"></div>
     </div>
     <div class="field">
-      <label>Descuento <span style="font-size:0.75rem;color:#71717A;font-weight:400">(opcional)</span></label>
+      <label>Descuento <span style="font-size:0.75rem;color:#8A8479;font-weight:400">(opcional)</span></label>
       <div style="display:flex;gap:8px;align-items:center">
-        <div style="position:relative;flex:1"><input type="number" id="pdf-descuento" min="0" max="100" step="1" placeholder="0" oninput="actualizarDescuento()" style="width:100%;padding:10px 32px 10px 12px;border:1.5px solid #E4E4E7;border-radius:8px;font-size:1rem;font-family:'Outfit',sans-serif;outline:none;box-sizing:border-box"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#71717A;font-size:0.88rem;pointer-events:none">%</span></div>
-        <div id="descuento-preview" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;text-align:center;min-width:110px"><div style="font-size:0.68rem;color:#71717A;font-family:'Outfit',sans-serif">Total con descuento</div><div id="descuento-preview-val" style="font-size:1rem;font-weight:700;color:#16A34A;font-variant-numeric:tabular-nums"></div></div>
+        <div style="position:relative;flex:1"><input type="number" id="pdf-descuento" min="0" max="100" step="1" placeholder="0" oninput="actualizarDescuento()" style="width:100%;padding:10px 32px 10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:1rem;font-family:'Outfit',sans-serif;outline:none;box-sizing:border-box"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.88rem;pointer-events:none">%</span></div>
+        <div id="descuento-preview" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;text-align:center;min-width:110px"><div style="font-size:0.68rem;color:#8A8479;font-family:'Outfit',sans-serif">Total con descuento</div><div id="descuento-preview-val" style="font-size:1rem;font-weight:700;color:#2D6A4F;font-variant-numeric:tabular-nums"></div></div>
       </div>
     </div>
-    <div class="field"><label>Condiciones / notas <span style="font-size:0.75rem;color:#71717A;font-weight:400">(opcional)</span></label><textarea id="pdf-notas" placeholder="Ej: Seña del 50% para iniciar. Entrega en 5 días hábiles."></textarea></div>
+    <div class="field"><label>Condiciones / notas <span style="font-size:0.75rem;color:#8A8479;font-weight:400">(opcional)</span></label><textarea id="pdf-notas" placeholder="Ej: Seña del 50% para iniciar. Entrega en 5 días hábiles."></textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:1rem">
       <button class="btn-generar" onclick="generarPDF(false)" style="margin-top:0">
         <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 10v6m0 0-3-3m3 3 3-3M3 17a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4z"/></svg>
@@ -1527,7 +1527,7 @@ document.addEventListener('input', function(e){ if(e.target.type === 'number' &&
 <!-- MI CUENTA -->
 <div class="page" id="page-cuenta">
   <div style="max-width:680px;margin:0 auto;padding:1.5rem 1rem 6rem">
-    <div id="cuenta-header" style="background:#09090B;border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem">
+    <div id="cuenta-header" style="background:#1A1814;border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem">
       <img id="cuenta-avatar" src="" style="width:48px;height:48px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);display:none">
       <div style="flex:1">
         <div id="cuenta-nombre" style="font-size:1rem;font-weight:700;color:#fff;font-family:'Outfit',sans-serif"></div>
@@ -1537,37 +1537,37 @@ document.addEventListener('input', function(e){ if(e.target.type === 'number' &&
     </div>
     <div id="stats-box" style="display:none;margin-bottom:1.5rem">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-        <div style="background:#fff;border:1px solid #E4E4E7;border-radius:12px;padding:1rem">
-          <div style="font-size:0.72rem;color:#71717A;font-family:'Outfit',sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Total generado</div>
-          <div id="stat-total" style="font-size:1.3rem;font-weight:700;color:#16A34A;font-variant-numeric:tabular-nums"></div>
-          <div id="stat-total-sub" style="font-size:0.72rem;color:#71717A;font-family:'Outfit',sans-serif;margin-top:2px"></div>
+        <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem">
+          <div style="font-size:0.72rem;color:#8A8479;font-family:'Outfit',sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Total generado</div>
+          <div id="stat-total" style="font-size:1.3rem;font-weight:700;color:#2D6A4F;font-variant-numeric:tabular-nums"></div>
+          <div id="stat-total-sub" style="font-size:0.72rem;color:#8A8479;font-family:'Outfit',sans-serif;margin-top:2px"></div>
         </div>
-        <div style="background:#fff;border:1px solid #E4E4E7;border-radius:12px;padding:1rem">
-          <div style="font-size:0.72rem;color:#71717A;font-family:'Outfit',sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Tasa de aprobación</div>
-          <div id="stat-tasa" style="font-size:1.3rem;font-weight:700;color:#09090B;font-variant-numeric:tabular-nums"></div>
-          <div id="stat-tasa-sub" style="font-size:0.72rem;color:#71717A;font-family:'Outfit',sans-serif;margin-top:2px"></div>
+        <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem">
+          <div style="font-size:0.72rem;color:#8A8479;font-family:'Outfit',sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Tasa de aprobación</div>
+          <div id="stat-tasa" style="font-size:1.3rem;font-weight:700;color:#1A1814;font-variant-numeric:tabular-nums"></div>
+          <div id="stat-tasa-sub" style="font-size:0.72rem;color:#8A8479;font-family:'Outfit',sans-serif;margin-top:2px"></div>
         </div>
       </div>
-      <div style="background:#fff;border:1px solid #E4E4E7;border-radius:12px;padding:1rem;margin-bottom:10px">
-        <div style="font-size:0.78rem;font-weight:600;color:#09090B;font-family:'Outfit',sans-serif;margin-bottom:0.75rem">Presupuestos por estado</div>
+      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:10px">
+        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Outfit',sans-serif;margin-bottom:0.75rem">Presupuestos por estado</div>
         <div id="stat-estados" style="display:flex;flex-direction:column;gap:6px"></div>
       </div>
-      <div id="stat-cliente-box" style="background:#fff;border:1px solid #E4E4E7;border-radius:12px;padding:1rem;margin-bottom:10px;display:none">
-        <div style="font-size:0.78rem;font-weight:600;color:#09090B;font-family:'Outfit',sans-serif;margin-bottom:4px">Cliente más frecuente</div>
-        <div id="stat-cliente" style="font-size:0.95rem;font-weight:700;color:#09090B;font-family:'Outfit',sans-serif"></div>
-        <div id="stat-cliente-sub" style="font-size:0.78rem;color:#71717A;font-family:'Outfit',sans-serif"></div>
+      <div id="stat-cliente-box" style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:10px;display:none">
+        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Outfit',sans-serif;margin-bottom:4px">Cliente más frecuente</div>
+        <div id="stat-cliente" style="font-size:0.95rem;font-weight:700;color:#1A1814;font-family:'Outfit',sans-serif"></div>
+        <div id="stat-cliente-sub" style="font-size:0.78rem;color:#8A8479;font-family:'Outfit',sans-serif"></div>
       </div>
-      <div style="background:#fff;border:1px solid #E4E4E7;border-radius:12px;padding:1rem">
-        <div style="font-size:0.78rem;font-weight:600;color:#09090B;font-family:'Outfit',sans-serif;margin-bottom:0.875rem">Presupuestos por mes</div>
+      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem">
+        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Outfit',sans-serif;margin-bottom:0.875rem">Presupuestos por mes</div>
         <div id="stat-grafico" style="display:flex;align-items:flex-end;gap:6px;height:80px"></div>
         <div id="stat-grafico-labels" style="display:flex;gap:6px;margin-top:4px"></div>
       </div>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.875rem">
-      <div style="font-size:1rem;font-weight:700;color:#09090B;font-family:'Outfit',sans-serif">Mis presupuestos</div>
-      <div id="pres-count" style="font-size:0.78rem;color:#71717A;font-family:'Outfit',sans-serif"></div>
+      <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:'Outfit',sans-serif">Mis presupuestos</div>
+      <div id="pres-count" style="font-size:0.78rem;color:#8A8479;font-family:'Outfit',sans-serif"></div>
     </div>
-    <input id="pres-search" type="text" placeholder="Buscar por cliente o proyecto..." oninput="filtrarPresupuestos()" style="width:100%;padding:9px 12px;border:1.5px solid #E4E4E7;border-radius:10px;font-size:0.88rem;font-family:'Outfit',sans-serif;outline:none;box-sizing:border-box;margin-bottom:0.75rem">
+    <input id="pres-search" type="text" placeholder="Buscar por cliente o proyecto..." oninput="filtrarPresupuestos()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.88rem;font-family:'Outfit',sans-serif;outline:none;box-sizing:border-box;margin-bottom:0.75rem">
     <div id="pres-filtros" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem">
       <button class="pres-filtro active" data-estado="Todos" onclick="setFiltroEstado(this)">Todos</button>
       <button class="pres-filtro" data-estado="Enviado" onclick="setFiltroEstado(this)">Enviado</button>
@@ -1576,7 +1576,7 @@ document.addEventListener('input', function(e){ if(e.target.type === 'number' &&
       <button class="pres-filtro" data-estado="Pagado" onclick="setFiltroEstado(this)">Pagado</button>
       <button class="pres-filtro" data-estado="Cancelado" onclick="setFiltroEstado(this)">Cancelado</button>
     </div>
-    <div id="lista-presupuestos"><p style="color:#71717A;font-size:0.85rem;text-align:center;padding:2rem">Cargando...</p></div>
+    <div id="lista-presupuestos"><p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Cargando...</p></div>
   </div>
 </div>
 
