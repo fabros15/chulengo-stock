@@ -882,9 +882,9 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
 <div class="page" id="page-calc">
   <div class="calc-container">
     <div class="calc-section">
-      <h2>Material</h2>
+      <h2>Material <span class="tip" data-tip="El costo del filamento que usás para imprimir la pieza. Se calcula según el precio por kg y el peso de la pieza.">?</span></h2>
       <div class="field">
-        <label>Filamento</label>
+        <label>Filamento <span class="tip" data-tip="Seleccioná el filamento del stock de Chulengo (ya tiene el precio cargado) o usá otro con precio manual.">?</span></label>
         <select id="sel-material" onchange="onMatChange()">
           <option value="">— Seleccioná un filamento —</option>
           <optgroup label="⭐ Favoritos" id="optgroup-favoritos" style="display:none"></optgroup>
@@ -902,15 +902,15 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
         <input type="number" id="precio-fil" placeholder="Ej: 25000" oninput="calcular()">
       </div>
       <div class="row2">
-        <div class="field"><label>Peso de la pieza <span class="label-hint">gramos</span></label><input type="number" id="peso" placeholder="Ej: 50" oninput="calcular()"></div>
+        <div class="field"><label>Peso de la pieza <span class="label-hint">gramos</span> <span class="tip" data-tip="El peso en gramos de la pieza terminada. Lo podés ver en el slicer (Bambu Studio, Orca, Cura) antes de imprimir.">?</span></label><input type="number" id="peso" placeholder="Ej: 50" oninput="calcular()"></div>
         <div class="field"><label>Desperdicio / fallo <span class="label-hint">%</span><span class="tip" data-tip="Porcentaje extra por fallos de impresión, purga o material desperdiciado. Se recomienda entre 10% y 20%.">?</span></label><input type="number" id="margen-error" value="15" oninput="calcular()"></div>
       </div>
     </div>
 
     <div class="calc-section">
-      <h2>Impresora</h2>
+      <h2>Impresora <span class="tip" data-tip="Costo de amortización de la impresora por minuto de uso. Es el desgaste que le dás a la máquina cada vez que imprimís.">?</span></h2>
       <div class="field">
-        <label>Seleccioná la impresora</label>
+        <label>Seleccioná la impresora <span class="tip" data-tip="Los valores de $/min ya están calculados asumiendo 3 años de vida útil con 8 horas diarias de uso. Si usás menos, tu amortización real es menor.">?</span></label>
         <select id="sel-imp" onchange="onImpChange()">
           <option value="">— Seleccioná una impresora —</option>
           <optgroup label="Bambu Lab">
@@ -940,33 +940,33 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       </div>
       <div id="campos-imp-custom" style="display:none">
         <div class="row2">
-          <div class="field"><label>Precio de la impresora <span class="label-hint">$</span></label><input type="number" id="precio-imp" placeholder="Ej: 500000" oninput="calcAmort()"></div>
-          <div class="field"><label>Vida útil <span class="label-hint">horas</span></label><input type="number" id="vida-util" value="8640" oninput="calcAmort()"></div>
+          <div class="field"><label>Precio de la impresora <span class="label-hint">$</span> <span class="tip" data-tip="El precio que pagaste o pagarías para reponer la impresora. Sirve para calcular cuánto amortizás por cada hora de uso.">?</span></label><input type="number" id="precio-imp" placeholder="Ej: 500000" oninput="calcAmort()"></div>
+          <div class="field"><label>Vida útil <span class="label-hint">horas</span> <span class="tip" data-tip="Cuántas horas estimás que va a durar la impresora. 8640 hs = 3 años a 8 hs/día. Podés ajustarlo según tu uso real.">?</span></label><input type="number" id="vida-util" value="8640" oninput="calcAmort()"></div>
         </div>
         <div class="field"><label>Costo por minuto calculado</label><input type="text" id="costo-min-calc" readonly class="readonly-field" placeholder="—"></div>
       </div>
-      <div class="field"><label>Tiempo de impresión <span class="label-hint">minutos</span></label><input type="number" id="tiempo" placeholder="Ej: 120" oninput="calcular()"></div>
+      <div class="field"><label>Tiempo de impresión <span class="label-hint">minutos</span> <span class="tip" data-tip="El tiempo total que tarda la impresora. Lo ves en el slicer. Si hay varios archivos o copias, sumá todos los tiempos.">?</span></label><input type="number" id="tiempo" placeholder="Ej: 120" oninput="calcular()"></div>
     </div>
 
     <div class="calc-section">
-      <h2>Electricidad</h2>
+      <h2>Electricidad <span class="tip" data-tip="Costo de la energía eléctrica que consume todo el equipo mientras imprimís. Se calcula con los watts de cada aparato y el precio del kWh.">?</span></h2>
       <div class="row3">
-        <div class="field"><label>Impresora <span class="label-hint">W</span></label><input type="number" id="w-imp" value="180" oninput="calcElec()"></div>
-        <div class="field"><label>PC <span class="label-hint">W</span></label><input type="number" id="w-pc" value="500" oninput="calcElec()"></div>
-        <div class="field"><label>Monitor <span class="label-hint">W</span></label><input type="number" id="w-mon" value="65" oninput="calcElec()"></div>
+        <div class="field"><label>Impresora <span class="label-hint">W</span> <span class="tip" data-tip="Consumo de la impresora en vatios. Está en el manual o en la ficha técnica. Bambu A1 consume ~180W, Ender 3 ~200W.">?</span></label><input type="number" id="w-imp" value="180" oninput="calcElec()"></div>
+        <div class="field"><label>PC <span class="label-hint">W</span> <span class="tip" data-tip="Consumo de la PC o notebook. Una PC de escritorio gama media consume ~300-500W, una notebook ~60-90W.">?</span></label><input type="number" id="w-pc" value="500" oninput="calcElec()"></div>
+        <div class="field"><label>Monitor <span class="label-hint">W</span> <span class="tip" data-tip="Consumo del monitor. Un monitor de 24 pulgadas consume entre 20 y 50W según el modelo.">?</span></label><input type="number" id="w-mon" value="65" oninput="calcElec()"></div>
       </div>
       <div class="row2">
-        <div class="field"><label>Iluminación <span class="label-hint">W</span></label><input type="number" id="w-luz" value="30" oninput="calcElec()"></div>
-        <div class="field"><label>Costo kWh <span class="label-hint">$</span></label><input type="number" id="costo-kwh" value="516.13" oninput="calcElec()"></div>
+        <div class="field"><label>Iluminación <span class="label-hint">W</span> <span class="tip" data-tip="Consumo de la iluminación del espacio de trabajo. Una lámpara LED de escritorio consume ~10-20W.">?</span></label><input type="number" id="w-luz" value="30" oninput="calcElec()"></div>
+        <div class="field"><label>Costo kWh <span class="label-hint">$</span> <span class="tip" data-tip="El precio del kWh en tu tarifa eléctrica. Lo encontrás en tu factura de luz. El valor por defecto (~$516) es una referencia de Patagonia 2025.">?</span></label><input type="number" id="costo-kwh" value="516.13" oninput="calcElec()"></div>
       </div>
       <div class="field"><label>Costo energía por minuto</label><input type="text" id="costo-elec-min" readonly class="readonly-field" placeholder="—"></div>
     </div>
 
     <div class="calc-section">
-      <h2>Mano de obra</h2>
+      <h2>Mano de obra <span class="tip" data-tip="El costo de tu tiempo personal en el proceso. Incluye preparar el archivo, configurar la impresora, revisar la pieza, embalar y entregar.">?</span></h2>
       <div class="row2">
-        <div class="field"><label>Costo por hora <span class="label-hint">$</span></label><input type="number" id="mo-hora" value="10000" oninput="calcular()"></div>
-        <div class="field"><label>Tiempo de atención <span class="label-hint">minutos</span></label><input type="number" id="mo-tiempo" value="0" oninput="calcular()"></div>
+        <div class="field"><label>Costo por hora <span class="label-hint">$</span> <span class="tip" data-tip="¿Cuánto vale tu hora de trabajo? Calculalo como: sueldo mensual deseado ÷ horas trabajadas al mes. No regales tu tiempo.">?</span></label><input type="number" id="mo-hora" value="10000" oninput="calcular()"></div>
+        <div class="field"><label>Tiempo de atención <span class="label-hint">minutos</span> <span class="tip" data-tip="Minutos que vos dedicás activamente: preparar el archivo en el slicer, levantar la pieza, limpiarla, coordinar con el cliente, embalar. No incluyas el tiempo de impresión automático.">?</span></label><input type="number" id="mo-tiempo" value="0" oninput="calcular()"></div>
       </div>
     </div>
 
@@ -1003,7 +1003,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
     </div>
 
     <div class="calc-section">
-      <h2>Ganancia</h2>
+      <h2>Ganancia <span class="tip" data-tip="El porcentaje que querés ganar sobre el costo total. 100% = vendés al doble del costo (ganás lo mismo que gastás). 50% = ganás la mitad del costo.">?</span></h2>
       <div class="field"><label>% de ganancia deseada<span class="tip" data-tip="100% significa que vendés al doble del costo. 50% significa que ganás la mitad del costo.">?</span></label><input type="number" id="ganancia" value="100" oninput="calcular()"></div>
     </div>
 
