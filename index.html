@@ -954,7 +954,17 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
         </div>
         <div class="field"><label>Costo por minuto calculado</label><input type="text" id="costo-min-calc" readonly class="readonly-field" placeholder="—"></div>
       </div>
-      <div class="field"><label>Tiempo de impresión <span class="label-hint">minutos</span> <span class="tip" data-tip="El tiempo total que tarda la impresora. Lo ves en el slicer. Si hay varios archivos o copias, sumá todos los tiempos.">?</span></label><input type="number" id="tiempo" placeholder="Ej: 120" oninput="calcular()"></div>
+      <div class="field">
+          <label>Tiempo de impresión <span class="tip" data-tip="El tiempo total que tarda la impresora. Lo ves en el slicer. Si hay varios archivos o copias, sumá todos los tiempos.">?</span></label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="number" id="tiempo-horas" placeholder="0" min="0" style="width:80px;flex-shrink:0" oninput="actualizarTiempo()" title="Horas">
+            <span style="font-size:0.8rem;color:#8A8479;flex-shrink:0">hs</span>
+            <input type="number" id="tiempo-mins" placeholder="0" min="0" max="59" style="width:80px;flex-shrink:0" oninput="actualizarTiempo()" title="Minutos">
+            <span style="font-size:0.8rem;color:#8A8479;flex-shrink:0">min</span>
+            <input type="hidden" id="tiempo" value="0">
+            <span id="tiempo-preview" style="font-size:0.78rem;color:#2D6A4F;font-weight:600;white-space:nowrap"></span>
+          </div>
+        </div>
     </div>
 
 <div class="calc-section">
@@ -1662,6 +1672,25 @@ function calcElec(){ var wi=parseFloat(document.getElementById('w-imp').value)||
 function togPos(){document.getElementById('campos-pos').style.display=document.getElementById('tog-pos').checked?'block':'none';calcular();}
 function togVA(){document.getElementById('campos-va').style.display=document.getElementById('tog-va').checked?'block':'none';calcular();}
 function agregarInsumo(){ var id=Date.now(); var div=document.createElement('div'); div.className='insumo-item'; div.id='ins-'+id; div.innerHTML='<input type="text" placeholder="Nombre (ej: Aerosol negro)" oninput="calcular()"><input type="number" placeholder="Costo total $" oninput="calcular()" title="Precio total del producto"><input type="number" placeholder="Rinde N piezas" oninput="calcular()" title="Cuántas piezas podés hacer con ese producto"><button class="btn-remove" onclick="document.getElementById(\'ins-'+id+'\').remove();calcular()">✕</button>'; document.getElementById('lista-insumos').appendChild(div); }
+function actualizarTiempo(){
+  var horas = parseFloat(document.getElementById('tiempo-horas').value)||0;
+  var mins  = parseFloat(document.getElementById('tiempo-mins').value)||0;
+  var total = horas*60 + mins;
+  document.getElementById('tiempo').value = total;
+  var preview = document.getElementById('tiempo-preview');
+  if(total > 0){
+    var h = Math.floor(total/60);
+    var m = Math.round(total%60);
+    var txt = '';
+    if(h > 0) txt += h + 'h ';
+    if(m > 0) txt += m + 'min';
+    preview.textContent = '= '+txt.trim();
+  } else {
+    preview.textContent = '';
+  }
+  calcular();
+}
+
 function calcular(){
   var pkgil=parseFloat(document.getElementById('precio-fil').value)||0; var peso=parseFloat(document.getElementById('peso').value)||0;
   var tiempo=parseFloat(document.getElementById('tiempo').value)||0; var margen=parseFloat(document.getElementById('margen-error').value)||0;
