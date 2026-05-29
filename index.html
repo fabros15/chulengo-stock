@@ -1039,7 +1039,7 @@ function initCarrusel(){
 }
 function irASlide(idx){ carruselIdx = idx; document.getElementById('carousel-track').style.transform = 'translateX(-'+idx+'00%)'; document.querySelectorAll('.carousel-dot').forEach(function(d,i){ d.className='carousel-dot'+(i===idx?' active':''); }); reiniciarTimerCarrusel(); }
 function moverCarrusel(dir){ irASlide((carruselIdx+dir+SLIDES.length)%SLIDES.length); }
-function iniciarTimerCarrusel(){ carruselTimer=setInterval(function(){moverCarrusel(1);},5000); }
+function iniciarTimerCarrusel(){ carruselTimer=setInterval(function(){moverCarrusel(1);},9000); }
 function reiniciarTimerCarrusel(){ clearInterval(carruselTimer); iniciarTimerCarrusel(); }
 if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', function(){ initCarrusel(); }); } else { initCarrusel(); }
 
