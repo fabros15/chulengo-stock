@@ -417,8 +417,8 @@ function generarPDF(sendWA){
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;max-width:100%}
-html{overflow-x:hidden;width:100%}
-body{font-family:'Outfit',sans-serif;background:#F5F2ED;color:#1A1814;min-height:100vh;overflow-x:hidden;width:100%;-webkit-overflow-scrolling:touch}
+html{overflow-x:clip;width:100%}
+body{font-family:'Outfit',sans-serif;background:#F5F2ED;color:#1A1814;min-height:100vh;overflow-x:clip;width:100%;-webkit-overflow-scrolling:touch}
 .site-header{background:#1A1814;color:#fff;position:-webkit-sticky;position:sticky;top:0;z-index:100;width:100%;box-shadow:0 2px 8px rgba(0,0,0,0.25)}
 .header-row1{display:flex;align-items:center;gap:12px;padding:0.55rem 1.5rem}
 .header-row2{background:#221F1B;border-top:1px solid rgba(255,255,255,0.07);padding:0 1.5rem;display:flex;align-items:center}
@@ -598,9 +598,8 @@ select:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12)}
   .carousel-overlay{padding:1rem}
 }
 .calc-container{max-width:1200px;margin:0 auto;padding:1.5rem 1rem 3rem;display:grid;grid-template-columns:1fr 360px;gap:1.5rem;align-items:start}
-.calc-form-col{min-width:0}
-.calc-result-col{position:sticky;top:106px;max-height:calc(100vh - 120px);overflow-y:auto;scrollbar-width:none}
-.calc-result-col::-webkit-scrollbar{display:none}
+.calc-form-col{min-width:0;padding-bottom:60vh}
+.calc-result-col{position:-webkit-sticky;position:sticky;top:100px;align-self:start}
 @media(max-width:900px){
   .calc-container{grid-template-columns:1fr;display:block}
   .calc-result-col{position:static;margin-top:1rem}
