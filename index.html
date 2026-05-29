@@ -887,7 +887,10 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
 <!-- CALCULADORA PAGE -->
 <div class="page" id="page-calc">
   <div class="calc-container">
-    <div class="calc-section">
+
+    <div class="calc-form-col">
+
+<div class="calc-section">
       <h2>Material <span class="tip" data-tip="El costo del filamento que usás para imprimir la pieza. Se calcula según el precio por kg y el peso de la pieza.">?</span></h2>
       <div class="field">
         <label>Filamento <span class="tip" data-tip="Seleccioná el filamento del stock de Chulengo (ya tiene el precio cargado) o usá otro con precio manual.">?</span></label>
@@ -913,7 +916,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       </div>
     </div>
 
-    <div class="calc-section">
+<div class="calc-section">
       <h2>Impresora <span class="tip" data-tip="Costo de amortización de la impresora por minuto de uso. Es el desgaste que le dás a la máquina cada vez que imprimís.">?</span></h2>
       <div class="field">
         <label>Seleccioná la impresora <span class="tip" data-tip="Los valores de $/min ya están calculados asumiendo 3 años de vida útil con 8 horas diarias de uso. Si usás menos, tu amortización real es menor.">?</span></label>
@@ -954,7 +957,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       <div class="field"><label>Tiempo de impresión <span class="label-hint">minutos</span> <span class="tip" data-tip="El tiempo total que tarda la impresora. Lo ves en el slicer. Si hay varios archivos o copias, sumá todos los tiempos.">?</span></label><input type="number" id="tiempo" placeholder="Ej: 120" oninput="calcular()"></div>
     </div>
 
-    <div class="calc-section">
+<div class="calc-section">
       <h2>Electricidad <span class="tip" data-tip="Costo de la energía eléctrica que consume todo el equipo mientras imprimís. Se calcula con los watts de cada aparato y el precio del kWh.">?</span></h2>
       <div class="row3">
         <div class="field"><label>Impresora <span class="label-hint">W</span> <span class="tip" data-tip="Consumo de la impresora en vatios. Está en el manual o en la ficha técnica. Bambu A1 consume ~180W, Ender 3 ~200W.">?</span></label><input type="number" id="w-imp" value="180" oninput="calcElec()"></div>
@@ -968,7 +971,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       <div class="field"><label>Costo energía por minuto</label><input type="text" id="costo-elec-min" readonly class="readonly-field" placeholder="—"></div>
     </div>
 
-    <div class="calc-section">
+<div class="calc-section">
       <h2>Mano de obra <span class="tip" data-tip="El costo de tu tiempo personal en el proceso. Incluye preparar el archivo, configurar la impresora, revisar la pieza, embalar y entregar.">?</span></h2>
       <div class="row2">
         <div class="field"><label>Costo por hora <span class="label-hint">$</span> <span class="tip" data-tip="¿Cuánto vale tu hora de trabajo? Calculalo como: sueldo mensual deseado ÷ horas trabajadas al mes. No regales tu tiempo.">?</span></label><input type="number" id="mo-hora" value="10000" oninput="calcular()"></div>
@@ -976,14 +979,14 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       </div>
     </div>
 
-    <div class="calc-section">
+<div class="calc-section">
       <h2>Insumos adicionales <span class="badge-info">opcional</span></h2>
       <p style="font-size:0.8rem;color:#8A8479;margin-bottom:1rem;line-height:1.5">Agregá materiales que usás en la pieza. Indicá el costo total del producto y cuántas piezas estimás que podés hacer con él.</p>
       <div id="lista-insumos"></div>
       <button class="btn-add" onclick="agregarInsumo()">+ Agregar insumo</button>
     </div>
 
-    <div class="calc-section">
+<div class="calc-section">
       <h2>Posprocesado <span class="badge-info">opcional</span></h2>
       <div class="toggle-row">
         <div><div class="toggle-lbl">¿La pieza requiere posprocesado?</div><div class="toggle-hint">Lijado, pintura, ensamble, acetona, etc.</div></div>
@@ -997,7 +1000,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       </div>
     </div>
 
-    <div class="calc-section">
+<div class="calc-section">
       <h2>Valor agregado<span class="tip" data-tip="Es lo que hace única tu pieza más allá del costo de materiales y tiempo. Por ejemplo: una estatuilla exclusiva, un diseño personalizado, una pieza que no existe en el mercado.">?</span></h2>
       <div class="toggle-row">
         <div><div class="toggle-lbl">¿Esta pieza tiene valor agregado?</div><div class="toggle-hint">Diseño único, pieza exclusiva, personalización especial</div></div>
@@ -1008,14 +1011,15 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       </div>
     </div>
 
-    <div class="calc-section">
+<div class="calc-section">
       <h2>Ganancia <span class="tip" data-tip="El porcentaje que querés ganar sobre el costo total. 100% = vendés al doble del costo (ganás lo mismo que gastás). 50% = ganás la mitad del costo.">?</span></h2>
       <div class="field"><label>% de ganancia deseada<span class="tip" data-tip="100% significa que vendés al doble del costo. 50% significa que ganás la mitad del costo.">?</span></label><input type="number" id="ganancia" value="100" oninput="calcular()"></div>
     </div>
 
-    </div><!-- /calc-form-col -->
+    </div>
+
     <div class="calc-result-col">
-    <div class="resultado" id="resultado" style="background:#1A1814;border-radius:12px;padding:1.5rem;color:#fff;display:block">
+<div class="resultado" id="resultado" style="background:#1A1814;border-radius:12px;padding:1.5rem;color:#fff;display:block">
       <h2>Resumen de costos</h2>
       <div class="res-row"><span class="res-lbl">Material</span><span class="res-val" id="r-mat">—</span></div>
       <div class="res-row"><span class="res-lbl">Amortización impresora</span><span class="res-val" id="r-imp">—</span></div>
@@ -1053,7 +1057,8 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
         <div class="rep-item"><div class="rep-lbl">Mano de obra</div><div class="rep-val" id="rep-mo">—</div></div>
       </div>
     </div>
-    </div><!-- /calc-result-col -->
+    </div>
+
   </div>
 </div>
 
