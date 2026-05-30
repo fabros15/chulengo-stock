@@ -930,7 +930,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
 <div class="calc-section" id="perfiles-section">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;gap:12px">
     <div>
-      <h2 style="border:none;padding:0;margin:0">🖨️ Mis perfiles de impresión</h2>
+      <h2 style="border:none;padding:0;margin:0">Mis perfiles de impresión</h2>
       <div style="font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif;margin-top:3px">Guardá tu impresora y filamento como un perfil reutilizable. Se carga con un clic.</div>
     </div>
     <button onclick="abrirModalGuardarPerfil()" style="background:#2D6A4F;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;white-space:nowrap;flex-shrink:0">+ Guardar perfil actual</button>
@@ -1170,7 +1170,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
 
       <!-- Conversor IMG → SVG -->
       <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="if(typeof abrirHerramienta!=='undefined')abrirHerramienta('svg-converter');else{document.getElementById('herramienta-svg-converter').style.display='block';window.scrollBy(0,400)}" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
-        <div style="background:linear-gradient(135deg,#1A1814 0%,#2D6A4F 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">🖼️→📐</div>
+        <div style="background:linear-gradient(135deg,#1A1814 0%,#2D6A4F 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem"></div>
         <div style="padding:1.25rem">
           <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:5px">Imagen a SVG</div>
           <div style="font-size:0.82rem;color:#8A8479;font-family:Outfit,sans-serif;line-height:1.5">Convertí fotos o logos en vectores SVG listos para usar en tus diseños 3D. Descarga gratuita, sin login.</div>
@@ -1184,7 +1184,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
 
       <!-- Generador QR -->
       <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="if(typeof abrirHerramienta!=='undefined')abrirHerramienta('qr-generator');else document.getElementById('herramienta-qr-generator').style.display='block'" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
-        <div style="background:linear-gradient(135deg,#1D4ED8 0%,#1A1814 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">◼️QR</div>
+        <div style="background:linear-gradient(135deg,#1D4ED8 0%,#1A1814 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">QR</div>
         <div style="padding:1.25rem">
           <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:5px">Generador de QR</div>
           <div style="font-size:0.82rem;color:#8A8479;font-family:Outfit,sans-serif;line-height:1.5">Creá códigos QR para tu WhatsApp, Instagram, link de producto o cualquier URL. Descargá en PNG o SVG.</div>
@@ -1197,7 +1197,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
 
       <!-- Más herramientas próximamente -->
       <div style="background:#F5F2ED;border:1.5px dashed #D4CFC8;border-radius:14px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;text-align:center">
-        <div style="font-size:2rem;margin-bottom:0.75rem;opacity:0.4">🔧</div>
+        <div style="font-size:2rem;margin-bottom:0.75rem;opacity:0.4"></div>
         <div style="font-size:0.875rem;font-weight:600;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:4px">Más herramientas</div>
         <div style="font-size:0.78rem;color:#A09890;font-family:Outfit,sans-serif">Próximamente</div>
       </div>
@@ -1221,11 +1221,11 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
 
             <!-- Tipos presets -->
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem" id="qr-tipos">
-              <button class="qr-tipo-btn active" data-tipo="url" onclick="setQRTipo(this,'url')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#1A1814;color:#fff;border:1.5px solid #1A1814">🔗 URL</button>
-              <button class="qr-tipo-btn" data-tipo="wa" onclick="setQRTipo(this,'wa')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">💬 WhatsApp</button>
-              <button class="qr-tipo-btn" data-tipo="ig" onclick="setQRTipo(this,'ig')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">📸 Instagram</button>
-              <button class="qr-tipo-btn" data-tipo="tel" onclick="setQRTipo(this,'tel')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">📞 Teléfono</button>
-              <button class="qr-tipo-btn" data-tipo="texto" onclick="setQRTipo(this,'texto')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">📝 Texto</button>
+              <button class="qr-tipo-btn active" data-tipo="url" onclick="setQRTipo(this,'url')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#1A1814;color:#fff;border:1.5px solid #1A1814">URL</button>
+              <button class="qr-tipo-btn" data-tipo="wa" onclick="setQRTipo(this,'wa')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">WhatsApp</button>
+              <button class="qr-tipo-btn" data-tipo="ig" onclick="setQRTipo(this,'ig')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">Instagram</button>
+              <button class="qr-tipo-btn" data-tipo="tel" onclick="setQRTipo(this,'tel')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">Teléfono</button>
+              <button class="qr-tipo-btn" data-tipo="texto" onclick="setQRTipo(this,'texto')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">Texto</button>
             </div>
 
             <div id="qr-input-wrap">
@@ -1271,8 +1271,8 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
           <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem">
             <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:0.875rem">Presets rápidos de Chulengo</div>
             <div style="display:flex;flex-direction:column;gap:6px">
-              <button onclick="aplicarPresetQR('wa')" style="text-align:left;padding:8px 12px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#1A1814">💬 WhatsApp de Chulengo</button>
-              <button onclick="aplicarPresetQR('web')" style="text-align:left;padding:8px 12px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#1A1814">🌐 Página web de Chulengo</button>
+              <button onclick="aplicarPresetQR('wa')" style="text-align:left;padding:8px 12px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#1A1814">WhatsApp de Chulengo</button>
+              <button onclick="aplicarPresetQR('web')" style="text-align:left;padding:8px 12px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#1A1814">Página web de Chulengo</button>
             </div>
           </div>
         </div>
@@ -1291,10 +1291,10 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
           </div>
 
           <div style="display:flex;gap:8px;margin-bottom:8px">
-            <button onclick="descargarQR('png')" id="btn-dl-qr-png" disabled style="flex:1;padding:11px;background:#1A1814;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;opacity:0.4">⬇ PNG</button>
-            <button onclick="descargarQR('svg')" id="btn-dl-qr-svg" disabled style="flex:1;padding:11px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;opacity:0.4">⬇ SVG</button>
+            <button onclick="descargarQR('png')" id="btn-dl-qr-png" disabled style="flex:1;padding:11px;background:#1A1814;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;opacity:0.4">PNG</button>
+            <button onclick="descargarQR('svg')" id="btn-dl-qr-svg" disabled style="flex:1;padding:11px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;opacity:0.4">SVG</button>
           </div>
-          <button onclick="guardarQRHistorial()" id="btn-guardar-qr" disabled style="width:100%;padding:11px;background:#FFF7ED;color:#9A3412;border:1.5px solid #FED7AA;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px;opacity:0.4">⭐ Guardar en historial</button>
+          <button onclick="guardarQRHistorial()" id="btn-guardar-qr" disabled style="width:100%;padding:11px;background:#FFF7ED;color:#9A3412;border:1.5px solid #FED7AA;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px;opacity:0.4">Guardar en historial</button>
           <div id="qr-guardado-msg" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;font-size:0.78rem;color:#166534;font-family:Outfit,sans-serif;margin-bottom:8px"></div>
 
           <div id="qr-link-preview" style="background:#F5F2ED;border-radius:8px;padding:10px 12px;font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif;word-break:break-all;display:none"></div>
@@ -1304,7 +1304,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       <!-- HISTORIAL QR -->
       <div style="margin-top:2.5rem">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif">📚 Mi historial de QRs</div>
+          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif">Mi historial de QRs</div>
           <div id="qr-historial-count" style="font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif"></div>
         </div>
         <div id="qr-historial-contenido">
@@ -1367,7 +1367,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
             </div>
 
             <button onclick="convertirASVG()" id="btn-convertir" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
-              <span id="btn-convertir-icon">⚡</span> Convertir a SVG
+              Convertir a SVG
             </button>
           </div>
         </div>
@@ -1380,10 +1380,10 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
 
             <div style="display:flex;gap:8px;margin-bottom:0.75rem">
               <button onclick="descargarSVG()" style="flex:1;padding:11px;background:#1A1814;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px">
-                ⬇ Descargar SVG
+                Descargar SVG
               </button>
               <button onclick="guardarSVGHistorial()" id="btn-guardar-svg" style="flex:1;padding:11px;background:#FFF7ED;color:#9A3412;border:1px solid #FED7AA;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px">
-                ⭐ Guardar en historial
+                Guardar en historial
               </button>
             </div>
             <div id="svg-guardado-msg" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;font-size:0.78rem;color:#166534;font-family:Outfit,sans-serif;margin-bottom:0.75rem"></div>
@@ -1404,7 +1404,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       <!-- HISTORIAL -->
       <div id="svg-historial-section" style="margin-top:2.5rem">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif">📚 Mi historial de SVGs</div>
+          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif">Mi historial de SVGs</div>
           <div id="svg-historial-count" style="font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif"></div>
         </div>
         <div id="svg-historial-contenido">
@@ -1776,7 +1776,7 @@ function renderListaPresupuestos(docs){
     if(d.descripcion){var desc=document.createElement('div');desc.style.cssText='font-size:0.8rem;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:0.75rem';desc.textContent=d.descripcion;detalle.appendChild(desc);}
     if(d.condiciones){var cond=document.createElement('div');cond.style.cssText='font-size:0.78rem;color:#4B4640;font-family:Outfit,sans-serif;margin-bottom:0.75rem';cond.innerHTML='<b>Condiciones:</b> '+d.condiciones;detalle.appendChild(cond);}
     var acciones=document.createElement('div'); acciones.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin-top:0.5rem';
-    var btnPDF=document.createElement('button'); btnPDF.style.cssText='flex:1;min-width:120px;padding:9px;background:#1A1814;color:#fff;border:none;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px'; btnPDF.textContent='📄 Descargar PDF'; btnPDF.addEventListener('click',function(){regenerarPDF(id,d);});
+    var btnPDF=document.createElement('button'); btnPDF.style.cssText='flex:1;min-width:120px;padding:9px;background:#1A1814;color:#fff;border:none;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px'; btnPDF.textContent='Descargar PDF'; btnPDF.addEventListener('click',function(){regenerarPDF(id,d);});
     var btnWA=document.createElement('a'); btnWA.style.cssText='flex:1;min-width:120px;padding:9px;background:#25D366;color:#fff;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none'; btnWA.textContent='💬 Enviar WA'; btnWA.target='_blank';
     var waMsg='Hola! Te envio el presupuesto de *'+(d.proyecto||'tu pedido')+'* por '+fmtPeso(d.precioTotal)+'.'; btnWA.href='https://wa.me/'+WA+'?text='+encodeURIComponent(waMsg);
     var btnDel=document.createElement('button'); btnDel.style.cssText='padding:9px 14px;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;border-radius:8px;font-size:0.82rem;cursor:pointer;font-family:Outfit,sans-serif'; btnDel.textContent='🗑'; btnDel.addEventListener('click',function(){eliminarPresupuesto(id,btnDel);});
@@ -2554,7 +2554,7 @@ function abrirModalGuardarPerfil(){
   btnCancel.style.cssText = 'padding:9px 20px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#1A1814';
   btnCancel.onclick = function(){ modal.remove(); };
   var btnSave = document.createElement('button');
-  btnSave.textContent = '💾 Guardar perfil';
+  btnSave.textContent = 'Guardar perfil';
   btnSave.style.cssText = 'padding:9px 20px;background:#2D6A4F;border:none;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#fff';
   btnSave.onclick = function(){ confirmarGuardarPerfil(config, inp.value); };
   btnRow.appendChild(btnCancel);
@@ -2856,7 +2856,7 @@ function generarQR(){
   var guardadoMsg = document.getElementById('qr-guardado-msg');
   if(guardadoMsg) guardadoMsg.style.display='none';
   // Reset guardar button
-  if(btnGuardar){ btnGuardar.textContent=''; btnGuardar.innerHTML='⭐ Guardar en historial'; btnGuardar.style.background='#FFF7ED'; btnGuardar.style.color='#9A3412'; btnGuardar.style.borderColor='#FED7AA'; }
+  if(btnGuardar){ btnGuardar.textContent=''; btnGuardar.innerHTML='Guardar en historial'; btnGuardar.style.background='#FFF7ED'; btnGuardar.style.color='#9A3412'; btnGuardar.style.borderColor='#FED7AA'; }
 }
 
 function descargarQR(formato){
@@ -2964,7 +2964,7 @@ function guardarQRHistorial(){
     .catch(function(e){
       var msg = document.getElementById('qr-guardado-msg');
       if(msg){ msg.style.display='block'; msg.style.background='#FEF2F2'; msg.style.color='#B91C1C'; msg.textContent='Error: '+e.message; }
-      if(btn){ btn.innerHTML='⭐ Guardar en historial'; btn.disabled=false; }
+      if(btn){ btn.innerHTML='Guardar en historial'; btn.disabled=false; }
     });
 }
 
@@ -2998,7 +2998,7 @@ function cargarHistorialQR(){
       snap.forEach(function(doc){
         var d = doc.data();
         var fecha = d.fecha ? d.fecha.toDate().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
-        var tipoLabel = {url:'🔗 URL',wa:'💬 WhatsApp',ig:'📸 Instagram',tel:'📞 Teléfono',texto:'📝 Texto'}[d.tipo]||'QR';
+        var tipoLabel = {url:'URL',wa:'WhatsApp',ig:'Instagram',tel:'Teléfono',texto:'Texto'}[d.tipo]||'QR';
 
         var card = document.createElement('div');
         card.style.cssText='background:#fff;border:1px solid #E2DDD6;border-radius:10px;overflow:hidden;transition:all 0.15s';
@@ -3024,8 +3024,8 @@ function cargarHistorialQR(){
           '<div style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(d.input||d.valor||'—')+'</div>'+
           '<div style="font-size:0.7rem;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:8px">'+fecha+'</div>'+
           '<div style="display:flex;gap:5px">'+
-            '<button data-qrid="'+doc.id+'" class="btn-regenerar-qr" style="flex:1;padding:6px;background:#2D6A4F;color:#fff;border:none;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">↺ Cargar</button>'+
-            '<button data-qrid="'+doc.id+'" class="btn-dl-qr-hist" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">⬇ PNG</button>'+
+            '<button data-qrid="'+doc.id+'" class="btn-regenerar-qr" style="flex:1;padding:6px;background:#2D6A4F;color:#fff;border:none;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">Cargar</button>'+
+            '<button data-qrid="'+doc.id+'" class="btn-dl-qr-hist" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">PNG</button>'+
             '<button data-qrid="'+doc.id+'" class="btn-del-qr" style="padding:6px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.72rem;cursor:pointer">🗑</button>'+
           '</div>';
 
@@ -3223,7 +3223,7 @@ function convertirASVG(){
         }
       } catch(err){
         console.error(err);
-        btn.innerHTML = '<span id="btn-convertir-icon">⚡</span> Convertir a SVG';
+        btn.innerHTML = 'Convertir a SVG';
         btn.disabled = false;
         alert('Error al convertir: ' + err.message);
       }
@@ -3258,7 +3258,7 @@ function mostrarResultadoSVG(svgString, w, h){
   document.getElementById('svg-guardado-msg').style.display='none';
 
   var btn = document.getElementById('btn-convertir');
-  btn.innerHTML = '<span>⚡</span> Convertir de nuevo';
+  btn.innerHTML = 'Convertir de nuevo';
   btn.disabled = false;
 }
 
@@ -3291,7 +3291,7 @@ function guardarSVGHistorial(){
     document.getElementById('svg-guardado-msg').style.background='#FEF2F2';
     document.getElementById('svg-guardado-msg').style.color='#B91C1C';
     document.getElementById('svg-guardado-msg').textContent='El SVG es muy grande para guardar en el historial (>500KB). Descargalo directamente.';
-    btn.innerHTML='⭐ Guardar en historial';
+    btn.innerHTML='Guardar en historial';
     btn.disabled=false;
     return;
   }
@@ -3318,7 +3318,7 @@ function guardarSVGHistorial(){
     .catch(function(e){
       document.getElementById('svg-guardado-msg').style.display='block';
       document.getElementById('svg-guardado-msg').textContent='Error al guardar: '+e.message;
-      btn.innerHTML='⭐ Guardar en historial';
+      btn.innerHTML='Guardar en historial';
       btn.disabled=false;
     });
 }
@@ -3378,7 +3378,7 @@ function cargarHistorialSVG(){
         info.innerHTML='<div style="font-size:0.82rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(d.nombre||'svg')+'</div>'+
           '<div style="font-size:0.72rem;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:8px">'+fecha+' · '+kb+'</div>'+
           '<div style="display:flex;gap:6px">'+
-            '<button data-id="'+doc.id+'" class="btn-dl-svg" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">⬇ SVG</button>'+
+            '<button data-id="'+doc.id+'" class="btn-dl-svg" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">SVG</button>'+
             '<button data-id="'+doc.id+'" class="btn-del-svg" style="padding:6px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.75rem;cursor:pointer">🗑</button>'+
           '</div>';
 
