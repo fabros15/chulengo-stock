@@ -121,6 +121,336 @@ function loginConGoogle(){
   firebase.auth().signInWithPopup(provider).catch(function(e){ console.error('Error login Google:', e); });
 }
 function doLogout(){ firebase.auth().signOut(); }
+</script>
+<script>
+var svgActual = null;
+var svgNombreArchivo = 'imagen';
+var svgHistorial = [];
+
+function handleSVGDrop(e){
+  e.preventDefault();
+  document.getElementById('svg-dropzone').style.borderColor='#E2DDD6';
+  var file = e.dataTransfer.files[0];
+  if(file && file.type.startsWith('image/')) cargarImagenSVG(file);
+}
+
+function cargarImagenSVG(file){
+  if(!file) return;
+  svgNombreArchivo = file.name.replace(/\.[^.]+$/, '');
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var imgEl = document.getElementById('svg-original-img');
+    imgEl.src = e.target.result;
+    imgEl.dataset.dataurl = e.target.result; // guardar DataURL directo
+    var origWrap = document.getElementById('svg-original-wrap');
+    var opciones = document.getElementById('svg-opciones');
+    var dropzone = document.getElementById('svg-dropzone');
+    var resWrap  = document.getElementById('svg-resultado-wrap');
+    var resPh    = document.getElementById('svg-resultado-placeholder');
+    var guardMsg = document.getElementById('svg-guardado-msg');
+    if(origWrap) origWrap.style.display='block';
+    if(opciones) opciones.style.display='block';
+    if(dropzone) dropzone.style.display='none';
+    svgActual = null;
+    if(resWrap)  resWrap.style.display='none';
+    if(resPh)    resPh.style.display='flex';
+    if(guardMsg) guardMsg.style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function convertirASVG(){
+  var imgEl = document.getElementById('svg-original-img');
+  if(!imgEl.src || imgEl.src === window.location.href) return;
+
+  var btn = document.getElementById('btn-convertir');
+  btn.innerHTML = '<div style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite"></div> Convirtiendo...';
+  btn.disabled = true;
+
+  // Draw image to canvas
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  var img = new Image();
+  // usar el DataURL guardado para evitar problemas de CORS/file://
+  var imgElSrc = imgEl.dataset.dataurl || imgEl.src;
+  img.onload = function(){
+    // Max 800px para mejor performance
+    var maxW = 800, maxH = 800;
+    var scale = Math.min(maxW/img.width, maxH/img.height, 1);
+    canvas.width  = Math.round(img.width  * scale);
+    canvas.height = Math.round(img.height * scale);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+
+    var umbralBlanco = parseInt(document.getElementById('svg-umbral') ? document.getElementById('svg-umbral').value : 240);
+    var blur = parseInt(document.getElementById('svg-blur').value);
+    var tol  = parseInt(document.getElementById('svg-tolerancia').value);
+
+    // Pre-procesar: binarizar imagen (solo negro puro o transparente)
+    var rawData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    var pxData = rawData.data;
+    for(var pi = 0; pi < pxData.length; pi += 4){
+      var avg = (pxData[pi] + pxData[pi+1] + pxData[pi+2]) / 3;
+      if(avg > umbralBlanco || pxData[pi+3] < 128){
+        pxData[pi]=255; pxData[pi+1]=255; pxData[pi+2]=255; pxData[pi+3]=0; // transparente
+      } else {
+        pxData[pi]=0; pxData[pi+1]=0; pxData[pi+2]=0; pxData[pi+3]=255; // negro
+      }
+    }
+    ctx.putImageData(rawData, 0, 0);
+
+    setTimeout(function(){
+      try {
+        // Usar directamente el método de píxeles → rectángulos SVG
+        // para garantizar fondo 100% transparente, compatible con cualquier slicer
+        var svgString = pixelsAPathsSVG(canvas, umbralBlanco);
+        mostrarResultadoSVG(svgString, canvas.width, canvas.height);
+      } catch(err){
+        console.error(err);
+        btn.innerHTML = 'Convertir a SVG'; btn.disabled = false;
+        alert('Error al convertir: ' + err.message);
+      }
+    }, 50);
+  };
+  img.src = imgElSrc;
+}
+
+function colorEsClaro(fill, umbral){
+  umbral = umbral || 230;
+  if(!fill) return false;
+  fill = fill.trim().toLowerCase();
+  if(fill === 'white' || fill === '#fff' || fill === '#ffffff') return true;
+  if(fill === 'none' || fill === 'transparent') return false;
+  var hex = null;
+  if(fill.startsWith('#')){
+    if(fill.length === 4) hex = fill[1]+fill[1]+fill[2]+fill[2]+fill[3]+fill[3];
+    else if(fill.length === 7) hex = fill.slice(1);
+  }
+  if(hex){
+    var r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
+    return r > umbral && g > umbral && b > umbral;
+  }
+  var rgb = fill.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if(rgb) return parseInt(rgb[1])>umbral && parseInt(rgb[2])>umbral && parseInt(rgb[3])>umbral;
+  return false;
+}
+
+function quitarFondoSVG(svgString){
+  var umbral = parseInt(document.getElementById('svg-umbral') ? document.getElementById('svg-umbral').value : 230);
+  var parser = new DOMParser();
+  var doc = parser.parseFromString(svgString, 'image/svg+xml');
+  var svgEl = doc.querySelector('svg');
+  if(!svgEl) return svgString;
+
+  // Quitar cualquier rect de fondo claro
+  svgEl.querySelectorAll('rect').forEach(function(el){
+    if(colorEsClaro(el.getAttribute('fill'), umbral)) el.remove();
+  });
+
+  // Quitar TODOS los grupos con fill claro (no solo el primero)
+  svgEl.querySelectorAll('g').forEach(function(g){
+    var fill = g.getAttribute('fill') || '';
+    if(!fill){
+      // Intentar con el primer path hijo
+      var firstPath = g.querySelector('path');
+      if(firstPath) fill = firstPath.getAttribute('fill') || '';
+    }
+    if(colorEsClaro(fill, umbral)) g.remove();
+  });
+
+  // Quitar paths sueltos con fill claro
+  svgEl.querySelectorAll('path').forEach(function(p){
+    if(colorEsClaro(p.getAttribute('fill'), umbral)) p.remove();
+  });
+
+  // Fondo transparente explícito
+  svgEl.setAttribute('style','background:transparent');
+  // Quitar cualquier atributo de fondo
+  svgEl.removeAttribute('bgcolor');
+
+  var serializer = new XMLSerializer();
+  var result = serializer.serializeToString(svgEl);
+  // Reemplazar cualquier fill blanco residual que pueda quedar como atributo inline
+  result = result.replace(/fill="#fff(fff)?"/gi, 'fill="none"');
+  result = result.replace(/fill="white"/gi, 'fill="none"');
+  result = result.replace(/fill="rgb\(255,\s*255,\s*255\)"/gi, 'fill="none"');
+  return result;
+}
+
+function limpiarSVGParaSlicer(svgString, umbral){
+  umbral = umbral || 230;
+  var parser = new DOMParser();
+  var doc = parser.parseFromString(svgString, 'image/svg+xml');
+  var svgEl = doc.querySelector('svg');
+  if(!svgEl) return svgString;
+
+  // Eliminar rect de fondo
+  svgEl.querySelectorAll('rect').forEach(function(el){ el.remove(); });
+
+  // Eliminar TODOS los grupos/paths con fill claro
+  function esClaro(fill){
+    if(!fill || fill === 'none') return false;
+    fill = fill.trim().toLowerCase();
+    if(fill === '#fff' || fill === '#ffffff' || fill === 'white') return true;
+    if(fill.startsWith('#') && fill.length === 7){
+      var r=parseInt(fill.slice(1,3),16), g=parseInt(fill.slice(3,5),16), b=parseInt(fill.slice(5,7),16);
+      return (r+g+b)/3 > umbral;
+    }
+    return false;
+  }
+
+  svgEl.querySelectorAll('g').forEach(function(g){
+    var fill = g.getAttribute('fill') || '';
+    if(!fill){ var p = g.querySelector('path'); if(p) fill = p.getAttribute('fill')||''; }
+    if(esClaro(fill)) g.remove();
+  });
+  svgEl.querySelectorAll('path').forEach(function(p){
+    if(esClaro(p.getAttribute('fill'))) p.remove();
+  });
+
+  svgEl.removeAttribute('style');
+  // Asegurarse de que no haya fondo
+  var ser = new XMLSerializer();
+  var out = ser.serializeToString(svgEl);
+  out = out.replace(/fill\s*=\s*["']#f{3,6}["']/gi, 'fill="none"');
+  out = out.replace(/fill\s*=\s*["']white["']/gi, 'fill="none"');
+  return out;
+}
+
+// Trazar pixels directamente en rectángulos SVG — sin fondo, compatible con slicers
+function pixelsAPathsSVG(canvas, umbral){
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+  var data = ctx.getImageData(0, 0, w, h).data;
+  var rects = [];
+  var threshold = umbral || 200;
+
+  for(var y = 0; y < h; y++){
+    var startX = -1;
+    for(var x = 0; x <= w; x++){
+      var isDark = false;
+      if(x < w){
+        var i = (y * w + x) * 4;
+        var alpha = data[i+3];
+        var brightness = (data[i] + data[i+1] + data[i+2]) / 3;
+        isDark = alpha > 128 && brightness < threshold;
+      }
+      if(isDark && startX === -1){
+        startX = x;
+      } else if(!isDark && startX !== -1){
+        rects.push('<rect x="'+startX+'" y="'+y+'" width="'+(x-startX)+'" height="1"/>');
+        startX = -1;
+      }
+    }
+  }
+
+  // SVG con fill negro en el grupo, sin fondo, sin background
+  return '<?xml version="1.0" encoding="UTF-8"?>
+'+
+    '<svg xmlns="http://www.w3.org/2000/svg" '+
+    'viewBox="0 0 '+w+' '+h+'" '+
+    'width="'+w+'" height="'+h+'" '+
+    'style="background:none">'+
+    '<g fill="#000000" stroke="none">'+
+    rects.join('')+
+    '</g>'+
+    '</svg>';
+}
+
+function mostrarResultadoSVG(svgString, w, h){
+  // Quitar fondo blanco
+  svgString = quitarFondoSVG(svgString);
+  svgActual = svgString;
+  var bytes = new Blob([svgString]).size;
+  var kb = (bytes/1024).toFixed(1);
+
+  // Preview
+  var preview = document.getElementById('svg-preview');
+  preview.innerHTML = '';
+  var div = document.createElement('div');
+  div.style.cssText = 'width:100%;max-height:300px;overflow:hidden';
+  div.innerHTML = svgString;
+  var svgEl = div.querySelector('svg');
+  if(svgEl){ svgEl.style.width='100%'; svgEl.style.height='auto'; svgEl.style.maxHeight='290px'; }
+  preview.appendChild(div);
+
+  // Info
+  document.getElementById('svg-info').innerHTML =
+    '<b>Tamaño:</b> '+kb+' KB<br>'+
+    '<b>Dimensiones:</b> '+w+' × '+h+' px<br>'+
+    '<b>Archivo:</b> '+svgNombreArchivo+'.svg';
+
+  document.getElementById('svg-resultado-wrap').style.display='block';
+  document.getElementById('svg-resultado-placeholder').style.display='none';
+  document.getElementById('svg-guardado-msg').style.display='none';
+
+  var btn = document.getElementById('btn-convertir');
+  btn.innerHTML = 'Convertir de nuevo';
+  btn.disabled = false;
+}
+
+function descargarSVG(){
+  if(!svgActual) return;
+  var blob = new Blob([svgActual], {type:'image/svg+xml'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = svgNombreArchivo + '.svg';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function guardarSVGHistorial(){
+  if(!svgActual){ return; }
+  if(!window.currentUser){
+    window._pendingSVG = true;
+    mostrarLoginModal('svg');
+    return;
+  }
+  var btn = document.getElementById('btn-guardar-svg');
+  btn.innerHTML = '⏳ Guardando...';
+  btn.disabled = true;
+
+  // Comprimir SVG si es muy grande (>500KB)
+  var bytes = new Blob([svgActual]).size;
+  if(bytes > 500000){
+    document.getElementById('svg-guardado-msg').style.display='block';
+    document.getElementById('svg-guardado-msg').style.background='#FEF2F2';
+    document.getElementById('svg-guardado-msg').style.color='#B91C1C';
+    document.getElementById('svg-guardado-msg').textContent='El SVG es muy grande para guardar en el historial (>500KB). Descargalo directamente.';
+    btn.innerHTML='Guardar en historial';
+    btn.disabled=false;
+    return;
+  }
+
+  var entry = {
+    uid: window.currentUser.uid,
+    nombre: svgNombreArchivo,
+    fecha: firebase.firestore.FieldValue.serverTimestamp(),
+    bytes: bytes,
+    svgData: svgActual
+  };
+
+  firebase.firestore().collection('svg_historial').add(entry)
+    .then(function(){
+      document.getElementById('svg-guardado-msg').style.display='block';
+      document.getElementById('svg-guardado-msg').style.background='#F0FDF4';
+      document.getElementById('svg-guardado-msg').style.color='#166534';
+      document.getElementById('svg-guardado-msg').textContent='✓ Guardado en tu historial. Lo podés descargar cuando quieras.';
+      btn.innerHTML='✓ Guardado';
+      btn.style.background='#F0FDF4';
+      btn.style.color='#166534';
+      cargarHistorialSVG();
+    })
+    .catch(function(e){
+      document.getElementById('svg-guardado-msg').style.display='block';
+      document.getElementById('svg-guardado-msg').textContent='Error al guardar: '+e.message;
+      btn.innerHTML='Guardar en historial';
+      btn.disabled=false;
+    });
+}
+
+
 
 function guardarPresupuesto(datos){
   if(!window.currentUser) return;
@@ -831,7 +1161,37 @@ body.dark footer{border-top-color:#2A2520;color:#8A8479}
 body.dark .pres-filtro{background:#1C1C1C;border-color:#2A2520;color:#8A8479}
 body.dark .pres-filtro.active,.pres-filtro:hover{background:#FAFAFA;color:#1A1814}
 body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
-</style></head>
+</style><script>
+function abrirHerramienta(id){
+  document.querySelectorAll('[id^="herramienta-"]').forEach(function(el){
+    el.style.display = 'none';
+  });
+  var grid = document.getElementById('herramientas-cards-grid');
+  if(grid) grid.style.display = 'none';
+  var header = document.getElementById('herramientas-main-header');
+  if(header) header.style.display = 'none';
+
+  var tool = document.getElementById('herramienta-'+id);
+  if(tool) tool.style.display = 'block';
+
+  window.scrollTo(0,0);
+
+  if(id === 'svg-converter') cargarHistorialSVG();
+  if(id === 'qr-generator') cargarHistorialQR();
+}
+
+function cerrarHerramienta(){
+  document.querySelectorAll('[id^="herramienta-"]').forEach(function(el){
+    el.style.display = 'none';
+  });
+  var grid = document.getElementById('herramientas-cards-grid');
+  if(grid) grid.style.display = 'grid';
+  var header = document.getElementById('herramientas-main-header');
+  if(header) header.style.display = 'block';
+  window.scrollTo(0,0);
+}
+</script>
+</head>
 <body>
 <div id="app" style="display:none">
 
@@ -1160,7 +1520,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
   <div style="max-width:1100px;margin:0 auto;padding:2rem 1.25rem 6rem">
 
     <!-- Header -->
-    <div style="margin-bottom:2rem">
+    <div id="herramientas-main-header" style="margin-bottom:2rem">
       <h1 style="font-size:1.4rem;font-weight:800;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:6px">Herramientas</h1>
       <p style="font-size:0.875rem;color:#8A8479;font-family:Outfit,sans-serif">Utilidades para tu flujo de trabajo de impresión 3D</p>
     </div>
@@ -1169,7 +1529,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
     <div id="herramientas-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;margin-bottom:2.5rem">
 
       <!-- Conversor IMG → SVG -->
-      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="if(typeof abrirHerramienta!=='undefined')abrirHerramienta('svg-converter');else{document.getElementById('herramienta-svg-converter').style.display='block';window.scrollBy(0,400)}" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('svg-converter')" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
         <div style="background:linear-gradient(135deg,#1A1814 0%,#2D6A4F 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem"></div>
         <div style="padding:1.25rem">
           <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:5px">Imagen a SVG</div>
@@ -1183,7 +1543,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       </div>
 
       <!-- Generador QR -->
-      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="if(typeof abrirHerramienta!=='undefined')abrirHerramienta('qr-generator');else document.getElementById('herramienta-qr-generator').style.display='block'" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('qr-generator')" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
         <div style="background:linear-gradient(135deg,#1D4ED8 0%,#1A1814 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">QR</div>
         <div style="padding:1.25rem">
           <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:5px">Generador de QR</div>
@@ -1329,18 +1689,18 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
         <!-- Panel izquierdo: upload + opciones -->
         <div>
           <!-- Drop zone -->
-          <div id="svg-dropzone" onclick="document.getElementById('svg-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='#2D6A4F'" ondragleave="this.style.borderColor='#E2DDD6'" ondrop="handleSVGDrop(event)" style="background:#F9F9F9;border:2px dashed #E2DDD6;border-radius:12px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:1rem">
+          <div id="svg-dropzone" onclick="var fi=document.getElementById('svg-file-input');if(fi){fi.value='';fi.click();}" ondragover="event.preventDefault();this.style.borderColor='#2D6A4F'" ondragleave="this.style.borderColor='#E2DDD6'" ondrop="handleSVGDrop(event)" style="background:#F9F9F9;border:2px dashed #E2DDD6;border-radius:12px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:1rem">
             <div style="font-size:2.5rem;margin-bottom:0.75rem">📁</div>
             <div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:4px">Arrastrá tu imagen acá</div>
             <div style="font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif">o hacé clic para seleccionar · PNG, JPG, GIF, BMP</div>
-            <input type="file" id="svg-file-input" accept="image/*" style="display:none" onchange="cargarImagenSVG(this.files[0]);this.value=''">
+            <input type="file" id="svg-file-input" accept="image/*" style="display:none" onchange="var f=this.files[0];cargarImagenSVG(f);">
           </div>
 
           <!-- Preview imagen original -->
           <div id="svg-original-wrap" style="display:none;margin-bottom:1rem">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
               <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:Outfit,sans-serif;text-transform:uppercase;letter-spacing:0.05em">Imagen original</div>
-              <button onclick="document.getElementById('svg-file-input').click()" style="font-size:0.75rem;font-weight:600;color:#2D6A4F;background:none;border:1px solid #2D6A4F;border-radius:6px;padding:3px 10px;cursor:pointer;font-family:Outfit,sans-serif">Cambiar imagen</button>
+              <button onclick="document.getElementById('svg-original-wrap').style.display='none';document.getElementById('svg-opciones').style.display='none';document.getElementById('svg-dropzone').style.display='block';document.getElementById('svg-file-input').value=''" style="font-size:0.75rem;font-weight:600;color:#2D6A4F;background:none;border:1px solid #2D6A4F;border-radius:6px;padding:3px 10px;cursor:pointer;font-family:Outfit,sans-serif">Cambiar imagen</button>
             </div>
             <img id="svg-original-img" style="width:100%;border-radius:10px;border:1px solid #E2DDD6;max-height:250px;object-fit:contain;background:#F5F2ED">
           </div>
@@ -2977,6 +3337,9 @@ function guardarQRHistorial(){
     });
 }
 
+
+
+
 function cargarHistorialQR(){
   var cont  = document.getElementById('qr-historial-contenido');
   var count = document.getElementById('qr-historial-count');
@@ -3119,343 +3482,6 @@ var svgActual = null;
 var svgNombreArchivo = 'imagen';
 var svgHistorial = [];
 
-function abrirHerramienta(id){
-  // Ocultar todas las herramientas
-  document.querySelectorAll('[id^="herramienta-"]').forEach(function(el){
-    el.style.display = 'none';
-  });
-  // Ocultar grid de cards
-  var grid = document.getElementById('herramientas-cards-grid');
-  if(grid) grid.style.display = 'none';
-
-  // Mostrar la herramienta seleccionada
-  var tool = document.getElementById('herramienta-'+id);
-  if(tool){
-    tool.style.display = 'block';
-    tool.scrollIntoView({behavior:'smooth', block:'start'});
-  }
-  if(id === 'svg-converter') cargarHistorialSVG();
-  if(id === 'qr-generator') cargarHistorialQR();
-}
-
-function cerrarHerramienta(){
-  document.querySelectorAll('[id^="herramienta-"]').forEach(function(el){
-    el.style.display = 'none';
-  });
-  var grid = document.getElementById('herramientas-cards-grid');
-  if(grid) grid.style.display = 'grid';
-  window.scrollTo(0,0);
-}
-
-function handleSVGDrop(e){
-  e.preventDefault();
-  document.getElementById('svg-dropzone').style.borderColor='#E2DDD6';
-  var file = e.dataTransfer.files[0];
-  if(file && file.type.startsWith('image/')) cargarImagenSVG(file);
-}
-
-function cargarImagenSVG(file){
-  if(!file) return;
-  svgNombreArchivo = file.name.replace(/\.[^.]+$/, '');
-  var reader = new FileReader();
-  reader.onload = function(e){
-    var imgEl = document.getElementById('svg-original-img');
-    imgEl.src = e.target.result;
-    imgEl.dataset.dataurl = e.target.result; // guardar DataURL directo
-    document.getElementById('svg-original-wrap').style.display='block';
-    document.getElementById('svg-opciones').style.display='block';
-    document.getElementById('svg-dropzone').style.display='none';
-    svgActual = null;
-    document.getElementById('svg-resultado-wrap').style.display='none';
-    document.getElementById('svg-resultado-placeholder').style.display='flex';
-    document.getElementById('svg-guardado-msg').style.display='none';
-  };
-  reader.readAsDataURL(file);
-}
-
-function convertirASVG(){
-  var imgEl = document.getElementById('svg-original-img');
-  if(!imgEl.src || imgEl.src === window.location.href) return;
-
-  var btn = document.getElementById('btn-convertir');
-  btn.innerHTML = '<div style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite"></div> Convirtiendo...';
-  btn.disabled = true;
-
-  // Draw image to canvas
-  var canvas = document.createElement('canvas');
-  var ctx = canvas.getContext('2d');
-  var img = new Image();
-  // usar el DataURL guardado para evitar problemas de CORS/file://
-  var imgElSrc = imgEl.dataset.dataurl || imgEl.src;
-  img.onload = function(){
-    // Max 800px para mejor performance
-    var maxW = 800, maxH = 800;
-    var scale = Math.min(maxW/img.width, maxH/img.height, 1);
-    canvas.width  = Math.round(img.width  * scale);
-    canvas.height = Math.round(img.height * scale);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-
-    var umbralBlanco = parseInt(document.getElementById('svg-umbral') ? document.getElementById('svg-umbral').value : 240);
-    var blur = parseInt(document.getElementById('svg-blur').value);
-    var tol  = parseInt(document.getElementById('svg-tolerancia').value);
-
-    // Pre-procesar: binarizar imagen (solo negro puro o transparente)
-    var rawData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    var pxData = rawData.data;
-    for(var pi = 0; pi < pxData.length; pi += 4){
-      var avg = (pxData[pi] + pxData[pi+1] + pxData[pi+2]) / 3;
-      if(avg > umbralBlanco || pxData[pi+3] < 128){
-        pxData[pi]=255; pxData[pi+1]=255; pxData[pi+2]=255; pxData[pi+3]=0; // transparente
-      } else {
-        pxData[pi]=0; pxData[pi+1]=0; pxData[pi+2]=0; pxData[pi+3]=255; // negro
-      }
-    }
-    ctx.putImageData(rawData, 0, 0);
-
-    setTimeout(function(){
-      try {
-        var svgString;
-        if(typeof ImageTracer !== 'undefined'){
-          var opts = { numberofcolors:2, blurradius:blur, colorquantcycles:1, ltres:Math.max(0.5,tol/80), qtres:Math.max(0.5,tol/80), pathomit:4, rightangleenhance:true, scale:1 };
-          svgString = ImageTracer.imagedataToSVG(ctx.getImageData(0,0,canvas.width,canvas.height), opts);
-          svgString = limpiarSVGParaSlicer(svgString, umbralBlanco);
-        } else {
-          svgString = pixelsAPathsSVG(canvas, umbralBlanco);
-        }
-        mostrarResultadoSVG(svgString, canvas.width, canvas.height);
-      } catch(err){
-        console.error(err);
-        try {
-          mostrarResultadoSVG(pixelsAPathsSVG(canvas, umbralBlanco), canvas.width, canvas.height);
-        } catch(e2){
-          btn.innerHTML = 'Convertir a SVG'; btn.disabled = false;
-          alert('Error: ' + err.message);
-        }
-      }
-    }, 50);
-  };
-  img.src = imgElSrc;
-}
-
-}
-
-function colorEsClaro(fill, umbral){
-  umbral = umbral || 230;
-  if(!fill) return false;
-  fill = fill.trim().toLowerCase();
-  if(fill === 'white' || fill === '#fff' || fill === '#ffffff') return true;
-  if(fill === 'none' || fill === 'transparent') return false;
-  var hex = null;
-  if(fill.startsWith('#')){
-    if(fill.length === 4) hex = fill[1]+fill[1]+fill[2]+fill[2]+fill[3]+fill[3];
-    else if(fill.length === 7) hex = fill.slice(1);
-  }
-  if(hex){
-    var r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
-    return r > umbral && g > umbral && b > umbral;
-  }
-  var rgb = fill.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-  if(rgb) return parseInt(rgb[1])>umbral && parseInt(rgb[2])>umbral && parseInt(rgb[3])>umbral;
-  return false;
-}
-
-function quitarFondoSVG(svgString){
-  var umbral = parseInt(document.getElementById('svg-umbral') ? document.getElementById('svg-umbral').value : 230);
-  var parser = new DOMParser();
-  var doc = parser.parseFromString(svgString, 'image/svg+xml');
-  var svgEl = doc.querySelector('svg');
-  if(!svgEl) return svgString;
-
-  // Quitar cualquier rect de fondo claro
-  svgEl.querySelectorAll('rect').forEach(function(el){
-    if(colorEsClaro(el.getAttribute('fill'), umbral)) el.remove();
-  });
-
-  // Quitar TODOS los grupos con fill claro (no solo el primero)
-  svgEl.querySelectorAll('g').forEach(function(g){
-    var fill = g.getAttribute('fill') || '';
-    if(!fill){
-      // Intentar con el primer path hijo
-      var firstPath = g.querySelector('path');
-      if(firstPath) fill = firstPath.getAttribute('fill') || '';
-    }
-    if(colorEsClaro(fill, umbral)) g.remove();
-  });
-
-  // Quitar paths sueltos con fill claro
-  svgEl.querySelectorAll('path').forEach(function(p){
-    if(colorEsClaro(p.getAttribute('fill'), umbral)) p.remove();
-  });
-
-  // Fondo transparente explícito
-  svgEl.setAttribute('style','background:transparent');
-  // Quitar cualquier atributo de fondo
-  svgEl.removeAttribute('bgcolor');
-
-  var serializer = new XMLSerializer();
-  var result = serializer.serializeToString(svgEl);
-  // Reemplazar cualquier fill blanco residual que pueda quedar como atributo inline
-  result = result.replace(/fill="#fff(fff)?"/gi, 'fill="none"');
-  result = result.replace(/fill="white"/gi, 'fill="none"');
-  result = result.replace(/fill="rgb\(255,\s*255,\s*255\)"/gi, 'fill="none"');
-  return result;
-}
-
-function limpiarSVGParaSlicer(svgString, umbral){
-  umbral = umbral || 230;
-  var parser = new DOMParser();
-  var doc = parser.parseFromString(svgString, 'image/svg+xml');
-  var svgEl = doc.querySelector('svg');
-  if(!svgEl) return svgString;
-
-  // Eliminar rect de fondo
-  svgEl.querySelectorAll('rect').forEach(function(el){ el.remove(); });
-
-  // Eliminar TODOS los grupos/paths con fill claro
-  function esClaro(fill){
-    if(!fill || fill === 'none') return false;
-    fill = fill.trim().toLowerCase();
-    if(fill === '#fff' || fill === '#ffffff' || fill === 'white') return true;
-    if(fill.startsWith('#') && fill.length === 7){
-      var r=parseInt(fill.slice(1,3),16), g=parseInt(fill.slice(3,5),16), b=parseInt(fill.slice(5,7),16);
-      return (r+g+b)/3 > umbral;
-    }
-    return false;
-  }
-
-  svgEl.querySelectorAll('g').forEach(function(g){
-    var fill = g.getAttribute('fill') || '';
-    if(!fill){ var p = g.querySelector('path'); if(p) fill = p.getAttribute('fill')||''; }
-    if(esClaro(fill)) g.remove();
-  });
-  svgEl.querySelectorAll('path').forEach(function(p){
-    if(esClaro(p.getAttribute('fill'))) p.remove();
-  });
-
-  svgEl.removeAttribute('style');
-  // Asegurarse de que no haya fondo
-  var ser = new XMLSerializer();
-  var out = ser.serializeToString(svgEl);
-  out = out.replace(/fill\s*=\s*["']#f{3,6}["']/gi, 'fill="none"');
-  out = out.replace(/fill\s*=\s*["']white["']/gi, 'fill="none"');
-  return out;
-}
-
-// Fallback: trazar pixels directamente en rectángulos SVG
-function pixelsAPathsSVG(canvas, umbral){
-  var ctx = canvas.getContext('2d');
-  var w = canvas.width, h = canvas.height;
-  var data = ctx.getImageData(0, 0, w, h).data;
-  var rects = [];
-  // Recorrer fila por fila, crear rectángulos para runs de pixels oscuros
-  for(var y = 0; y < h; y++){
-    var startX = -1;
-    for(var x = 0; x <= w; x++){
-      var idx = (y * w + x) * 4;
-      var dark = x < w && data[idx+3] > 128 && (data[idx]+data[idx+1]+data[idx+2])/3 < (255-umbral+128);
-      if(dark && startX === -1) startX = x;
-      else if(!dark && startX !== -1){
-        rects.push('<rect x="'+startX+'" y="'+y+'" width="'+(x-startX)+'" height="1" fill="#000000"/>');
-        startX = -1;
-      }
-    }
-  }
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'">'+rects.join('')+'</svg>';
-}
-
-function mostrarResultadoSVG(svgString, w, h){
-  // Quitar fondo blanco
-  svgString = quitarFondoSVG(svgString);
-  svgActual = svgString;
-  var bytes = new Blob([svgString]).size;
-  var kb = (bytes/1024).toFixed(1);
-
-  // Preview
-  var preview = document.getElementById('svg-preview');
-  preview.innerHTML = '';
-  var div = document.createElement('div');
-  div.style.cssText = 'width:100%;max-height:300px;overflow:hidden';
-  div.innerHTML = svgString;
-  var svgEl = div.querySelector('svg');
-  if(svgEl){ svgEl.style.width='100%'; svgEl.style.height='auto'; svgEl.style.maxHeight='290px'; }
-  preview.appendChild(div);
-
-  // Info
-  document.getElementById('svg-info').innerHTML =
-    '<b>Tamaño:</b> '+kb+' KB<br>'+
-    '<b>Dimensiones:</b> '+w+' × '+h+' px<br>'+
-    '<b>Archivo:</b> '+svgNombreArchivo+'.svg';
-
-  document.getElementById('svg-resultado-wrap').style.display='block';
-  document.getElementById('svg-resultado-placeholder').style.display='none';
-  document.getElementById('svg-guardado-msg').style.display='none';
-
-  var btn = document.getElementById('btn-convertir');
-  btn.innerHTML = 'Convertir de nuevo';
-  btn.disabled = false;
-}
-
-function descargarSVG(){
-  if(!svgActual) return;
-  var blob = new Blob([svgActual], {type:'image/svg+xml'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = svgNombreArchivo + '.svg';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function guardarSVGHistorial(){
-  if(!svgActual){ return; }
-  if(!window.currentUser){
-    window._pendingSVG = true;
-    mostrarLoginModal('svg');
-    return;
-  }
-  var btn = document.getElementById('btn-guardar-svg');
-  btn.innerHTML = '⏳ Guardando...';
-  btn.disabled = true;
-
-  // Comprimir SVG si es muy grande (>500KB)
-  var bytes = new Blob([svgActual]).size;
-  if(bytes > 500000){
-    document.getElementById('svg-guardado-msg').style.display='block';
-    document.getElementById('svg-guardado-msg').style.background='#FEF2F2';
-    document.getElementById('svg-guardado-msg').style.color='#B91C1C';
-    document.getElementById('svg-guardado-msg').textContent='El SVG es muy grande para guardar en el historial (>500KB). Descargalo directamente.';
-    btn.innerHTML='Guardar en historial';
-    btn.disabled=false;
-    return;
-  }
-
-  var entry = {
-    uid: window.currentUser.uid,
-    nombre: svgNombreArchivo,
-    fecha: firebase.firestore.FieldValue.serverTimestamp(),
-    bytes: bytes,
-    svgData: svgActual
-  };
-
-  firebase.firestore().collection('svg_historial').add(entry)
-    .then(function(){
-      document.getElementById('svg-guardado-msg').style.display='block';
-      document.getElementById('svg-guardado-msg').style.background='#F0FDF4';
-      document.getElementById('svg-guardado-msg').style.color='#166534';
-      document.getElementById('svg-guardado-msg').textContent='✓ Guardado en tu historial. Lo podés descargar cuando quieras.';
-      btn.innerHTML='✓ Guardado';
-      btn.style.background='#F0FDF4';
-      btn.style.color='#166534';
-      cargarHistorialSVG();
-    })
-    .catch(function(e){
-      document.getElementById('svg-guardado-msg').style.display='block';
-      document.getElementById('svg-guardado-msg').textContent='Error al guardar: '+e.message;
-      btn.innerHTML='Guardar en historial';
-      btn.disabled=false;
-    });
-}
 
 function cargarHistorialSVG(){
   var cont = document.getElementById('svg-historial-contenido');
@@ -3726,4 +3752,3 @@ document.addEventListener('click', function(e){
 </div><!-- fin app -->
 </body>
 </html>
-
