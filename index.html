@@ -11,6 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/jankovicsandras/imagetracerjs/imagetracer_v1.2.6.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 firebase.initializeApp({
   apiKey: "AIzaSyAmCmiHMah0Vm9Lu8mK-BnFO_42fqSUYRQ",
@@ -64,9 +65,10 @@ document.addEventListener('DOMContentLoaded', function(){
       if(modal) modal.style.display='none';
       if(window._pendingPDF){ window._pendingPDF=false; abrirPDFModal(); }
       // Cargar perfiles guardados
-      setTimeout(function(){ cargarPerfilesStorage(); }, 500);
+      setTimeout(function(){ if(typeof cargarPerfilesStorage!=='undefined') cargarPerfilesStorage(); }, 500);
       if(window._pendingGuardarPerfil){ window._pendingGuardarPerfil=false; setTimeout(abrirModalGuardarPerfil, 300); }
       if(window._pendingSVG){ window._pendingSVG=false; setTimeout(guardarSVGHistorial, 300); }
+      if(window._pendingGuardarQR){ window._pendingGuardarQR=false; setTimeout(guardarQRHistorial, 300); }
       // Recargar historial SVG si la herramienta está visible
       if(document.getElementById('herramienta-svg-converter').style.display!=='none'){
         setTimeout(cargarHistorialSVG, 400);
@@ -92,6 +94,27 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 });
+
+function mostrarLoginModal(contexto){
+  var config = {
+    'default':    { icon:'📄', titulo:'Guardá tus presupuestos',  desc:'Iniciá sesión gratis con Google para generar presupuestos en PDF, guardar tu historial y recibir avisos de ofertas y cupones.' },
+    'svg':        { icon:'🖼️', titulo:'Guardá tus SVGs',          desc:'Iniciá sesión con Google para guardar tus conversiones en el historial y acceder a ellas desde cualquier dispositivo.' },
+    'presupuesto':{ icon:'📄', titulo:'Guardá tus presupuestos',  desc:'Iniciá sesión con Google para generar presupuestos en PDF y guardar el historial de todos tus cálculos.' },
+    'favoritos':  { icon:'⭐', titulo:'Guardá tus favoritos',     desc:'Iniciá sesión con Google para guardar filamentos favoritos y acceder a ellos rápidamente desde cualquier dispositivo.' },
+    'perfiles':   { icon:'🖨️', titulo:'Guardá tus perfiles',     desc:'Iniciá sesión con Google para guardar tus perfiles de impresión y sincronizarlos en todos tus dispositivos.' },
+    'oferta':     { icon:'🏷️', titulo:'Avisarme de ofertas',     desc:'Iniciá sesión con Google para que te avisemos cuando haya ofertas y descuentos disponibles.' },
+    'cupon':      { icon:'🎫', titulo:'Avisarme de cupones',      desc:'Iniciá sesión con Google para recibir cupones de descuento exclusivos cuando estén disponibles.' },
+  };
+  var c = config[contexto] || config['default'];
+  var elIcon   = document.getElementById('login-modal-icon');
+  var elTitulo = document.getElementById('login-modal-titulo');
+  var elDesc   = document.getElementById('login-modal-desc');
+  if(elIcon)   elIcon.textContent   = c.icon;
+  if(elTitulo) elTitulo.textContent = c.titulo;
+  if(elDesc)   elDesc.textContent   = c.desc;
+  var modal = document.getElementById('google-login-modal');
+  if(modal) modal.style.display = 'flex';
+}
 
 function loginConGoogle(){
   var provider = new firebase.auth.GoogleAuthProvider();
@@ -308,7 +331,7 @@ var pdfLogoBase64 = null;
 var precioFinalPDF = 0;
 
 function abrirPDFModal(){
-  if(!window.currentUser){ window._pendingPDF=true; document.getElementById('google-login-modal').style.display='flex'; return; }
+  if(!window.currentUser){ window._pendingPDF=true; mostrarLoginModal('presupuesto'); return; }
   cargarConfigMarca();
   if(itemsPresupuesto.length > 0){ var total = itemsPresupuesto.reduce(function(s,i){return s+i.precio;},0); document.getElementById('pdf-precio-unit').value = Math.round(total); }
   else { var precioRaw=document.getElementById('r-precio').textContent.replace(/[^0-9.,]/g,''); var precioNum=parseFloat(precioRaw.replace(/\./g,'').replace(',','.'))||0; document.getElementById('pdf-precio-unit').value=precioNum>0?Math.round(precioNum):''; }
@@ -853,7 +876,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
           </button>
         </div>
       </div>
-      <button onclick="document.getElementById('google-login-modal').style.display='flex'" id="btn-entrar">Iniciar sesión</button>
+      <button onclick="mostrarLoginModal('default')" id="btn-entrar">Iniciar sesión</button>
     </div>
   </div>
   <div class="header-row2">
@@ -1143,10 +1166,10 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
     </div>
 
     <!-- Tools grid -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;margin-bottom:2.5rem">
+    <div id="herramientas-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;margin-bottom:2.5rem">
 
       <!-- Conversor IMG → SVG -->
-      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('svg-converter')" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="if(typeof abrirHerramienta!=='undefined')abrirHerramienta('svg-converter');else{document.getElementById('herramienta-svg-converter').style.display='block';window.scrollBy(0,400)}" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
         <div style="background:linear-gradient(135deg,#1A1814 0%,#2D6A4F 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">🖼️→📐</div>
         <div style="padding:1.25rem">
           <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:5px">Imagen a SVG</div>
@@ -1159,11 +1182,136 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
         </div>
       </div>
 
+      <!-- Generador QR -->
+      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="if(typeof abrirHerramienta!=='undefined')abrirHerramienta('qr-generator');else document.getElementById('herramienta-qr-generator').style.display='block'" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+        <div style="background:linear-gradient(135deg,#1D4ED8 0%,#1A1814 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">◼️QR</div>
+        <div style="padding:1.25rem">
+          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:5px">Generador de QR</div>
+          <div style="font-size:0.82rem;color:#8A8479;font-family:Outfit,sans-serif;line-height:1.5">Creá códigos QR para tu WhatsApp, Instagram, link de producto o cualquier URL. Descargá en PNG o SVG.</div>
+          <div style="margin-top:1rem;display:flex;gap:6px;flex-wrap:wrap">
+            <span style="background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Gratuito</span>
+            <span style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Sin registro</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Más herramientas próximamente -->
       <div style="background:#F5F2ED;border:1.5px dashed #D4CFC8;border-radius:14px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;text-align:center">
         <div style="font-size:2rem;margin-bottom:0.75rem;opacity:0.4">🔧</div>
         <div style="font-size:0.875rem;font-weight:600;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:4px">Más herramientas</div>
         <div style="font-size:0.78rem;color:#A09890;font-family:Outfit,sans-serif">Próximamente</div>
+      </div>
+    </div>
+
+    <!-- QR GENERATOR TOOL -->
+    <div id="herramienta-qr-generator" style="display:none">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem">
+        <button onclick="cerrarHerramienta()" style="background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;padding:7px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#1A1814;display:flex;align-items:center;gap:6px">← Volver</button>
+        <div>
+          <div style="font-size:1.1rem;font-weight:800;color:#1A1814;font-family:Outfit,sans-serif">Generador de QR</div>
+          <div style="font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif">Creá códigos QR personalizados para compartir</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <!-- Configuración -->
+        <div>
+          <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem;margin-bottom:1rem">
+            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:1rem">¿Qué querés poner en el QR?</div>
+
+            <!-- Tipos presets -->
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem" id="qr-tipos">
+              <button class="qr-tipo-btn active" data-tipo="url" onclick="setQRTipo(this,'url')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#1A1814;color:#fff;border:1.5px solid #1A1814">🔗 URL</button>
+              <button class="qr-tipo-btn" data-tipo="wa" onclick="setQRTipo(this,'wa')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">💬 WhatsApp</button>
+              <button class="qr-tipo-btn" data-tipo="ig" onclick="setQRTipo(this,'ig')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">📸 Instagram</button>
+              <button class="qr-tipo-btn" data-tipo="tel" onclick="setQRTipo(this,'tel')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">📞 Teléfono</button>
+              <button class="qr-tipo-btn" data-tipo="texto" onclick="setQRTipo(this,'texto')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">📝 Texto</button>
+            </div>
+
+            <div id="qr-input-wrap">
+              <label id="qr-input-label" style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;display:block;margin-bottom:5px">URL o link</label>
+              <input type="text" id="qr-input" placeholder="https://..." oninput="generarQR()" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:Outfit,sans-serif;color:#1A1814;outline:none;box-sizing:border-box;transition:border-color 0.2s">
+              <div id="qr-input-hint" style="font-size:0.72rem;color:#8A8479;font-family:Outfit,sans-serif;margin-top:4px"></div>
+            </div>
+
+            <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;display:block;margin-bottom:5px">Color del QR</label>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <input type="color" id="qr-color-dark" value="#1A1814" oninput="generarQR()" style="width:38px;height:34px;padding:2px;border:1px solid #E2DDD6;border-radius:6px;cursor:pointer;background:#F9F9F9">
+                  <input type="text" id="qr-color-dark-hex" value="#1A1814" oninput="document.getElementById('qr-color-dark').value=this.value;generarQR()" style="flex:1;padding:7px 8px;border:1px solid #E2DDD6;border-radius:6px;font-size:0.82rem;font-family:Outfit,sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+                </div>
+              </div>
+              <div>
+                <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;display:block;margin-bottom:5px">Fondo</label>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <input type="color" id="qr-color-light" value="#FFFFFF" oninput="generarQR()" style="width:38px;height:34px;padding:2px;border:1px solid #E2DDD6;border-radius:6px;cursor:pointer;background:#F9F9F9">
+                  <input type="text" id="qr-color-light-hex" value="#FFFFFF" oninput="document.getElementById('qr-color-light').value=this.value;generarQR()" style="flex:1;padding:7px 8px;border:1px solid #E2DDD6;border-radius:6px;font-size:0.82rem;font-family:Outfit,sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:1rem">
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;display:block;margin-bottom:5px">Tamaño: <span id="qr-size-val">256</span>px</label>
+              <input type="range" id="qr-size" min="128" max="512" value="256" step="32" oninput="document.getElementById('qr-size-val').textContent=this.value;generarQR()" style="width:100%;accent-color:#2D6A4F">
+            </div>
+
+            <div style="margin-top:1rem">
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;display:block;margin-bottom:5px">Corrección de errores</label>
+              <select id="qr-ec" oninput="generarQR()" style="width:100%;padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:Outfit,sans-serif;background:#F9F9F9;color:#1A1814;outline:none">
+                <option value="L">L — Baja (datos más compactos)</option>
+                <option value="M" selected>M — Media (recomendado)</option>
+                <option value="Q">Q — Alta</option>
+                <option value="H">H — Máxima (más resistente a daños)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Presets rápidos -->
+          <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem">
+            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:0.875rem">Presets rápidos de Chulengo</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <button onclick="aplicarPresetQR('wa')" style="text-align:left;padding:8px 12px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#1A1814">💬 WhatsApp de Chulengo</button>
+              <button onclick="aplicarPresetQR('web')" style="text-align:left;padding:8px 12px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#1A1814">🌐 Página web de Chulengo</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview QR -->
+        <div>
+          <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.5rem;text-align:center;margin-bottom:1rem">
+            <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:Outfit,sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:1rem">Vista previa</div>
+            <div id="qr-preview-wrap" style="display:flex;align-items:center;justify-content:center;min-height:260px">
+              <div id="qr-canvas-container" style="display:inline-block;border-radius:8px;overflow:hidden"></div>
+              <div id="qr-placeholder" style="display:flex;flex-direction:column;align-items:center;gap:8px;color:#A09890">
+                <div style="font-size:3rem;opacity:0.3">◼</div>
+                <div style="font-size:0.82rem;font-family:Outfit,sans-serif">Escribí algo para generar el QR</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button onclick="descargarQR('png')" id="btn-dl-qr-png" disabled style="flex:1;padding:11px;background:#1A1814;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;opacity:0.4">⬇ PNG</button>
+            <button onclick="descargarQR('svg')" id="btn-dl-qr-svg" disabled style="flex:1;padding:11px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;opacity:0.4">⬇ SVG</button>
+          </div>
+          <button onclick="guardarQRHistorial()" id="btn-guardar-qr" disabled style="width:100%;padding:11px;background:#FFF7ED;color:#9A3412;border:1.5px solid #FED7AA;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px;opacity:0.4">⭐ Guardar en historial</button>
+          <div id="qr-guardado-msg" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;font-size:0.78rem;color:#166534;font-family:Outfit,sans-serif;margin-bottom:8px"></div>
+
+          <div id="qr-link-preview" style="background:#F5F2ED;border-radius:8px;padding:10px 12px;font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif;word-break:break-all;display:none"></div>
+        </div>
+      </div>
+
+      <!-- HISTORIAL QR -->
+      <div style="margin-top:2.5rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif">📚 Mi historial de QRs</div>
+          <div id="qr-historial-count" style="font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif"></div>
+        </div>
+        <div id="qr-historial-contenido">
+          <div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center">
+            <div style="font-size:0.875rem;color:#8A8479;font-family:Outfit,sans-serif">Iniciá sesión para guardar y ver tu historial de QRs.</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1359,7 +1507,7 @@ function showPage(page, btn) {
 function suscribirAviso(tipo, btnEl){
   if(!window.currentUser){
     window._pendingAviso={tipo:tipo,btnId:btnEl.id};
-    document.getElementById('google-login-modal').style.display='flex';
+    mostrarLoginModal(tipo);
     return;
   }
   var u=window.currentUser;
@@ -1386,7 +1534,7 @@ function suscribirAviso(tipo, btnEl){
 function setAvisarWA(tipo, linkEl){
   if(!window.currentUser){
     window._pendingAviso={tipo:tipo};
-    document.getElementById('google-login-modal').style.display='flex';
+    mostrarLoginModal(tipo);
     return false;
   }
   var nombre=window.currentUser.displayName||window.currentUser.email||'';
@@ -1483,7 +1631,7 @@ function renderOptgroupPropios(){
   filamentosPropios.forEach(function(f){ var o=document.createElement('option'); o.value=f.precio; o.textContent='🎨 '+f.nombre+' — '+fmtPeso(f.precio)+'/kg'; o.dataset.propioId=f.id; og.appendChild(o); });
 }
 function toggleFavoritoFilamento(){
-  if(!window.currentUser){ document.getElementById('google-login-modal').style.display='flex'; return; }
+  if(!window.currentUser){ mostrarLoginModal('favoritos'); return; }
   var sel = document.getElementById('sel-material'); var opt = sel.options[sel.selectedIndex];
   if(!opt || !opt.value || opt.value==='custom' || opt.value==='') return;
   var nombre = opt.textContent.replace('⭐ ','').replace('🎨 ','').split(' —')[0].trim(); var precio = Number(opt.value); var id = nombre+'-'+precio;
@@ -1503,7 +1651,7 @@ function actualizarBtnFavorito(){
   btn.style.background = yaFav ? '#FDE68A' : '#FFFBEB';
 }
 function abrirModalFilamentoPropio(){
-  if(!window.currentUser){ document.getElementById('google-login-modal').style.display='flex'; return; }
+  if(!window.currentUser){ mostrarLoginModal('favoritos'); return; }
   document.getElementById('modal-fil-propio').style.display='flex';
   document.getElementById('fil-propio-nombre').value=''; document.getElementById('fil-propio-precio').value=''; document.getElementById('fil-propio-err').textContent='';
 }
@@ -2052,7 +2200,7 @@ function calcularML(){
 }
 calcElec();
 // Cargar perfiles locales al iniciar
-setTimeout(function(){ cargarPerfilesStorage(); }, 600);
+setTimeout(function(){ if(typeof cargarPerfilesStorage!=='undefined') cargarPerfilesStorage(); }, 600);
 function fixBrokenImages(){ document.querySelectorAll('.card-img-wrap img').forEach(function(im){ if(im.complete && im.naturalWidth===0){ im.style.display='none'; } }); }
 window.addEventListener('load', fixBrokenImages); setTimeout(fixBrokenImages, 2000);
 document.addEventListener('keydown', function(e){ if(e.target.type === 'number' && ['e','E','+','-'].includes(e.key)){ e.preventDefault(); } });
@@ -2362,7 +2510,7 @@ function obtenerConfigActual(){
 function abrirModalGuardarPerfil(){
   if(!window.currentUser){
     window._pendingGuardarPerfil = true;
-    document.getElementById('google-login-modal').style.display='flex';
+    mostrarLoginModal('perfiles');
     return;
   }
   var existing = document.getElementById('modal-guardar-perfil');
@@ -2596,6 +2744,366 @@ function toggleDark(){
   }
 })();
 // ══════════════════════════════════════════════
+// HERRAMIENTAS - GENERADOR QR
+// ══════════════════════════════════════════════
+var qrInstance = null;
+var qrTipoActual = 'url';
+
+function setQRTipo(btn, tipo){
+  qrTipoActual = tipo;
+  document.querySelectorAll('.qr-tipo-btn').forEach(function(b){
+    b.style.background = '#F5F2ED';
+    b.style.color = '#1A1814';
+    b.style.borderColor = '#E2DDD6';
+  });
+  btn.style.background = '#1A1814';
+  btn.style.color = '#fff';
+  btn.style.borderColor = '#1A1814';
+
+  var inp = document.getElementById('qr-input');
+  var lbl = document.getElementById('qr-input-label');
+  var hint = document.getElementById('qr-input-hint');
+  var configs = {
+    'url':    { label:'URL o link', placeholder:'https://...', hint:'Cualquier dirección web' },
+    'wa':     { label:'Número de WhatsApp', placeholder:'+54 9 280 4585359', hint:'Con código de país. El QR abrirá un chat directo en WhatsApp.' },
+    'ig':     { label:'Usuario de Instagram', placeholder:'@chulengoestudio', hint:'Solo el usuario, sin el link completo.' },
+    'tel':    { label:'Número de teléfono', placeholder:'+54 9 280 4585359', hint:'Con código de país' },
+    'texto':  { label:'Texto libre', placeholder:'Hola! Somos Chulengo Estudio...', hint:'Cualquier texto que quieras codificar' },
+  };
+  var c = configs[tipo];
+  if(lbl) lbl.textContent = c.label;
+  if(inp){ inp.placeholder = c.placeholder; inp.value = ''; }
+  if(hint) hint.textContent = c.hint;
+  generarQR();
+}
+
+function getQRValue(){
+  var val = (document.getElementById('qr-input').value || '').trim();
+  if(!val) return '';
+  switch(qrTipoActual){
+    case 'wa':
+      var num = val.replace(/\D/g,'');
+      return 'https://wa.me/' + num;
+    case 'ig':
+      var user = val.replace('@','').trim();
+      return 'https://instagram.com/' + user;
+    case 'tel':
+      return 'tel:' + val.replace(/\s/g,'');
+    default:
+      return val;
+  }
+}
+
+function generarQR(){
+  var valor = getQRValue();
+  var container = document.getElementById('qr-canvas-container');
+  var placeholder = document.getElementById('qr-placeholder');
+  var linkPreview = document.getElementById('qr-link-preview');
+  var btnPng = document.getElementById('btn-dl-qr-png');
+  var btnSvg = document.getElementById('btn-dl-qr-svg');
+
+  if(!valor){
+    container.style.display = 'none';
+    container.innerHTML = '';
+    if(placeholder) placeholder.style.display = 'flex';
+    if(linkPreview) linkPreview.style.display = 'none';
+    if(btnPng){ btnPng.disabled=true; btnPng.style.opacity='0.4'; }
+    if(btnSvg){ btnSvg.disabled=true; btnSvg.style.opacity='0.4'; }
+    qrInstance = null;
+    return;
+  }
+
+  if(placeholder) placeholder.style.display = 'none';
+  container.style.display = 'inline-block';
+  container.innerHTML = '';
+
+  var size = parseInt(document.getElementById('qr-size').value) || 256;
+  var dark = document.getElementById('qr-color-dark').value || '#1A1814';
+  var light = document.getElementById('qr-color-light').value || '#FFFFFF';
+  var ec = document.getElementById('qr-ec').value || 'M';
+
+  // Sync hex inputs
+  document.getElementById('qr-color-dark-hex').value = dark;
+  document.getElementById('qr-color-light-hex').value = light;
+
+  try {
+    if(typeof QRCode !== 'undefined'){
+      qrInstance = new QRCode(container, {
+        text: valor,
+        width: size,
+        height: size,
+        colorDark: dark,
+        colorLight: light,
+        correctLevel: QRCode.CorrectLevel[ec] || QRCode.CorrectLevel.M
+      });
+    } else {
+      container.innerHTML = '<div style="padding:2rem;color:#B91C1C;font-size:0.85rem">Error: librería QR no cargada. Recargá la página.</div>';
+    }
+  } catch(e){
+    container.innerHTML = '<div style="padding:1rem;color:#B91C1C;font-size:0.82rem;font-family:Outfit,sans-serif">Error: '+e.message+'</div>';
+  }
+
+  // Link preview
+  if(linkPreview){
+    linkPreview.style.display = 'block';
+    linkPreview.innerHTML = '<b>Contenido del QR:</b> ' + valor;
+  }
+
+  if(btnPng){ btnPng.disabled=false; btnPng.style.opacity='1'; }
+  if(btnSvg){ btnSvg.disabled=false; btnSvg.style.opacity='1'; }
+  var btnGuardar = document.getElementById('btn-guardar-qr');
+  if(btnGuardar){ btnGuardar.disabled=false; btnGuardar.style.opacity='1'; }
+  var guardadoMsg = document.getElementById('qr-guardado-msg');
+  if(guardadoMsg) guardadoMsg.style.display='none';
+  // Reset guardar button
+  if(btnGuardar){ btnGuardar.textContent=''; btnGuardar.innerHTML='⭐ Guardar en historial'; btnGuardar.style.background='#FFF7ED'; btnGuardar.style.color='#9A3412'; btnGuardar.style.borderColor='#FED7AA'; }
+}
+
+function descargarQR(formato){
+  var container = document.getElementById('qr-canvas-container');
+  var valor = getQRValue();
+  if(!valor || !container) return;
+
+  var nombre = 'qr-chulengo';
+  var inp = document.getElementById('qr-input').value.trim();
+  if(inp) nombre = 'qr-' + inp.replace(/[^a-zA-Z0-9]/g,'-').slice(0,30);
+
+  if(formato === 'png'){
+    var canvas = container.querySelector('canvas');
+    if(!canvas){
+      // QRCode renders as img in some browsers
+      var img = container.querySelector('img');
+      if(img){
+        var a = document.createElement('a');
+        a.href = img.src;
+        a.download = nombre + '.png';
+        a.click();
+        return;
+      }
+    }
+    if(canvas){
+      var a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = nombre + '.png';
+      a.click();
+    }
+  } else if(formato === 'svg'){
+    var size = parseInt(document.getElementById('qr-size').value) || 256;
+    var dark = document.getElementById('qr-color-dark').value || '#1A1814';
+    var light = document.getElementById('qr-color-light').value || '#FFFFFF';
+
+    // Generate SVG using QRCode data from canvas
+    var canvas = container.querySelector('canvas');
+    if(canvas){
+      // Convert canvas to SVG by reading pixel data
+      var ctx = canvas.getContext('2d');
+      var imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var cellSize = canvas.width / Math.round(Math.sqrt(canvas.width));
+      var svgCells = '';
+      var w = canvas.width, h = canvas.height;
+      var step = Math.max(1, Math.round(w / 40)); // approximate cell size
+
+      // Simple approach: embed canvas as image in SVG
+      var dataURL = canvas.toDataURL('image/png');
+      var svgStr = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+size+' '+size+'" width="'+size+'" height="'+size+'">'+
+        '<rect width="'+size+'" height="'+size+'" fill="'+light+'"/>'+
+        '<image href="'+dataURL+'" width="'+size+'" height="'+size+'"/>'+
+        '</svg>';
+      var blob = new Blob([svgStr], {type:'image/svg+xml'});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = nombre+'.svg'; a.click();
+      URL.revokeObjectURL(url);
+    }
+  }
+}
+
+function guardarQRHistorial(){
+  var valor = getQRValue();
+  if(!valor){ return; }
+  if(!window.currentUser){
+    window._pendingGuardarQR = true;
+    mostrarLoginModal('default');
+    return;
+  }
+
+  var btn = document.getElementById('btn-guardar-qr');
+  if(btn){ btn.innerHTML='⏳ Guardando...'; btn.disabled=true; }
+
+  // Capturar preview del QR como PNG base64
+  var container = document.getElementById('qr-canvas-container');
+  var canvas = container ? container.querySelector('canvas') : null;
+  var previewData = canvas ? canvas.toDataURL('image/png') : null;
+
+  var size = parseInt(document.getElementById('qr-size').value)||256;
+  var dark = document.getElementById('qr-color-dark').value||'#1A1814';
+  var light = document.getElementById('qr-color-light').value||'#FFFFFF';
+  var ec = document.getElementById('qr-ec').value||'M';
+  var inp = document.getElementById('qr-input').value.trim();
+
+  var entry = {
+    uid: window.currentUser.uid,
+    fecha: firebase.firestore.FieldValue.serverTimestamp(),
+    tipo: qrTipoActual,
+    input: inp,
+    valor: valor,
+    colorDark: dark,
+    colorLight: light,
+    size: size,
+    ec: ec,
+    previewData: previewData || ''
+  };
+
+  firebase.firestore().collection('qr_historial').add(entry)
+    .then(function(){
+      var msg = document.getElementById('qr-guardado-msg');
+      if(msg){ msg.style.display='block'; msg.textContent='✓ QR guardado en tu historial.'; }
+      if(btn){ btn.innerHTML='✓ Guardado'; btn.style.background='#F0FDF4'; btn.style.color='#166534'; btn.style.borderColor='#BBF7D0'; }
+      cargarHistorialQR();
+    })
+    .catch(function(e){
+      var msg = document.getElementById('qr-guardado-msg');
+      if(msg){ msg.style.display='block'; msg.style.background='#FEF2F2'; msg.style.color='#B91C1C'; msg.textContent='Error: '+e.message; }
+      if(btn){ btn.innerHTML='⭐ Guardar en historial'; btn.disabled=false; }
+    });
+}
+
+function cargarHistorialQR(){
+  var cont  = document.getElementById('qr-historial-contenido');
+  var count = document.getElementById('qr-historial-count');
+  if(!cont) return;
+
+  if(!window.currentUser){
+    cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:Outfit,sans-serif">Iniciá sesión para guardar y ver tu historial de QRs.</div></div>';
+    return;
+  }
+
+  cont.innerHTML='<div style="text-align:center;padding:1.5rem;color:#8A8479;font-family:Outfit,sans-serif;font-size:0.875rem">Cargando historial...</div>';
+
+  firebase.firestore().collection('qr_historial')
+    .where('uid','==',window.currentUser.uid)
+    .orderBy('fecha','desc')
+    .limit(30)
+    .get()
+    .then(function(snap){
+      if(snap.empty){
+        cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:Outfit,sans-serif">Todavía no guardaste ningún QR. Generá uno y guardalo.</div></div>';
+        return;
+      }
+      if(count) count.textContent = snap.size + ' QR'+(snap.size!==1?'s':'');
+      cont.innerHTML='';
+      var grid = document.createElement('div');
+      grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px';
+
+      snap.forEach(function(doc){
+        var d = doc.data();
+        var fecha = d.fecha ? d.fecha.toDate().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+        var tipoLabel = {url:'🔗 URL',wa:'💬 WhatsApp',ig:'📸 Instagram',tel:'📞 Teléfono',texto:'📝 Texto'}[d.tipo]||'QR';
+
+        var card = document.createElement('div');
+        card.style.cssText='background:#fff;border:1px solid #E2DDD6;border-radius:10px;overflow:hidden;transition:all 0.15s';
+        card.onmouseover=function(){this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)';};
+        card.onmouseout=function(){this.style.boxShadow='';};
+
+        // Preview
+        var previewDiv = document.createElement('div');
+        previewDiv.style.cssText='background:#F5F2ED;height:120px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px';
+        if(d.previewData){
+          var img=document.createElement('img');
+          img.src=d.previewData;
+          img.style.cssText='max-width:100%;max-height:100%;object-fit:contain';
+          previewDiv.appendChild(img);
+        } else {
+          previewDiv.innerHTML='<div style="font-size:2rem;opacity:0.3">◼</div>';
+        }
+
+        var info = document.createElement('div');
+        info.style.cssText='padding:10px 12px';
+        info.innerHTML=
+          '<div style="font-size:0.72rem;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:2px">'+tipoLabel+'</div>'+
+          '<div style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(d.input||d.valor||'—')+'</div>'+
+          '<div style="font-size:0.7rem;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:8px">'+fecha+'</div>'+
+          '<div style="display:flex;gap:5px">'+
+            '<button data-qrid="'+doc.id+'" class="btn-regenerar-qr" style="flex:1;padding:6px;background:#2D6A4F;color:#fff;border:none;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">↺ Cargar</button>'+
+            '<button data-qrid="'+doc.id+'" class="btn-dl-qr-hist" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">⬇ PNG</button>'+
+            '<button data-qrid="'+doc.id+'" class="btn-del-qr" style="padding:6px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.72rem;cursor:pointer">🗑</button>'+
+          '</div>';
+
+        card.appendChild(previewDiv);
+        card.appendChild(info);
+        grid.appendChild(card);
+      });
+      cont.appendChild(grid);
+    })
+    .catch(function(e){
+      cont.innerHTML='<div style="color:#B91C1C;padding:1rem;font-size:0.85rem;font-family:Outfit,sans-serif">Error: '+e.message+'</div>';
+    });
+}
+
+// Event delegation for QR historial buttons
+document.addEventListener('click', function(e){
+  var regen = e.target.closest('.btn-regenerar-qr');
+  var dlBtn  = e.target.closest('.btn-dl-qr-hist');
+  var delBtn = e.target.closest('.btn-del-qr');
+
+  if(regen){
+    var id = regen.dataset.qrid;
+    firebase.firestore().collection('qr_historial').doc(id).get().then(function(doc){
+      if(!doc.exists) return;
+      var d = doc.data();
+      // Set tipo
+      var tipoBtn = document.querySelector('.qr-tipo-btn[data-tipo="'+d.tipo+'"]');
+      if(tipoBtn) setQRTipo(tipoBtn, d.tipo);
+      // Set input
+      var inp = document.getElementById('qr-input');
+      if(inp) inp.value = d.input||'';
+      // Set colors
+      document.getElementById('qr-color-dark').value = d.colorDark||'#1A1814';
+      document.getElementById('qr-color-dark-hex').value = d.colorDark||'#1A1814';
+      document.getElementById('qr-color-light').value = d.colorLight||'#FFFFFF';
+      document.getElementById('qr-color-light-hex').value = d.colorLight||'#FFFFFF';
+      document.getElementById('qr-size').value = d.size||256;
+      document.getElementById('qr-size-val').textContent = d.size||256;
+      document.getElementById('qr-ec').value = d.ec||'M';
+      generarQR();
+      // Scroll to preview
+      document.getElementById('qr-canvas-container').scrollIntoView({behavior:'smooth',block:'center'});
+      mostrarToastCalc('✓ QR cargado — podés editarlo y descargarlo');
+    });
+  }
+
+  if(dlBtn){
+    var id = dlBtn.dataset.qrid;
+    firebase.firestore().collection('qr_historial').doc(id).get().then(function(doc){
+      if(!doc.exists||!doc.data().previewData) return;
+      var a=document.createElement('a');
+      a.href=doc.data().previewData;
+      a.download='qr-chulengo.png';
+      a.click();
+    });
+  }
+
+  if(delBtn){
+    var id = delBtn.dataset.qrid;
+    if(!confirm('¿Eliminar este QR del historial?')) return;
+    firebase.firestore().collection('qr_historial').doc(id).delete()
+      .then(function(){ cargarHistorialQR(); });
+  }
+});
+
+function aplicarPresetQR(tipo){
+  var input = document.getElementById('qr-input');
+  var presets = {
+    'wa':  'https://wa.me/5492804585359',
+    'web': 'https://fabros15.github.io/chulengo-stock/'
+  };
+  // Set to URL mode
+  setQRTipo(document.querySelector('.qr-tipo-btn[data-tipo="url"]'), 'url');
+  if(input) input.value = presets[tipo] || '';
+  generarQR();
+}
+
+// ══════════════════════════════════════════════
 // HERRAMIENTAS - IMAGEN A SVG
 // ══════════════════════════════════════════════
 var svgActual = null;
@@ -2603,16 +3111,31 @@ var svgNombreArchivo = 'imagen';
 var svgHistorial = [];
 
 function abrirHerramienta(id){
-  document.getElementById('herramienta-svg-converter').style.display = 'block';
+  // Ocultar todas las herramientas
   document.querySelectorAll('[id^="herramienta-"]').forEach(function(el){
-    if(el.id !== 'herramienta-'+id) el.style.display='none';
+    el.style.display = 'none';
   });
-  document.querySelectorAll('.herramienta-card').forEach(function(el){ el.style.display='none'; });
-  // Hide grid, show tool
-  var grid = document.querySelector('#page-herramientas > div > div:first-of-type + div');
-  // just scroll to tool
-  document.getElementById('herramienta-svg-converter').scrollIntoView({behavior:'smooth'});
-  cargarHistorialSVG();
+  // Ocultar grid de cards
+  var grid = document.getElementById('herramientas-cards-grid');
+  if(grid) grid.style.display = 'none';
+
+  // Mostrar la herramienta seleccionada
+  var tool = document.getElementById('herramienta-'+id);
+  if(tool){
+    tool.style.display = 'block';
+    tool.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  if(id === 'svg-converter') cargarHistorialSVG();
+  if(id === 'qr-generator') cargarHistorialQR();
+}
+
+function cerrarHerramienta(){
+  document.querySelectorAll('[id^="herramienta-"]').forEach(function(el){
+    el.style.display = 'none';
+  });
+  var grid = document.getElementById('herramientas-cards-grid');
+  if(grid) grid.style.display = 'grid';
+  window.scrollTo(0,0);
 }
 
 function cerrarHerramienta(){
@@ -2754,7 +3277,7 @@ function guardarSVGHistorial(){
   if(!svgActual){ return; }
   if(!window.currentUser){
     window._pendingSVG = true;
-    document.getElementById('google-login-modal').style.display='flex';
+    mostrarLoginModal('svg');
     return;
   }
   var btn = document.getElementById('btn-guardar-svg');
@@ -2855,8 +3378,8 @@ function cargarHistorialSVG(){
         info.innerHTML='<div style="font-size:0.82rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(d.nombre||'svg')+'</div>'+
           '<div style="font-size:0.72rem;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:8px">'+fecha+' · '+kb+'</div>'+
           '<div style="display:flex;gap:6px">'+
-            '<button onclick="descargarSVGHistorial(''+doc.id+'')" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">⬇ SVG</button>'+
-            '<button onclick="eliminarSVGHistorial(''+doc.id+'',this)" style="padding:6px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.75rem;cursor:pointer">🗑</button>'+
+            '<button data-id="'+doc.id+'" class="btn-dl-svg" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">⬇ SVG</button>'+
+            '<button data-id="'+doc.id+'" class="btn-del-svg" style="padding:6px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.75rem;cursor:pointer">🗑</button>'+
           '</div>';
 
         card.appendChild(previewDiv);
@@ -2882,11 +3405,19 @@ function descargarSVGHistorial(docId){
   });
 }
 
-function eliminarSVGHistorial(docId, btn){
+function eliminarSVGHistorial(docId){
   if(!confirm('¿Eliminar este SVG del historial?')) return;
   firebase.firestore().collection('svg_historial').doc(docId).delete()
     .then(function(){ cargarHistorialSVG(); });
 }
+
+// Event delegation for svg history buttons
+document.addEventListener('click', function(e){
+  var dlBtn = e.target.closest('.btn-dl-svg');
+  var delBtn = e.target.closest('.btn-del-svg');
+  if(dlBtn){ descargarSVGHistorial(dlBtn.dataset.id); }
+  if(delBtn){ eliminarSVGHistorial(delBtn.dataset.id); }
+});
 
 
 </script>
@@ -2899,9 +3430,9 @@ function eliminarSVGHistorial(docId, btn){
   <div style="background:#fff;border-radius:20px;padding:2rem;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
     <button onclick="document.getElementById('google-login-modal').style.display='none'" style="float:right;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#8A8479;margin-top:-8px">✕</button>
     <div style="clear:both"></div>
-    <div style="font-size:2.5rem;margin-bottom:0.75rem">📄</div>
-    <div style="font-size:1.1rem;font-weight:700;color:#1A1814;font-family:'Outfit',sans-serif;margin-bottom:0.5rem">Guardá tus presupuestos</div>
-    <div style="font-size:0.82rem;color:#8A8479;font-family:'Outfit',sans-serif;line-height:1.6;margin-bottom:1.5rem">Iniciá sesión gratis con Google para generar presupuestos en PDF, guardar tu historial y recibir avisos de ofertas y cupones.</div>
+    <div id="login-modal-icon" style="font-size:2.5rem;margin-bottom:0.75rem">📄</div>
+    <div id="login-modal-titulo" style="font-size:1.1rem;font-weight:700;color:#1A1814;font-family:'Outfit',sans-serif;margin-bottom:0.5rem">Guardá tus presupuestos</div>
+    <div id="login-modal-desc" style="font-size:0.82rem;color:#8A8479;font-family:'Outfit',sans-serif;line-height:1.6;margin-bottom:1.5rem">Iniciá sesión gratis con Google para generar presupuestos en PDF, guardar tu historial y recibir avisos de ofertas y cupones.</div>
     <button onclick="loginConGoogle()" style="width:100%;padding:12px;background:#fff;color:#1A1814;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.95rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:0.75rem;transition:background 0.2s" onmouseover="this.style.background='#F5F2ED'" onmouseout="this.style.background='#fff'">
       <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
       Continuar con Google
