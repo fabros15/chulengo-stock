@@ -10,6 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/jankovicsandras/imagetracerjs/imagetracer_v1.2.6.js"></script>
 <script>
 firebase.initializeApp({
   apiKey: "AIzaSyAmCmiHMah0Vm9Lu8mK-BnFO_42fqSUYRQ",
@@ -65,6 +66,11 @@ document.addEventListener('DOMContentLoaded', function(){
       // Cargar perfiles guardados
       setTimeout(function(){ cargarPerfilesStorage(); }, 500);
       if(window._pendingGuardarPerfil){ window._pendingGuardarPerfil=false; setTimeout(abrirModalGuardarPerfil, 300); }
+      if(window._pendingSVG){ window._pendingSVG=false; setTimeout(guardarSVGHistorial, 300); }
+      // Recargar historial SVG si la herramienta está visible
+      if(document.getElementById('herramienta-svg-converter').style.display!=='none'){
+        setTimeout(cargarHistorialSVG, 400);
+      }
       if(window._pendingAviso){
         var pa=window._pendingAviso; window._pendingAviso=null;
         var btn=pa.btnId?document.getElementById(pa.btnId):document.getElementById('btn-avisar-'+pa.tipo+'-mail');
@@ -856,6 +862,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       <button class="nav-tab" onclick="showPage('ofertas',this)">Ofertas</button>
       <button class="nav-tab" onclick="showPage('cupones',this)">Cupones</button>
       <button class="nav-tab" onclick="showPage('calc',this)">Calculadora de costos</button>
+      <button class="nav-tab" onclick="showPage('herramientas',this)">Herramientas</button>
     </div>
     <div class="nav-row2-right">
       
@@ -1122,6 +1129,144 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
       <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.115.549 4.1 1.508 5.83L.057 23.077a.75.75 0 0 0 .916.953l5.453-1.427A11.933 11.933 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.715 9.715 0 0 1-4.951-1.355l-.355-.211-3.676.962.98-3.578-.231-.368A9.715 9.715 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
       Avisarme cuando haya stock
     </a>
+  </div>
+</div>
+
+<!-- HERRAMIENTAS PAGE -->
+<div class="page" id="page-herramientas">
+  <div style="max-width:1100px;margin:0 auto;padding:2rem 1.25rem 6rem">
+
+    <!-- Header -->
+    <div style="margin-bottom:2rem">
+      <h1 style="font-size:1.4rem;font-weight:800;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:6px">Herramientas</h1>
+      <p style="font-size:0.875rem;color:#8A8479;font-family:Outfit,sans-serif">Utilidades para tu flujo de trabajo de impresión 3D</p>
+    </div>
+
+    <!-- Tools grid -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;margin-bottom:2.5rem">
+
+      <!-- Conversor IMG → SVG -->
+      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('svg-converter')" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+        <div style="background:linear-gradient(135deg,#1A1814 0%,#2D6A4F 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">🖼️→📐</div>
+        <div style="padding:1.25rem">
+          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:5px">Imagen a SVG</div>
+          <div style="font-size:0.82rem;color:#8A8479;font-family:Outfit,sans-serif;line-height:1.5">Convertí fotos o logos en vectores SVG listos para usar en tus diseños 3D. Descarga gratuita, sin login.</div>
+          <div style="margin-top:1rem;display:flex;gap:6px;flex-wrap:wrap">
+            <span style="background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Gratuito</span>
+            <span style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Sin registro</span>
+            <span style="background:#FFF7ED;color:#9A3412;border:1px solid #FED7AA;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Historial con cuenta</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Más herramientas próximamente -->
+      <div style="background:#F5F2ED;border:1.5px dashed #D4CFC8;border-radius:14px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;text-align:center">
+        <div style="font-size:2rem;margin-bottom:0.75rem;opacity:0.4">🔧</div>
+        <div style="font-size:0.875rem;font-weight:600;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:4px">Más herramientas</div>
+        <div style="font-size:0.78rem;color:#A09890;font-family:Outfit,sans-serif">Próximamente</div>
+      </div>
+    </div>
+
+    <!-- SVG CONVERTER TOOL -->
+    <div id="herramienta-svg-converter" style="display:none">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem">
+        <button onclick="cerrarHerramienta()" style="background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;padding:7px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#1A1814;display:flex;align-items:center;gap:6px">← Volver</button>
+        <div>
+          <div style="font-size:1.1rem;font-weight:800;color:#1A1814;font-family:Outfit,sans-serif">Imagen a SVG</div>
+          <div style="font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif">Convertí PNG, JPG o GIF a vectores SVG</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <!-- Panel izquierdo: upload + opciones -->
+        <div>
+          <!-- Drop zone -->
+          <div id="svg-dropzone" onclick="document.getElementById('svg-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='#2D6A4F'" ondragleave="this.style.borderColor='#E2DDD6'" ondrop="handleSVGDrop(event)" style="background:#F9F9F9;border:2px dashed #E2DDD6;border-radius:12px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:1rem">
+            <div style="font-size:2.5rem;margin-bottom:0.75rem">📁</div>
+            <div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:4px">Arrastrá tu imagen acá</div>
+            <div style="font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif">o hacé clic para seleccionar · PNG, JPG, GIF, BMP</div>
+            <input type="file" id="svg-file-input" accept="image/*" style="display:none" onchange="cargarImagenSVG(this.files[0])">
+          </div>
+
+          <!-- Preview imagen original -->
+          <div id="svg-original-wrap" style="display:none;margin-bottom:1rem">
+            <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Imagen original</div>
+            <img id="svg-original-img" style="width:100%;border-radius:10px;border:1px solid #E2DDD6;max-height:250px;object-fit:contain;background:#F5F2ED">
+          </div>
+
+          <!-- Opciones de conversión -->
+          <div id="svg-opciones" style="display:none;background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem">
+            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:1rem">Opciones de conversión</div>
+
+            <div style="margin-bottom:0.875rem">
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;display:block;margin-bottom:5px">Número de colores <span id="svg-colores-val" style="color:#2D6A4F">8</span></label>
+              <input type="range" id="svg-colores" min="2" max="32" value="8" oninput="document.getElementById('svg-colores-val').textContent=this.value" style="width:100%;accent-color:#2D6A4F">
+            </div>
+
+            <div style="margin-bottom:0.875rem">
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;display:block;margin-bottom:5px">Suavizado de bordes</label>
+              <select id="svg-blur" style="width:100%;padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:Outfit,sans-serif;background:#F9F9F9;color:#1A1814;outline:none">
+                <option value="0">Sin suavizado (más nítido)</option>
+                <option value="1" selected>Leve (recomendado)</option>
+                <option value="2">Medio</option>
+                <option value="3">Alto (más suave)</option>
+              </select>
+            </div>
+
+            <div style="margin-bottom:1rem">
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;display:block;margin-bottom:5px">Tolerancia de color <span id="svg-tol-val" style="color:#2D6A4F">32</span></label>
+              <input type="range" id="svg-tolerancia" min="1" max="128" value="32" oninput="document.getElementById('svg-tol-val').textContent=this.value" style="width:100%;accent-color:#2D6A4F">
+            </div>
+
+            <button onclick="convertirASVG()" id="btn-convertir" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
+              <span id="btn-convertir-icon">⚡</span> Convertir a SVG
+            </button>
+          </div>
+        </div>
+
+        <!-- Panel derecho: resultado -->
+        <div>
+          <div id="svg-resultado-wrap" style="display:none">
+            <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Resultado SVG</div>
+            <div id="svg-preview" style="background:#F5F2ED;border:1px solid #E2DDD6;border-radius:10px;min-height:250px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:1rem"></div>
+
+            <div style="display:flex;gap:8px;margin-bottom:0.75rem">
+              <button onclick="descargarSVG()" style="flex:1;padding:11px;background:#1A1814;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px">
+                ⬇ Descargar SVG
+              </button>
+              <button onclick="guardarSVGHistorial()" id="btn-guardar-svg" style="flex:1;padding:11px;background:#FFF7ED;color:#9A3412;border:1px solid #FED7AA;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px">
+                ⭐ Guardar en historial
+              </button>
+            </div>
+            <div id="svg-guardado-msg" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;font-size:0.78rem;color:#166534;font-family:Outfit,sans-serif;margin-bottom:0.75rem"></div>
+
+            <div style="background:#fff;border:1px solid #E2DDD6;border-radius:10px;padding:1rem">
+              <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:6px">Info del archivo</div>
+              <div id="svg-info" style="font-size:0.82rem;color:#1A1814;font-family:Outfit,sans-serif;line-height:1.6"></div>
+            </div>
+          </div>
+
+          <div id="svg-resultado-placeholder" style="background:#F9F9F9;border:1px solid #E2DDD6;border-radius:10px;min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem">
+            <div style="font-size:2rem;margin-bottom:0.75rem;opacity:0.3">📐</div>
+            <div style="font-size:0.875rem;color:#A09890;font-family:Outfit,sans-serif">El SVG generado aparecerá acá</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORIAL -->
+      <div id="svg-historial-section" style="margin-top:2.5rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif">📚 Mi historial de SVGs</div>
+          <div id="svg-historial-count" style="font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif"></div>
+        </div>
+        <div id="svg-historial-contenido">
+          <div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center">
+            <div style="font-size:0.875rem;color:#8A8479;font-family:Outfit,sans-serif" id="svg-historial-msg">Iniciá sesión para guardar y ver tu historial de SVGs.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -2450,6 +2595,300 @@ function toggleDark(){
     });
   }
 })();
+// ══════════════════════════════════════════════
+// HERRAMIENTAS - IMAGEN A SVG
+// ══════════════════════════════════════════════
+var svgActual = null;
+var svgNombreArchivo = 'imagen';
+var svgHistorial = [];
+
+function abrirHerramienta(id){
+  document.getElementById('herramienta-svg-converter').style.display = 'block';
+  document.querySelectorAll('[id^="herramienta-"]').forEach(function(el){
+    if(el.id !== 'herramienta-'+id) el.style.display='none';
+  });
+  document.querySelectorAll('.herramienta-card').forEach(function(el){ el.style.display='none'; });
+  // Hide grid, show tool
+  var grid = document.querySelector('#page-herramientas > div > div:first-of-type + div');
+  // just scroll to tool
+  document.getElementById('herramienta-svg-converter').scrollIntoView({behavior:'smooth'});
+  cargarHistorialSVG();
+}
+
+function cerrarHerramienta(){
+  document.getElementById('herramienta-svg-converter').style.display='none';
+  window.scrollTo(0,0);
+}
+
+function handleSVGDrop(e){
+  e.preventDefault();
+  document.getElementById('svg-dropzone').style.borderColor='#E2DDD6';
+  var file = e.dataTransfer.files[0];
+  if(file && file.type.startsWith('image/')) cargarImagenSVG(file);
+}
+
+function cargarImagenSVG(file){
+  if(!file) return;
+  svgNombreArchivo = file.name.replace(/\.[^.]+$/, '');
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = document.getElementById('svg-original-img');
+    img.src = e.target.result;
+    document.getElementById('svg-original-wrap').style.display='block';
+    document.getElementById('svg-opciones').style.display='block';
+    document.getElementById('svg-dropzone').style.display='none';
+    // Reset resultado
+    svgActual = null;
+    document.getElementById('svg-resultado-wrap').style.display='none';
+    document.getElementById('svg-resultado-placeholder').style.display='flex';
+    document.getElementById('svg-guardado-msg').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function convertirASVG(){
+  var imgEl = document.getElementById('svg-original-img');
+  if(!imgEl.src || imgEl.src === window.location.href) return;
+
+  var btn = document.getElementById('btn-convertir');
+  btn.innerHTML = '<div style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite"></div> Convirtiendo...';
+  btn.disabled = true;
+
+  // Draw image to canvas
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  var img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = function(){
+    // Max 800px para mejor performance
+    var maxW = 800, maxH = 800;
+    var scale = Math.min(maxW/img.width, maxH/img.height, 1);
+    canvas.width  = Math.round(img.width  * scale);
+    canvas.height = Math.round(img.height * scale);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    var colores = parseInt(document.getElementById('svg-colores').value);
+    var blur    = parseInt(document.getElementById('svg-blur').value);
+    var tol     = parseInt(document.getElementById('svg-tolerancia').value);
+
+    setTimeout(function(){
+      try {
+        var opts = {
+          numberofcolors: colores,
+          blurradius: blur,
+          colorquantcycles: 3,
+          ltres: tol / 100,
+          qtres: tol / 100,
+          pathomit: 4,
+          rightangleenhance: true,
+          scale: 1
+        };
+
+        if(typeof ImageTracer !== 'undefined'){
+          var svgString = ImageTracer.imagedataToSVG(
+            ctx.getImageData(0, 0, canvas.width, canvas.height),
+            opts
+          );
+          mostrarResultadoSVG(svgString, canvas.width, canvas.height);
+        } else {
+          // Fallback: simple SVG with embedded image
+          var dataURL = canvas.toDataURL('image/png');
+          var svgFallback = '<svg xmlns="http://www.w3.org/2000/svg" width="'+canvas.width+'" height="'+canvas.height+'">'+
+            '<image href="'+dataURL+'" width="'+canvas.width+'" height="'+canvas.height+'"/>'+
+            '</svg>';
+          mostrarResultadoSVG(svgFallback, canvas.width, canvas.height);
+        }
+      } catch(err){
+        console.error(err);
+        btn.innerHTML = '<span id="btn-convertir-icon">⚡</span> Convertir a SVG';
+        btn.disabled = false;
+        alert('Error al convertir: ' + err.message);
+      }
+    }, 50);
+  };
+  img.src = imgEl.src;
+}
+
+function mostrarResultadoSVG(svgString, w, h){
+  svgActual = svgString;
+  var bytes = new Blob([svgString]).size;
+  var kb = (bytes/1024).toFixed(1);
+
+  // Preview
+  var preview = document.getElementById('svg-preview');
+  preview.innerHTML = '';
+  var div = document.createElement('div');
+  div.style.cssText = 'width:100%;max-height:300px;overflow:hidden';
+  div.innerHTML = svgString;
+  var svgEl = div.querySelector('svg');
+  if(svgEl){ svgEl.style.width='100%'; svgEl.style.height='auto'; svgEl.style.maxHeight='290px'; }
+  preview.appendChild(div);
+
+  // Info
+  document.getElementById('svg-info').innerHTML =
+    '<b>Tamaño:</b> '+kb+' KB<br>'+
+    '<b>Dimensiones:</b> '+w+' × '+h+' px<br>'+
+    '<b>Archivo:</b> '+svgNombreArchivo+'.svg';
+
+  document.getElementById('svg-resultado-wrap').style.display='block';
+  document.getElementById('svg-resultado-placeholder').style.display='none';
+  document.getElementById('svg-guardado-msg').style.display='none';
+
+  var btn = document.getElementById('btn-convertir');
+  btn.innerHTML = '<span>⚡</span> Convertir de nuevo';
+  btn.disabled = false;
+}
+
+function descargarSVG(){
+  if(!svgActual) return;
+  var blob = new Blob([svgActual], {type:'image/svg+xml'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = svgNombreArchivo + '.svg';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function guardarSVGHistorial(){
+  if(!svgActual){ return; }
+  if(!window.currentUser){
+    window._pendingSVG = true;
+    document.getElementById('google-login-modal').style.display='flex';
+    return;
+  }
+  var btn = document.getElementById('btn-guardar-svg');
+  btn.innerHTML = '⏳ Guardando...';
+  btn.disabled = true;
+
+  // Comprimir SVG si es muy grande (>500KB)
+  var bytes = new Blob([svgActual]).size;
+  if(bytes > 500000){
+    document.getElementById('svg-guardado-msg').style.display='block';
+    document.getElementById('svg-guardado-msg').style.background='#FEF2F2';
+    document.getElementById('svg-guardado-msg').style.color='#B91C1C';
+    document.getElementById('svg-guardado-msg').textContent='El SVG es muy grande para guardar en el historial (>500KB). Descargalo directamente.';
+    btn.innerHTML='⭐ Guardar en historial';
+    btn.disabled=false;
+    return;
+  }
+
+  var entry = {
+    uid: window.currentUser.uid,
+    nombre: svgNombreArchivo,
+    fecha: firebase.firestore.FieldValue.serverTimestamp(),
+    bytes: bytes,
+    svgData: svgActual
+  };
+
+  firebase.firestore().collection('svg_historial').add(entry)
+    .then(function(){
+      document.getElementById('svg-guardado-msg').style.display='block';
+      document.getElementById('svg-guardado-msg').style.background='#F0FDF4';
+      document.getElementById('svg-guardado-msg').style.color='#166534';
+      document.getElementById('svg-guardado-msg').textContent='✓ Guardado en tu historial. Lo podés descargar cuando quieras.';
+      btn.innerHTML='✓ Guardado';
+      btn.style.background='#F0FDF4';
+      btn.style.color='#166534';
+      cargarHistorialSVG();
+    })
+    .catch(function(e){
+      document.getElementById('svg-guardado-msg').style.display='block';
+      document.getElementById('svg-guardado-msg').textContent='Error al guardar: '+e.message;
+      btn.innerHTML='⭐ Guardar en historial';
+      btn.disabled=false;
+    });
+}
+
+function cargarHistorialSVG(){
+  var cont = document.getElementById('svg-historial-contenido');
+  var msg  = document.getElementById('svg-historial-msg');
+  var count = document.getElementById('svg-historial-count');
+  if(!cont) return;
+
+  if(!window.currentUser){
+    cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:Outfit,sans-serif">Iniciá sesión para guardar y ver tu historial de SVGs.</div></div>';
+    return;
+  }
+
+  cont.innerHTML='<div style="text-align:center;padding:1.5rem;color:#8A8479;font-family:Outfit,sans-serif;font-size:0.875rem">Cargando historial...</div>';
+
+  firebase.firestore().collection('svg_historial')
+    .where('uid','==',window.currentUser.uid)
+    .orderBy('fecha','desc')
+    .limit(20)
+    .get()
+    .then(function(snap){
+      if(snap.empty){
+        cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:Outfit,sans-serif">Todavía no guardaste ningún SVG. Convertí una imagen y guardala.</div></div>';
+        return;
+      }
+      if(count) count.textContent = snap.size + ' archivo' + (snap.size!==1?'s':'');
+      cont.innerHTML='';
+      var grid = document.createElement('div');
+      grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px';
+      snap.forEach(function(doc){
+        var d = doc.data();
+        var fecha = d.fecha ? d.fecha.toDate().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+        var kb = d.bytes ? (d.bytes/1024).toFixed(1)+' KB' : '—';
+
+        var card = document.createElement('div');
+        card.style.cssText = 'background:#fff;border:1px solid #E2DDD6;border-radius:10px;overflow:hidden;transition:all 0.15s';
+        card.onmouseover = function(){ this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'; };
+        card.onmouseout  = function(){ this.style.boxShadow=''; };
+
+        // Mini preview
+        var previewDiv = document.createElement('div');
+        previewDiv.style.cssText = 'background:#F5F2ED;height:120px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px';
+        if(d.svgData){
+          var blob = new Blob([d.svgData],{type:'image/svg+xml'});
+          var url = URL.createObjectURL(blob);
+          var img = document.createElement('img');
+          img.src=url; img.style.cssText='max-width:100%;max-height:100%;object-fit:contain';
+          previewDiv.appendChild(img);
+        } else {
+          previewDiv.innerHTML='<div style="font-size:2rem;opacity:0.3">📐</div>';
+        }
+
+        var info = document.createElement('div');
+        info.style.cssText='padding:10px 12px';
+        info.innerHTML='<div style="font-size:0.82rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(d.nombre||'svg')+'</div>'+
+          '<div style="font-size:0.72rem;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:8px">'+fecha+' · '+kb+'</div>'+
+          '<div style="display:flex;gap:6px">'+
+            '<button onclick="descargarSVGHistorial(''+doc.id+'')" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif">⬇ SVG</button>'+
+            '<button onclick="eliminarSVGHistorial(''+doc.id+'',this)" style="padding:6px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.75rem;cursor:pointer">🗑</button>'+
+          '</div>';
+
+        card.appendChild(previewDiv);
+        card.appendChild(info);
+        grid.appendChild(card);
+      });
+      cont.appendChild(grid);
+    })
+    .catch(function(e){
+      cont.innerHTML='<div style="color:#B91C1C;padding:1rem;font-size:0.85rem;font-family:Outfit,sans-serif">Error al cargar historial: '+e.message+'</div>';
+    });
+}
+
+function descargarSVGHistorial(docId){
+  firebase.firestore().collection('svg_historial').doc(docId).get().then(function(doc){
+    if(!doc.exists) return;
+    var d = doc.data();
+    var blob = new Blob([d.svgData],{type:'image/svg+xml'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href=url; a.download=(d.nombre||'svg')+'.svg'; a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+function eliminarSVGHistorial(docId, btn){
+  if(!confirm('¿Eliminar este SVG del historial?')) return;
+  firebase.firestore().collection('svg_historial').doc(docId).delete()
+    .then(function(){ cargarHistorialSVG(); });
+}
+
+
 </script>
 
 <!-- FICHA PAGE -->
