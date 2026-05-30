@@ -62,8 +62,9 @@ document.addEventListener('DOMContentLoaded', function(){
       var modal = document.getElementById('google-login-modal');
       if(modal) modal.style.display='none';
       if(window._pendingPDF){ window._pendingPDF=false; abrirPDFModal(); }
-      // Auto-cargar preset de calculadora
-      setTimeout(function(){ cargarPresetCalc(); }, 500);
+      // Cargar perfiles guardados
+      setTimeout(function(){ cargarPerfilesStorage(); }, 500);
+      if(window._pendingGuardarPerfil){ window._pendingGuardarPerfil=false; setTimeout(abrirModalGuardarPerfil, 300); }
       if(window._pendingAviso){
         var pa=window._pendingAviso; window._pendingAviso=null;
         var btn=pa.btnId?document.getElementById(pa.btnId):document.getElementById('btn-avisar-'+pa.tipo+'-mail');
@@ -810,8 +811,8 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
     <img src="img/CHULENGO_LOGOO.png" alt="Logo" class="logo">
     <span class="site-title">Chulengo Estudio</span>
     <div class="header-search">
-      <input type="text" id="search" placeholder="Buscar filamentos por nombre, color o marca...">
-      <button class="header-search-btn" onclick="render()">
+      <input type="text" id="search" placeholder="Buscar filamentos por nombre, color o marca..." onkeydown="if(event.key==='Enter')ejecutarBusqueda()">
+      <button class="header-search-btn" onclick="ejecutarBusqueda()">
         <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       </button>
     </div>
@@ -896,6 +897,19 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
 
     <div class="calc-form-col">
 
+<div class="calc-section" id="perfiles-section">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;gap:12px">
+    <div>
+      <h2 style="border:none;padding:0;margin:0">🖨️ Mis perfiles de impresión</h2>
+      <div style="font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif;margin-top:3px">Guardá tu impresora y filamento como un perfil reutilizable. Se carga con un clic.</div>
+    </div>
+    <button onclick="abrirModalGuardarPerfil()" style="background:#2D6A4F;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;white-space:nowrap;flex-shrink:0">+ Guardar perfil actual</button>
+  </div>
+  <div id="perfiles-lista" style="display:flex;gap:8px;flex-wrap:wrap;min-height:32px">
+    <div id="perfiles-empty" style="font-size:0.82rem;color:#8A8479;font-family:Outfit,sans-serif;padding:4px 0">Todavía no guardaste ningún perfil. Configurá la calculadora y guardalo.</div>
+  </div>
+</div>
+
 <div class="calc-section">
       <h2>Material <span class="tip" data-tip="El costo del filamento que usás para imprimir la pieza. Se calcula según el precio por kg y el peso de la pieza.">?</span></h2>
       <div class="field">
@@ -960,10 +974,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
         </div>
         <div class="field"><label>Costo por minuto calculado</label><input type="text" id="costo-min-calc" readonly class="readonly-field" placeholder="—"></div>
       </div>
-      <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:4px">
-        <button id="btn-guardar-preset" onclick="guardarPresetCalc()" style="flex:1;padding:7px 12px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#9A3412;display:flex;align-items:center;justify-content:center;gap:6px">⭐ Guardar como mi configuración</button>
-        <button id="btn-cargar-preset" onclick="cargarPresetCalc()" style="display:none;flex:1;padding:7px 12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#166534;display:flex;align-items:center;justify-content:center;gap:6px">↺ Cargar mi configuración</button>
-      </div>
+
       <div class="field">
           <label>Tiempo de impresión <span class="tip" data-tip="El tiempo total que tarda la impresora. Lo ves en el slicer. Si hay varios archivos o copias, sumá todos los tiempos.">?</span></label>
           <div style="display:flex;gap:8px;align-items:center">
@@ -1113,6 +1124,39 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
     </a>
   </div>
 </div>
+
+<!-- BUSQUEDA PAGE -->
+<div class="page" id="page-busqueda">
+  <div style="max-width:1300px;margin:0 auto;padding:1.5rem 1.25rem 4rem">
+    <div id="busqueda-header" style="margin-bottom:1.5rem">
+      <div id="busqueda-titulo" style="font-size:1.1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:4px"></div>
+      <div id="busqueda-sub" style="font-size:0.82rem;color:#8A8479;font-family:Outfit,sans-serif"></div>
+    </div>
+    <div style="display:flex;gap:1.5rem;align-items:flex-start">
+      <!-- Filtros laterales -->
+      <div id="busqueda-filtros" style="width:200px;flex-shrink:0;display:none">
+        <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:1rem">
+          <div style="font-size:0.78rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Material</div>
+          <div id="fil-busqueda-material" style="display:flex;flex-direction:column;gap:5px"></div>
+        </div>
+        <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:1rem">
+          <div style="font-size:0.78rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Marca</div>
+          <div id="fil-busqueda-marca" style="display:flex;flex-direction:column;gap:5px"></div>
+        </div>
+        <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem">
+          <div style="font-size:0.78rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Stock</div>
+          <div id="fil-busqueda-stock" style="display:flex;flex-direction:column;gap:5px"></div>
+        </div>
+      </div>
+      <!-- Resultados -->
+      <div style="flex:1;min-width:0">
+        <div id="busqueda-grid" class="grid" style="padding:0;margin:0"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
 <!-- OFERTAS PAGE -->
 <div class="page" id="page-ofertas">
@@ -1862,16 +1906,8 @@ function calcularML(){
   mlSubEl.textContent = 'Publicando a este precio, después de la comisión del ' + pctLabel + '% recibís tu precio sugerido de ' + fmtPeso(precio);
 }
 calcElec();
-// Intentar cargar preset guardado localmente
-(function(){
-  var local = null;
-  try{ local = JSON.parse(localStorage.getItem('chulengo_calc_preset')||'null'); }catch(e){}
-  if(local){ setTimeout(function(){ cargarPresetCalc(local); }, 800); }
-  else {
-    // Verificar si hay preset guardado para mostrar el botón cargar
-    try{ if(localStorage.getItem('chulengo_calc_preset')) actualizarBtnPreset(true); }catch(e){}
-  }
-})();
+// Cargar perfiles locales al iniciar
+setTimeout(function(){ cargarPerfilesStorage(); }, 600);
 function fixBrokenImages(){ document.querySelectorAll('.card-img-wrap img').forEach(function(im){ if(im.complete && im.naturalWidth===0){ im.style.display='none'; } }); }
 window.addEventListener('load', fixBrokenImages); setTimeout(fixBrokenImages, 2000);
 document.addEventListener('keydown', function(e){ if(e.target.type === 'number' && ['e','E','+','-'].includes(e.key)){ e.preventDefault(); } });
@@ -1897,6 +1933,241 @@ document.addEventListener('input', function(e){ if(e.target.type === 'number' &&
   }, {passive:true});
 })();
 
+// ══════════════════════════════════════════════
+// BÚSQUEDA PRINCIPAL
+// ══════════════════════════════════════════════
+var busquedaFiltros = { material: null, marca: null, stock: null };
+
+function ejecutarBusqueda(){
+  var q = (document.getElementById('search').value || '').trim();
+  if(!q) return;
+  busquedaFiltros = { material: null, marca: null, stock: null };
+  irABusqueda(q);
+}
+
+function irABusqueda(q){
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('page-busqueda').classList.add('active');
+  document.querySelector('footer').style.display = '';
+  history.pushState({page:'busqueda', q:q}, '', '#busqueda?q=' + encodeURIComponent(q));
+  window.scrollTo(0, 0);
+  renderBusqueda(q);
+}
+
+function busquedaScore(d, tokens){
+  // Score inteligente: busca en todos los campos con pesos
+  var txt = [
+    (d.material||''),
+    (d.denom||''),
+    (d.color||''),
+    (d.marca||''),
+    (d.present||'')
+  ].join(' ').toLowerCase();
+
+  var score = 0;
+  tokens.forEach(function(tok){
+    if(!tok) return;
+    // Match exacto en campo
+    if((d.material||'').toLowerCase().includes(tok)) score += 10;
+    if((d.color||'').toLowerCase().includes(tok))    score += 10;
+    if((d.denom||'').toLowerCase().includes(tok))    score += 8;
+    if((d.marca||'').toLowerCase().includes(tok))    score += 7;
+    if(txt.includes(tok)) score += 3;
+    // Sinónimos de colores
+    var sinonimos = {
+      'rojo':['red','roja','colorado'],
+      'azul':['blue','celeste','navy'],
+      'verde':['green'],
+      'negro':['black','oscuro'],
+      'blanco':['white'],
+      'amarillo':['yellow'],
+      'naranja':['orange'],
+      'rosa':['pink','rosado'],
+      'violeta':['purple','lila','morado'],
+      'gris':['gray','grey'],
+      'plateado':['silver','plata'],
+      'dorado':['gold','oro'],
+      'marron':['brown','cafe']
+    };
+    Object.keys(sinonimos).forEach(function(key){
+      if(tok === key || sinonimos[key].includes(tok)){
+        if((d.color||'').toLowerCase().includes(key)) score += 8;
+        sinonimos[key].forEach(function(s){ if((d.color||'').toLowerCase().includes(s)) score += 6; });
+      }
+    });
+    // Abreviaturas / aliases
+    if(tok === 'pla' && (d.material||'').toLowerCase().includes('pla')) score += 15;
+    if(tok === 'petg' && (d.material||'').toLowerCase().includes('petg')) score += 15;
+    if(tok === 'abs' && (d.material||'').toLowerCase().includes('abs')) score += 15;
+    if(tok === 'seda' || tok === 'silk') {
+      if((d.material||'').toLowerCase().includes('seda') || (d.material||'').toLowerCase().includes('silk')) score += 12;
+    }
+  });
+  return score;
+}
+
+function renderBusqueda(q){
+  if(!q) q = '';
+  var query = q.toLowerCase().trim();
+  var tokens = query.split(/\s+/).filter(Boolean);
+
+  // Score cada producto
+  var resultados = DATA.map(function(d){
+    return { d: d, score: busquedaScore(d, tokens) };
+  }).filter(function(r){ return r.score > 0; });
+
+  // Aplicar filtros laterales
+  if(busquedaFiltros.material) resultados = resultados.filter(function(r){ return r.d.material === busquedaFiltros.material; });
+  if(busquedaFiltros.marca)    resultados = resultados.filter(function(r){ return r.d.marca === busquedaFiltros.marca; });
+  if(busquedaFiltros.stock === 'disponible') resultados = resultados.filter(function(r){ return getSt(r.d.stock) !== 'out'; });
+
+  resultados.sort(function(a, b){ return b.score - a.score; });
+
+  // Actualizar header
+  document.getElementById('busqueda-titulo').textContent = '"' + q + '"';
+  document.getElementById('busqueda-sub').textContent = resultados.length + ' resultado' + (resultados.length !== 1 ? 's' : '') + ' encontrado' + (resultados.length !== 1 ? 's' : '');
+
+  // Construir filtros laterales
+  var materiales = {}, marcas = {};
+  resultados.forEach(function(r){
+    if(r.d.material) materiales[r.d.material] = (materiales[r.d.material]||0)+1;
+    if(r.d.marca)    marcas[r.d.marca]    = (marcas[r.d.marca]||0)+1;
+  });
+
+  var filtrosMat = document.getElementById('fil-busqueda-material');
+  var filtrosMarca = document.getElementById('fil-busqueda-marca');
+  var filtrosStock = document.getElementById('fil-busqueda-stock');
+  if(filtrosMat) filtrosMat.innerHTML = '';
+  if(filtrosMarca) filtrosMarca.innerHTML = '';
+  if(filtrosStock) filtrosStock.innerHTML = '';
+
+  var allFiltros = [
+    { el: filtrosMat, items: materiales, key: 'material' },
+    { el: filtrosMarca, items: marcas, key: 'marca' }
+  ];
+  allFiltros.forEach(function(f){
+    if(!f.el) return;
+    Object.keys(f.items).sort().forEach(function(val){
+      var lbl = document.createElement('label');
+      lbl.style.cssText = 'display:flex;align-items:center;gap:7px;font-size:0.82rem;color:#1A1814;font-family:Outfit,sans-serif;cursor:pointer;padding:3px 0';
+      var chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.style.cssText = 'accent-color:#2D6A4F;cursor:pointer;width:14px;height:14px';
+      chk.checked = busquedaFiltros[f.key] === val;
+      chk.addEventListener('change', function(){
+        busquedaFiltros[f.key] = chk.checked ? val : null;
+        // Uncheck others in same group
+        f.el.querySelectorAll('input[type=checkbox]').forEach(function(c){ if(c!==chk) c.checked=false; });
+        renderBusqueda(q);
+      });
+      lbl.appendChild(chk);
+      lbl.appendChild(document.createTextNode(val + ' (' + f.items[val] + ')'));
+      f.el.appendChild(lbl);
+    });
+  });
+
+  // Stock filter
+  if(filtrosStock){
+    var lbl = document.createElement('label');
+    lbl.style.cssText = 'display:flex;align-items:center;gap:7px;font-size:0.82rem;color:#1A1814;font-family:Outfit,sans-serif;cursor:pointer;padding:3px 0';
+    var chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.style.cssText = 'accent-color:#2D6A4F;cursor:pointer;width:14px;height:14px';
+    chk.checked = busquedaFiltros.stock === 'disponible';
+    chk.addEventListener('change', function(){
+      busquedaFiltros.stock = chk.checked ? 'disponible' : null;
+      renderBusqueda(q);
+    });
+    lbl.appendChild(chk);
+    lbl.appendChild(document.createTextNode('Solo con stock'));
+    filtrosStock.appendChild(lbl);
+  }
+
+  // Show/hide filtros sidebar
+  var sidebar = document.getElementById('busqueda-filtros');
+  if(sidebar) sidebar.style.display = Object.keys(materiales).length > 1 || Object.keys(marcas).length > 1 ? 'block' : 'none';
+
+  // Render grid
+  var grid = document.getElementById('busqueda-grid');
+  if(!grid) return;
+  grid.innerHTML = '';
+
+  if(!resultados.length){
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div style="font-size:2rem;margin-bottom:0.75rem">🔍</div><div style="font-weight:600;color:#1A1814;margin-bottom:6px">Sin resultados para "' + q + '"</div><div style="font-size:0.85rem;color:#8A8479">Probá con otro nombre, color o material.</div></div>';
+    return;
+  }
+
+  resultados.forEach(function(r, idx){
+    var d = r.d;
+    var isOut = getSt(d.stock) === 'out';
+    var tieneFicha = !!getFicha(d.material, d.marca);
+    var card = document.createElement('div');
+    card.className = 'card' + (isOut?' out-of-stock':'') + (tieneFicha?' con-ficha':'');
+    card.style.animationDelay = (idx * 0.04) + 's';
+
+    if(isOut){ card.addEventListener('click', function(){ openModalDirect(d); }); }
+    else if(tieneFicha){ card.addEventListener('click', function(){ abrirProducto(d); }); }
+
+    if(d.img){
+      var wrap = document.createElement('div'); wrap.className = 'card-img-wrap';
+      var im = document.createElement('img'); im.className = 'card-img';
+      im.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:8px'; im.alt='';
+      im.onerror = function(){ this.onerror=null; this.src='img/placeholder.png'; };
+      im.src = 'img/' + d.img.split('/').pop() + '?v=1';
+      wrap.appendChild(im); card.appendChild(wrap);
+    }
+
+    var lista = Number(d.lista)||0, oferta = Number(d.oferta)||0;
+    var hayOferta = oferta > 0 && oferta !== lista;
+    var stockN = parseInt(d.stock)||0;
+    var cLabel = (d.color && d.color !== '*n/a') ? d.color : 'Sin color';
+    var cartId = d.material + '-' + d.denom + '-' + d.marca;
+    var enCarrito = carrito[cartId];
+
+    var inner = '<div class="card-top"><div class="card-title">'+d.material+' - '+d.denom+'</div><span class="badge '+getBdg(d.stock)+'">'+getLbl(d.stock)+'</span></div>';
+    inner += '<div class="card-meta"><b>'+d.marca+'</b> · '+d.present+'<br><span class="color-chip">'+getDot(d.color)+cLabel+'</span></div>';
+    inner += '<div class="stock-line">Stock: <b>'+stockN+' u.</b></div>';
+    inner += '<div class="prices"><div class="price-row"><span class="price-label">Precio unitario</span><span class="price-val">'+fmtPeso(lista)+'</span></div>';
+    if(hayOferta){ inner += '<div class="price-row"><span class="price-label">Oferta <span class="ptag">2 kg o más</span></span><span class="price-val green">'+fmtPeso(oferta)+'</span></div>'; }
+    inner += '</div>';
+    if(isOut){ inner += '<div class="notify-hint">👆 Tocá para que te avisemos</div>'; }
+    else {
+      var stockDisp = parseInt(d.stock)||0;
+      var dataStr = encodeURIComponent(JSON.stringify({material:d.material,denom:d.denom,marca:d.marca,present:d.present,lista:Number(d.lista)||0,oferta:Number(d.oferta)||0,stock:stockDisp}));
+      var btnTxt = enCarrito ? '✓ '+enCarrito.qty+' en el pedido' : '+ Agregar al pedido';
+      var btnCls = enCarrito ? 'btn-agregar en-carrito' : 'btn-agregar';
+      inner += '<button class="'+btnCls+'" data-cartid="'+cartId+'" data-item="'+dataStr+'" onclick="event.stopPropagation();agregarItem(this)">'+btnTxt+'</button>';
+    }
+    card.innerHTML += inner;
+    grid.appendChild(card);
+  });
+}
+
+function openModalDirect(d){
+  var idx = FILTERED.indexOf(d);
+  if(idx === -1){
+    // Add to FILTERED temporarily
+    FILTERED.push(d);
+    idx = FILTERED.length - 1;
+  }
+  openModal(idx);
+}
+
+// Handle URL search on load
+window.addEventListener('popstate', function(e){
+  var state = e.state;
+  if(!state) state = {page:'stock'};
+  if(state.page === 'busqueda' && state.q){
+    document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+    document.getElementById('page-busqueda').classList.add('active');
+    document.getElementById('search').value = state.q;
+    renderBusqueda(state.q);
+    return;
+  }
+  // ... rest handled by existing popstate
+});
+
 function toggleUserDropdown(e){
   e.stopPropagation();
   var dd=document.getElementById('user-dropdown');
@@ -1913,9 +2184,22 @@ function closeDropdown(){
 }
 document.addEventListener('click',function(){ closeDropdown(); });
 
-function guardarPresetCalc(){
-  var config = {
+// ══════════════════════════════════════════════
+// PERFILES DE IMPRESIÓN
+// ══════════════════════════════════════════════
+var perfilesGuardados = [];
+
+function getPerfilesKey(){ return 'chulengo_perfiles_v1'; }
+
+function obtenerConfigActual(){
+  var filSel = document.getElementById('sel-material');
+  var filOpt = filSel ? filSel.options[filSel.selectedIndex] : null;
+  return {
+    nombre: '',
+    filamento: filSel ? filSel.value : '',
+    filamentoLabel: filOpt ? filOpt.textContent : '',
     impresora: document.getElementById('sel-imp').value,
+    impresoraLabel: (function(){ var s=document.getElementById('sel-imp'); return s?s.options[s.selectedIndex].textContent:''; })(),
     precioImp: document.getElementById('precio-imp').value||'',
     vidaUtil: document.getElementById('vida-util').value||'8640',
     wImp: document.getElementById('w-imp').value||'180',
@@ -1925,77 +2209,220 @@ function guardarPresetCalc(){
     kwhCosto: document.getElementById('costo-kwh').value||'516.13',
     moHora: document.getElementById('mo-hora').value||'10000',
     margenError: document.getElementById('margen-error').value||'15',
-    ganancia: document.getElementById('ganancia').value||'100'
+    ganancia: document.getElementById('ganancia').value||'100',
+    fecha: Date.now()
   };
-  // Guardar local siempre
-  try{ localStorage.setItem('chulengo_calc_preset', JSON.stringify(config)); }catch(e){}
-  // Guardar en Firebase si está logueado
-  if(window.currentUser){
-    firebase.firestore().collection('usuarios').doc(window.currentUser.uid)
-      .set({ configCalc: config }, { merge: true })
-      .then(function(){
-        mostrarToastCalc('✓ Configuración guardada en tu perfil');
-      }).catch(function(){ mostrarToastCalc('✓ Guardado localmente'); });
-  } else {
-    mostrarToastCalc('✓ Guardado en este dispositivo (iniciá sesión para sincronizar)');
-  }
-  actualizarBtnPreset(true);
 }
 
-function cargarPresetCalc(config){
-  if(!config){
-    // Intentar desde Firebase primero, luego local
-    if(window.currentUser){
-      firebase.firestore().collection('usuarios').doc(window.currentUser.uid).get()
-        .then(function(doc){
-          if(doc.exists && doc.data().configCalc){
-            cargarPresetCalc(doc.data().configCalc);
-          } else {
-            var local = JSON.parse(localStorage.getItem('chulengo_calc_preset')||'null');
-            if(local) cargarPresetCalc(local);
-          }
-        }).catch(function(){
-          var local = JSON.parse(localStorage.getItem('chulengo_calc_preset')||'null');
-          if(local) cargarPresetCalc(local);
-        });
-    } else {
-      var local = JSON.parse(localStorage.getItem('chulengo_calc_preset')||'null');
-      if(local) cargarPresetCalc(local);
-    }
+function abrirModalGuardarPerfil(){
+  if(!window.currentUser){
+    window._pendingGuardarPerfil = true;
+    document.getElementById('google-login-modal').style.display='flex';
     return;
   }
-  // Aplicar config
-  if(config.impresora !== undefined){
-    var sel = document.getElementById('sel-imp');
-    sel.value = config.impresora;
+  var existing = document.getElementById('modal-guardar-perfil');
+  if(existing) existing.remove();
+
+  var config = obtenerConfigActual();
+  var modal = document.createElement('div');
+  modal.id = 'modal-guardar-perfil';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:16px;padding:1.75rem;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.2s ease';
+
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:1rem;font-weight:700;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:0.5rem';
+  title.textContent = '🖨️ Guardar perfil de impresión';
+  box.appendChild(title);
+
+  var hint = document.createElement('div');
+  hint.style.cssText = 'font-size:0.8rem;color:#8A8479;font-family:Outfit,sans-serif;margin-bottom:1.25rem;background:#F5F2ED;border-radius:8px;padding:10px 12px;line-height:1.5';
+  hint.innerHTML = '<b style="color:#1A1814">Impresora:</b> '+config.impresoraLabel+'<br>'+
+    '<b style="color:#1A1814">Filamento:</b> '+(config.filamentoLabel||'No seleccionado');
+  box.appendChild(hint);
+
+  var lbl = document.createElement('div');
+  lbl.style.cssText = 'font-size:0.8rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:5px';
+  lbl.textContent = 'Nombre del perfil';
+  box.appendChild(lbl);
+
+  var inp = document.createElement('input');
+  inp.type = 'text';
+  inp.placeholder = 'Ej: Bambu A1 + PLA Chulengo, Perfil nocturno...';
+  inp.style.cssText = 'width:100%;padding:10px 14px;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.95rem;font-family:Outfit,sans-serif;color:#1A1814;outline:none;box-sizing:border-box;margin-bottom:1.25rem';
+  inp.addEventListener('keydown', function(e){ if(e.key==='Enter') confirmarGuardarPerfil(config, inp.value); });
+  box.appendChild(inp);
+
+  var btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:10px;justify-content:flex-end';
+  var btnCancel = document.createElement('button');
+  btnCancel.textContent = 'Cancelar';
+  btnCancel.style.cssText = 'padding:9px 20px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#1A1814';
+  btnCancel.onclick = function(){ modal.remove(); };
+  var btnSave = document.createElement('button');
+  btnSave.textContent = '💾 Guardar perfil';
+  btnSave.style.cssText = 'padding:9px 20px;background:#2D6A4F;border:none;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:Outfit,sans-serif;color:#fff';
+  btnSave.onclick = function(){ confirmarGuardarPerfil(config, inp.value); };
+  btnRow.appendChild(btnCancel);
+  btnRow.appendChild(btnSave);
+  box.appendChild(btnRow);
+
+  modal.appendChild(box);
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+  document.body.appendChild(modal);
+  setTimeout(function(){ inp.focus(); }, 50);
+}
+
+function confirmarGuardarPerfil(config, nombre){
+  if(!nombre.trim()) nombre = 'Perfil ' + (perfilesGuardados.length + 1);
+  config.nombre = nombre.trim();
+  config.id = 'p-' + Date.now();
+
+  perfilesGuardados.push(config);
+  guardarPerfilesStorage();
+  renderPerfiles();
+  document.getElementById('modal-guardar-perfil').remove();
+  mostrarToastCalc('✓ Perfil "' + config.nombre + '" guardado');
+}
+
+function guardarPerfilesStorage(){
+  try{ localStorage.setItem(getPerfilesKey(), JSON.stringify(perfilesGuardados)); }catch(e){}
+  if(window.currentUser){
+    firebase.firestore().collection('usuarios').doc(window.currentUser.uid)
+      .set({ perfilesCalc: perfilesGuardados }, { merge: true })
+      .catch(function(){});
+  }
+}
+
+function cargarPerfilesStorage(callback){
+  if(window.currentUser){
+    firebase.firestore().collection('usuarios').doc(window.currentUser.uid).get()
+      .then(function(doc){
+        if(doc.exists && doc.data().perfilesCalc && doc.data().perfilesCalc.length > 0){
+          perfilesGuardados = doc.data().perfilesCalc;
+          try{ localStorage.setItem(getPerfilesKey(), JSON.stringify(perfilesGuardados)); }catch(e){}
+        } else {
+          try{ perfilesGuardados = JSON.parse(localStorage.getItem(getPerfilesKey())||'[]'); }catch(e){ perfilesGuardados=[]; }
+        }
+        renderPerfiles();
+        if(callback) callback();
+      }).catch(function(){
+        try{ perfilesGuardados = JSON.parse(localStorage.getItem(getPerfilesKey())||'[]'); }catch(e){ perfilesGuardados=[]; }
+        renderPerfiles();
+      });
+  } else {
+    try{ perfilesGuardados = JSON.parse(localStorage.getItem(getPerfilesKey())||'[]'); }catch(e){ perfilesGuardados=[]; }
+    renderPerfiles();
+  }
+}
+
+function aplicarPerfil(id){
+  var p = perfilesGuardados.find(function(x){ return x.id===id; });
+  if(!p) return;
+
+  // Filamento
+  if(p.filamento){
+    var sel = document.getElementById('sel-material');
+    sel.value = p.filamento;
+    onMatChange();
+  }
+  // Impresora
+  if(p.impresora){
+    var selI = document.getElementById('sel-imp');
+    selI.value = p.impresora;
     onImpChange();
   }
-  if(config.precioImp) document.getElementById('precio-imp').value = config.precioImp;
-  if(config.vidaUtil)  document.getElementById('vida-util').value  = config.vidaUtil;
-  if(config.wImp)   document.getElementById('w-imp').value   = config.wImp;
-  if(config.wPc)    document.getElementById('w-pc').value    = config.wPc;
-  if(config.wMon)   document.getElementById('w-mon').value   = config.wMon;
-  if(config.wLuz)   document.getElementById('w-luz').value   = config.wLuz;
-  if(config.kwhCosto) document.getElementById('costo-kwh').value = config.kwhCosto;
-  if(config.moHora)   document.getElementById('mo-hora').value   = config.moHora;
-  if(config.margenError) document.getElementById('margen-error').value = config.margenError;
-  if(config.ganancia)    document.getElementById('ganancia').value     = config.ganancia;
+  if(p.precioImp) document.getElementById('precio-imp').value = p.precioImp;
+  if(p.vidaUtil)  document.getElementById('vida-util').value  = p.vidaUtil;
+  if(p.wImp)     document.getElementById('w-imp').value      = p.wImp;
+  if(p.wPc)      document.getElementById('w-pc').value       = p.wPc;
+  if(p.wMon)     document.getElementById('w-mon').value      = p.wMon;
+  if(p.wLuz)     document.getElementById('w-luz').value      = p.wLuz;
+  if(p.kwhCosto) document.getElementById('costo-kwh').value  = p.kwhCosto;
+  if(p.moHora)   document.getElementById('mo-hora').value    = p.moHora;
+  if(p.margenError) document.getElementById('margen-error').value = p.margenError;
+  if(p.ganancia)    document.getElementById('ganancia').value     = p.ganancia;
   calcElec();
-  mostrarToastCalc('✓ Tu configuración fue cargada');
-  actualizarBtnPreset(true);
+
+  // Highlight active profile
+  document.querySelectorAll('.perfil-chip').forEach(function(c){ c.style.background='#F5F2ED'; c.style.borderColor='#E2DDD6'; c.style.color='#1A1814'; });
+  var chip = document.getElementById('chip-'+id);
+  if(chip){ chip.style.background='#2D6A4F'; chip.style.borderColor='#2D6A4F'; chip.style.color='#fff'; }
+  mostrarToastCalc('✓ Perfil "' + p.nombre + '" cargado');
 }
 
-function actualizarBtnPreset(tienePreset){
-  var btnCargar = document.getElementById('btn-cargar-preset');
-  if(!btnCargar) return;
-  if(tienePreset){
-    btnCargar.style.display = 'flex';
-    var btnGuardar = document.getElementById('btn-guardar-preset');
-    if(btnGuardar) btnGuardar.textContent = '⭐ Actualizar mi configuración';
-  }
+function eliminarPerfil(id, e){
+  e.stopPropagation();
+  perfilesGuardados = perfilesGuardados.filter(function(p){ return p.id!==id; });
+  guardarPerfilesStorage();
+  renderPerfiles();
+  mostrarToastCalc('Perfil eliminado');
 }
+
+function renderPerfiles(){
+  var lista = document.getElementById('perfiles-lista');
+  var empty = document.getElementById('perfiles-empty');
+  if(!lista) return;
+
+  lista.innerHTML = '';
+
+  if(perfilesGuardados.length === 0){
+    var emptyDiv = document.createElement('div');
+    emptyDiv.id = 'perfiles-empty';
+    emptyDiv.style.cssText = 'font-size:0.82rem;color:#8A8479;font-family:Outfit,sans-serif;padding:4px 0';
+    emptyDiv.textContent = 'Todavía no guardaste ningún perfil. Configurá la calculadora y guardalo.';
+    lista.appendChild(emptyDiv);
+    return;
+  }
+
+  perfilesGuardados.forEach(function(p){
+    var chip = document.createElement('div');
+    chip.id = 'chip-'+p.id;
+    chip.className = 'perfil-chip';
+    chip.style.cssText = 'display:flex;align-items:center;gap:8px;background:#F5F2ED;border:1.5px solid #E2DDD6;border-radius:10px;padding:8px 12px;cursor:pointer;transition:all 0.15s;max-width:260px;min-width:0';
+    chip.title = 'Clic para cargar este perfil';
+
+    var info = document.createElement('div');
+    info.style.cssText = 'flex:1;min-width:0';
+
+    var nombre = document.createElement('div');
+    nombre.style.cssText = 'font-size:0.82rem;font-weight:700;color:inherit;font-family:Outfit,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    nombre.textContent = p.nombre;
+    info.appendChild(nombre);
+
+    var sub = document.createElement('div');
+    sub.style.cssText = 'font-size:0.7rem;color:#8A8479;font-family:Outfit,sans-serif;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    // Shorten labels
+    var impLabel = (p.impresoraLabel||'').split(' — ')[0];
+    var filLabel = (p.filamentoLabel||'').replace(/⭐|🎨/g,'').split(' —')[0].trim();
+    sub.textContent = (impLabel||'Sin impresora') + (filLabel ? ' · '+filLabel : '');
+    info.appendChild(sub);
+
+    var btnDel = document.createElement('button');
+    btnDel.textContent = '✕';
+    btnDel.style.cssText = 'background:none;border:none;color:rgba(0,0,0,0.3);font-size:0.8rem;cursor:pointer;flex-shrink:0;padding:2px 4px;border-radius:4px;line-height:1';
+    btnDel.title = 'Eliminar perfil';
+    btnDel.addEventListener('click', function(e){ eliminarPerfil(p.id, e); });
+
+    chip.appendChild(info);
+    chip.appendChild(btnDel);
+    chip.addEventListener('click', function(){ aplicarPerfil(p.id); });
+
+    lista.appendChild(chip);
+  });
+}
+
+// ── old compat fns (now wrapped by profiles) ──
+function guardarPresetCalc(){ abrirModalGuardarPerfil(); }
+function cargarPresetCalc(config){
+  if(config){ aplicarPerfil(config.id||''); }
+  else { cargarPerfilesStorage(); }
+}
+function actualizarBtnPreset(){}
 
 function mostrarToastCalc(msg){
+
   var t = document.getElementById('toast-calc');
   if(!t){
     t = document.createElement('div');
