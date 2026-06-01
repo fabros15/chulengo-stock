@@ -123,424 +123,1531 @@ function loginConGoogle(){
 function doLogout(){ firebase.auth().signOut(); }
 </script>
 <script>
+// Potrace - real vector tracing
+/* Copyright (C) 2001-2013 Peter Selinger.
+ *
+ * A javascript port of Potrace (http://potrace.sourceforge.net).
+ * 
+ * Licensed under the GPL
+ * 
+ * Usage
+ *   loadImageFromFile(file) : load image from File API
+ *   loadImageFromUrl(url): load image from URL
+ *     because of the same-origin policy, can not load image from another domain.
+ *     input color/grayscale image is simply converted to binary image. no pre-
+ *     process is performed.
+ * 
+ *   setParameter({para1: value, ...}) : set parameters
+ *     parameters:
+ *        turnpolicy ("black" / "white" / "left" / "right" / "minority" / "majority")
+ *          how to resolve ambiguities in path decomposition. (default: "minority")       
+ *        turdsize
+ *          suppress speckles of up to this size (default: 2)
+ *        optcurve (true / false)
+ *          turn on/off curve optimization (default: true)
+ *        alphamax
+ *          corner threshold parameter (default: 1)
+ *        opttolerance 
+ *          curve optimization tolerance (default: 0.2)
+ *       
+ *   process(callback) : wait for the image be loaded, then run potrace algorithm,
+ *                       then call callback function.
+ * 
+ *   getSVG(size, opt_type) : return a string of generated SVG image.
+ *                                    result_image_size = original_image_size * size
+ *                                    optional parameter opt_type can be "curve"
+ */
+
+var Potrace = (function() {
+
+  function Point(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+  
+  Point.prototype.copy = function(){
+    return new Point(this.x, this.y);
+  };
+
+  function Bitmap(w, h) {
+    this.w = w;
+    this.h = h;
+    this.size = w * h;
+    this.arraybuffer = new ArrayBuffer(this.size);
+    this.data = new Int8Array(this.arraybuffer);
+  }
+
+  Bitmap.prototype.at = function (x, y) {
+    return (x >= 0 && x < this.w && y >=0 && y < this.h) && 
+        this.data[this.w * y + x] === 1;
+  };
+
+  Bitmap.prototype.index = function(i) {
+    var point = new Point();
+    point.y = Math.floor(i / this.w);
+    point.x = i - point.y * this.w;
+    return point;
+  };
+
+  Bitmap.prototype.flip = function(x, y) {
+    if (this.at(x, y)) {
+      this.data[this.w * y + x] = 0;
+    } else {
+      this.data[this.w * y + x] = 1;
+    }
+  };
+    
+  Bitmap.prototype.copy = function() {
+    var bm = new Bitmap(this.w, this.h), i;
+    for (i = 0; i < this.size; i++) {
+      bm.data[i] = this.data[i];
+    }
+    return bm;
+  };
+
+  function Path() {
+    this.area = 0;
+    this.len = 0;
+    this.curve = {};
+    this.pt = [];
+    this.minX = 100000;
+    this.minY = 100000;
+    this.maxX= -1;
+    this.maxY = -1;
+  }
+
+  function Curve(n) {
+    this.n = n;
+    this.tag = new Array(n);
+    this.c = new Array(n * 3);
+    this.alphaCurve = 0;
+    this.vertex = new Array(n);
+    this.alpha = new Array(n);
+    this.alpha0 = new Array(n);
+    this.beta = new Array(n);
+  }
+
+  var imgElement = document.createElement("img"),
+      imgCanvas = document.createElement("canvas"),
+      bm = null,
+      pathlist = [],
+      callback,
+      info = {
+        isReady: false,
+        turnpolicy: "minority", 
+        turdsize: 2,
+        optcurve: true,
+        alphamax: 1,
+        opttolerance: 0.2
+      };
+
+  imgElement.onload = function() {
+    loadCanvas();
+    loadBm();
+  };
+
+  function loadImageFromFile(file) {
+    if (info.isReady) {
+      clear();
+    }
+    imgElement.file = file;
+    var reader = new FileReader();
+    reader.onload = (function(aImg) {
+      return function(e) {
+        aImg.src = e.target.result;
+      };
+    })(imgElement);
+    reader.readAsDataURL(file);
+  }
+  
+  function loadImageFromUrl(url) {
+    if (info.isReady) {
+      clear();
+    }
+    imgElement.src = url;
+    
+  }
+  
+  function setParameter(obj) {
+   var key;
+   for (key in obj) {
+     if (obj.hasOwnProperty(key)) {
+       info[key] = obj[key];
+     }
+    }
+  }
+  
+  function loadCanvas() {
+    imgCanvas.width = imgElement.width;
+    imgCanvas.height = imgElement.height;
+    var ctx = imgCanvas.getContext('2d');
+    ctx.drawImage(imgElement, 0, 0);
+  }
+  
+  function loadBm() {
+    var ctx = imgCanvas.getContext('2d');
+    bm = new Bitmap(imgCanvas.width, imgCanvas.height);
+    var imgdataobj = ctx.getImageData(0, 0, bm.w, bm.h);
+    var l = imgdataobj.data.length, i, j, color;
+    for (i = 0, j = 0; i < l; i += 4, j++) {
+      color = 0.2126 * imgdataobj.data[i] + 0.7153 * imgdataobj.data[i + 1] +
+          0.0721 * imgdataobj.data[i + 2];
+      bm.data[j] = (color < 128 ? 1 : 0);
+    }
+    info.isReady = true;
+  }
+  
+  
+  function bmToPathlist() {
+  
+    var bm1 = bm.copy(),
+      currentPoint = new Point(0, 0),
+      path;
+    
+    function findNext(point) {
+      var i = bm1.w * point.y + point.x;
+      while (i < bm1.size && bm1.data[i] !== 1) {
+        i++;
+      }
+      return i < bm1.size && bm1.index(i);
+    }
+    
+    function majority(x, y) {
+      var i, a, ct;
+      for (i = 2; i < 5; i++) {
+        ct = 0;
+        for (a = -i + 1; a <= i - 1; a++) {
+          ct += bm1.at(x + a, y + i - 1) ? 1 : -1;
+          ct += bm1.at(x + i - 1, y + a - 1) ? 1 : -1;
+          ct += bm1.at(x + a - 1, y - i) ? 1 : -1;
+          ct += bm1.at(x - i, y + a) ? 1 : -1;
+        }
+        if (ct > 0) {
+          return 1;
+        } else if (ct < 0) {
+          return 0;
+        }
+      }
+      return 0;
+    }
+    
+    function findPath(point) {
+      var path = new Path(),
+        x = point.x, y = point.y,
+        dirx = 0, diry = 1, tmp;
+      
+      path.sign = bm.at(point.x, point.y) ? "+" : "-";
+      
+      while (1) {
+        path.pt.push(new Point(x, y));
+        if (x > path.maxX)
+          path.maxX = x;
+        if (x < path.minX)
+          path.minX = x;
+        if (y > path.maxY)
+          path.maxY = y;
+        if (y < path.minY)
+          path.minY = y;
+        path.len++;
+        
+        x += dirx;
+        y += diry;
+        path.area -= x * diry;
+        
+        if (x === point.x && y === point.y)
+          break;
+        
+        var l = bm1.at(x + (dirx + diry - 1 ) / 2, y + (diry - dirx - 1) / 2);
+        var r = bm1.at(x + (dirx - diry - 1) / 2, y + (diry + dirx - 1) / 2);
+        
+        if (r && !l) {
+          if (info.turnpolicy === "right" ||
+          (info.turnpolicy === "black" && path.sign === '+') ||
+          (info.turnpolicy === "white" && path.sign === '-') ||
+          (info.turnpolicy === "majority" && majority(x, y)) ||
+          (info.turnpolicy === "minority" && !majority(x, y))) {
+            tmp = dirx;
+            dirx = -diry;
+            diry = tmp;
+          } else {
+            tmp = dirx;
+            dirx = diry;
+            diry = -tmp;
+          }
+        } else if (r) {
+          tmp = dirx;
+          dirx = -diry;
+          diry = tmp;
+        } else if (!l) {
+          tmp = dirx;
+          dirx = diry;
+          diry = -tmp;
+        }
+      }
+      return path;
+    }
+    
+    function xorPath(path){
+      var y1 = path.pt[0].y,
+        len = path.len,
+        x, y, maxX, minY, i, j;
+      for (i = 1; i < len; i++) {
+        x = path.pt[i].x;
+        y = path.pt[i].y;
+        
+        if (y !== y1) {
+          minY = y1 < y ? y1 : y;
+          maxX = path.maxX;
+          for (j = x; j < maxX; j++) {
+            bm1.flip(j, minY);
+          }
+          y1 = y;
+        }
+      }
+      
+    }
+    
+    while (currentPoint = findNext(currentPoint)) {
+
+      path = findPath(currentPoint);
+      
+      xorPath(path);
+      
+      if (path.area > info.turdsize) {
+        pathlist.push(path);
+      }
+    }
+    
+  }
+  
+
+  function processPath() {
+  
+    function Quad() {
+      this.data = [0,0,0,0,0,0,0,0,0];
+    }
+
+    Quad.prototype.at = function(x, y) {
+      return this.data[x * 3 + y];
+    };
+    
+    function Sum(x, y, xy, x2, y2) {
+      this.x = x;
+      this.y = y;
+      this.xy = xy;
+      this.x2 = x2;
+      this.y2 = y2;
+    }
+    
+    function mod(a, n) {
+        return a >= n ? a % n : a>=0 ? a : n-1-(-1-a) % n;
+    }
+  
+    function xprod(p1, p2) {
+      return p1.x * p2.y - p1.y * p2.x;
+    }
+    
+    function cyclic(a, b, c) {
+      if (a <= c) {
+        return (a <= b && b < c);
+      } else {
+        return (a <= b || b < c);
+      }
+    }
+      
+    function sign(i) {
+      return i > 0 ? 1 : i < 0 ? -1 : 0;
+    }
+    
+    function quadform(Q, w) {
+      var v = new Array(3), i, j, sum;
+    
+      v[0] = w.x;
+      v[1] = w.y;
+      v[2] = 1;
+      sum = 0.0;
+    
+      for (i=0; i<3; i++) {
+        for (j=0; j<3; j++) {
+          sum += v[i] * Q.at(i, j) * v[j];
+        }
+      }
+      return sum;
+    }
+  
+    function interval(lambda, a, b) {
+      var res = new Point();
+    
+      res.x = a.x + lambda * (b.x - a.x);
+      res.y = a.y + lambda * (b.y - a.y);
+      return res;
+    }
+    
+    function dorth_infty(p0, p2) {
+      var r = new Point();
+      
+      r.y = sign(p2.x - p0.x);
+      r.x = -sign(p2.y - p0.y);
+    
+      return r;
+    }
+    
+    function ddenom(p0, p2) {
+      var r = dorth_infty(p0, p2);
+    
+      return r.y * (p2.x - p0.x) - r.x * (p2.y - p0.y);
+    }
+    
+    function dpara(p0, p1, p2) {
+      var x1, y1, x2, y2;
+    
+      x1 = p1.x - p0.x;
+      y1 = p1.y - p0.y;
+      x2 = p2.x - p0.x;
+      y2 = p2.y - p0.y;
+    
+      return x1 * y2 - x2 * y1;
+    }
+    
+    function cprod(p0, p1, p2, p3) {
+      var x1, y1, x2, y2;
+    
+      x1 = p1.x - p0.x;
+      y1 = p1.y - p0.y;
+      x2 = p3.x - p2.x;
+      y2 = p3.y - p2.y;
+    
+      return x1 * y2 - x2 * y1;
+    }
+      
+    function iprod(p0, p1, p2) {
+      var x1, y1, x2, y2;
+    
+      x1 = p1.x - p0.x;
+      y1 = p1.y - p0.y;
+      x2 = p2.x - p0.x;
+      y2 = p2.y - p0.y;
+    
+      return x1*x2 + y1*y2;
+    }
+      
+    function iprod1(p0, p1, p2, p3) {
+      var x1, y1, x2, y2;
+    
+      x1 = p1.x - p0.x;
+      y1 = p1.y - p0.y;
+      x2 = p3.x - p2.x;
+      y2 = p3.y - p2.y;
+    
+      return x1 * x2 + y1 * y2;
+    }
+    
+    function ddist(p, q) {
+      return Math.sqrt((p.x - q.x) * (p.x - q.x) + (p.y - q.y) * (p.y - q.y));
+    }
+    
+    function bezier(t, p0, p1, p2, p3) {
+      var s = 1 - t, res = new Point();
+    
+      res.x = s*s*s*p0.x + 3*(s*s*t)*p1.x + 3*(t*t*s)*p2.x + t*t*t*p3.x;
+      res.y = s*s*s*p0.y + 3*(s*s*t)*p1.y + 3*(t*t*s)*p2.y + t*t*t*p3.y;
+    
+      return res;
+    }
+  
+    function tangent(p0, p1, p2, p3, q0, q1) {
+      var A, B, C, a, b, c, d, s, r1, r2;
+    
+      A = cprod(p0, p1, q0, q1);
+      B = cprod(p1, p2, q0, q1);
+      C = cprod(p2, p3, q0, q1);
+    
+      a = A - 2 * B + C;
+      b = -2 * A + 2 * B;
+      c = A;
+      
+      d = b * b - 4 * a * c;
+    
+      if (a===0 || d<0) {
+        return -1.0;
+      }
+    
+      s = Math.sqrt(d);
+    
+      r1 = (-b + s) / (2 * a);
+      r2 = (-b - s) / (2 * a);
+    
+      if (r1 >= 0 && r1 <= 1) {
+        return r1;
+      } else if (r2 >= 0 && r2 <= 1) {
+        return r2;
+      } else {
+        return -1.0;
+      }
+    }
+    
+    function calcSums(path) {
+      var i, x, y;
+      path.x0 = path.pt[0].x;
+      path.y0 = path.pt[0].y;
+      
+      path.sums = [];
+      var s = path.sums;
+      s.push(new Sum(0, 0, 0, 0, 0));
+      for(i = 0; i < path.len; i++){
+        x = path.pt[i].x - path.x0;
+        y = path.pt[i].y - path.y0;
+        s.push(new Sum(s[i].x + x, s[i].y + y, s[i].xy + x * y,
+            s[i].x2 + x * x, s[i].y2 + y * y));
+      }
+    }
+   
+    function calcLon(path) {
+      
+      var n = path.len, pt = path.pt, dir,
+        pivk = new Array(n),
+        nc = new Array(n),
+        ct = new Array(4);
+      path.lon = new Array(n);
+      
+      var constraint = [new Point(), new Point()],
+          cur = new Point(),
+          off = new Point(),
+          dk = new Point(),
+          foundk;
+      
+      var i, j, k1, a, b, c, d, k = 0;
+      for(i = n - 1; i >= 0; i--){
+        if (pt[i].x != pt[k].x && pt[i].y != pt[k].y) {
+          k = i + 1;
+        }
+        nc[i] = k;
+      }
+      
+      for (i = n - 1; i >= 0; i--) {
+        ct[0] = ct[1] = ct[2] = ct[3] = 0;
+        dir = (3 + 3 * (pt[mod(i + 1, n)].x - pt[i].x) + 
+            (pt[mod(i + 1, n)].y - pt[i].y)) / 2;
+        ct[dir]++;
+        
+        constraint[0].x = 0;
+        constraint[0].y = 0;
+        constraint[1].x = 0;
+        constraint[1].y = 0;
+        
+        k = nc[i];
+        k1 = i;
+        while (1) {
+          foundk = 0;
+          dir =  (3 + 3 * sign(pt[k].x - pt[k1].x) + 
+              sign(pt[k].y - pt[k1].y)) / 2;
+          ct[dir]++;
+          
+          if (ct[0] && ct[1] && ct[2] && ct[3]) {
+            pivk[i] = k1;
+            foundk = 1;
+            break;
+          }
+          
+          cur.x = pt[k].x - pt[i].x;
+          cur.y = pt[k].y - pt[i].y;
+          
+          if (xprod(constraint[0], cur) < 0 || xprod(constraint[1], cur) > 0) {
+            break;
+          }
+              
+          if (Math.abs(cur.x) <= 1 && Math.abs(cur.y) <= 1) {
+          
+          } else {
+            off.x = cur.x + ((cur.y >= 0 && (cur.y > 0 || cur.x < 0)) ? 1 : -1);
+            off.y = cur.y + ((cur.x <= 0 && (cur.x < 0 || cur.y < 0)) ? 1 : -1);
+            if (xprod(constraint[0], off) >= 0) {
+              constraint[0].x = off.x;
+              constraint[0].y = off.y;
+            }
+            off.x = cur.x + ((cur.y <= 0 && (cur.y < 0 || cur.x < 0)) ? 1 : -1);
+            off.y = cur.y + ((cur.x >= 0 && (cur.x > 0 || cur.y < 0)) ? 1 : -1);
+            if (xprod(constraint[1], off) <= 0) {
+              constraint[1].x = off.x;
+              constraint[1].y = off.y;
+            }
+          }
+          k1 = k;
+          k = nc[k1];
+          if (!cyclic(k, i, k1)) {
+            break;
+          }
+        }
+        if (foundk === 0) {
+          dk.x = sign(pt[k].x-pt[k1].x);
+          dk.y = sign(pt[k].y-pt[k1].y);
+          cur.x = pt[k1].x - pt[i].x;
+          cur.y = pt[k1].y - pt[i].y;
+  
+          a = xprod(constraint[0], cur);
+          b = xprod(constraint[0], dk);
+          c = xprod(constraint[1], cur);
+          d = xprod(constraint[1], dk);
+  
+          j = 10000000;
+          if (b < 0) {
+            j = Math.floor(a / -b);
+          }
+          if (d > 0) {
+            j = Math.min(j, Math.floor(-c / d));
+          }
+          pivk[i] = mod(k1+j,n);
+        }
+      }
+      
+      j=pivk[n-1];
+      path.lon[n-1]=j;
+      for (i=n-2; i>=0; i--) {
+        if (cyclic(i+1,pivk[i],j)) {
+          j=pivk[i];
+        }
+        path.lon[i]=j;
+      }
+  
+      for (i=n-1; cyclic(mod(i+1,n),j,path.lon[i]); i--) {
+        path.lon[i] = j;
+      }
+    }
+    
+    function bestPolygon(path) {
+      
+      function penalty3(path, i, j) {
+        
+        var n = path.len, pt = path.pt, sums = path.sums;
+        var x, y, xy, x2, y2,
+          k, a, b, c, s,
+          px, py, ex, ey,
+          r = 0;
+        if (j>=n) {
+          j -= n;
+          r = 1;
+        }
+        
+        if (r === 0) {
+          x = sums[j+1].x - sums[i].x;
+          y = sums[j+1].y - sums[i].y;
+          x2 = sums[j+1].x2 - sums[i].x2;
+          xy = sums[j+1].xy - sums[i].xy;
+          y2 = sums[j+1].y2 - sums[i].y2;
+          k = j+1 - i;
+        } else {
+          x = sums[j+1].x - sums[i].x + sums[n].x;
+          y = sums[j+1].y - sums[i].y + sums[n].y;
+          x2 = sums[j+1].x2 - sums[i].x2 + sums[n].x2;
+          xy = sums[j+1].xy - sums[i].xy + sums[n].xy;
+          y2 = sums[j+1].y2 - sums[i].y2 + sums[n].y2;
+          k = j+1 - i + n;
+        } 
+      
+        px = (pt[i].x + pt[j].x) / 2.0 - pt[0].x;
+        py = (pt[i].y + pt[j].y) / 2.0 - pt[0].y;
+        ey = (pt[j].x - pt[i].x);
+        ex = -(pt[j].y - pt[i].y);
+      
+        a = ((x2 - 2*x*px) / k + px*px);
+        b = ((xy - x*py - y*px) / k + px*py);
+        c = ((y2 - 2*y*py) / k + py*py);
+        
+        s = ex*ex*a + 2*ex*ey*b + ey*ey*c;
+      
+        return Math.sqrt(s);
+      }
+      
+      var i, j, m, k,    
+      n = path.len,
+      pen = new Array(n + 1),
+      prev = new Array(n + 1),
+      clip0 = new Array(n),
+      clip1 = new Array(n + 1),
+      seg0 = new Array (n + 1),
+      seg1 = new Array(n + 1),
+      thispen, best, c;
+      
+      for (i=0; i<n; i++) {
+        c = mod(path.lon[mod(i-1,n)]-1,n);
+        if (c == i) {
+          c = mod(i+1,n);
+        }
+        if (c < i) {
+          clip0[i] = n;
+        } else {
+          clip0[i] = c;
+        }
+      }
+      
+      j = 1;
+      for (i=0; i<n; i++) {
+        while (j <= clip0[i]) {
+          clip1[j] = i;
+          j++;
+        }
+      }
+      
+      i = 0;
+      for (j=0; i<n; j++) {
+        seg0[j] = i;
+        i = clip0[i];
+      }
+      seg0[j] = n;
+      m = j;
+    
+      i = n;
+      for (j=m; j>0; j--) {
+        seg1[j] = i;
+        i = clip1[i];
+      }
+      seg1[0] = 0;
+      
+      pen[0]=0;
+      for (j=1; j<=m; j++) {
+        for (i=seg1[j]; i<=seg0[j]; i++) {
+          best = -1;
+          for (k=seg0[j-1]; k>=clip1[i]; k--) {
+            thispen = penalty3(path, k, i) + pen[k];
+            if (best < 0 || thispen < best) {
+              prev[i] = k;
+              best = thispen;
+            }
+          }
+          pen[i] = best;
+        }
+      }
+      path.m = m;
+      path.po = new Array(m);
+    
+      for (i=n, j=m-1; i>0; j--) {
+        i = prev[i];
+        path.po[j] = i;
+      }
+    }
+    
+    function adjustVertices(path) {
+      
+      function pointslope(path, i, j, ctr, dir) {
+    
+        var n = path.len, sums = path.sums,
+          x, y, x2, xy, y2,
+          k, a, b, c, lambda2, l, r=0;
+      
+        while (j>=n) {
+          j-=n;
+          r+=1;
+        }
+        while (i>=n) {
+          i-=n;
+          r-=1;
+        }
+        while (j<0) {
+          j+=n;
+          r-=1;
+        }
+        while (i<0) {
+          i+=n;
+          r+=1;
+        }
+        
+        x = sums[j+1].x-sums[i].x+r*sums[n].x;
+        y = sums[j+1].y-sums[i].y+r*sums[n].y;
+        x2 = sums[j+1].x2-sums[i].x2+r*sums[n].x2;
+        xy = sums[j+1].xy-sums[i].xy+r*sums[n].xy;
+        y2 = sums[j+1].y2-sums[i].y2+r*sums[n].y2;
+        k = j+1-i+r*n;
+        
+        ctr.x = x/k;
+        ctr.y = y/k;
+      
+        a = (x2-x*x/k)/k;
+        b = (xy-x*y/k)/k;
+        c = (y2-y*y/k)/k;
+        
+        lambda2 = (a+c+Math.sqrt((a-c)*(a-c)+4*b*b))/2;
+      
+        a -= lambda2;
+        c -= lambda2;
+      
+        if (Math.abs(a) >= Math.abs(c)) {
+          l = Math.sqrt(a*a+b*b);
+          if (l!==0) {
+            dir.x = -b/l;
+            dir.y = a/l;
+          }
+        } else {
+          l = Math.sqrt(c*c+b*b);
+          if (l!==0) {
+            dir.x = -c/l;
+            dir.y = b/l;
+          }
+        }
+        if (l===0) {
+          dir.x = dir.y = 0; 
+        }
+      }
+      
+      var m = path.m, po = path.po, n = path.len, pt = path.pt,
+        x0 = path.x0, y0 = path.y0,
+        ctr = new Array(m), dir = new Array(m),
+        q = new Array(m),
+        v = new Array(3), d, i, j, k, l,
+        s = new Point();
+      
+      path.curve = new Curve(m);
+  
+      for (i=0; i<m; i++) {
+        j = po[mod(i+1,m)];
+        j = mod(j-po[i],n)+po[i];
+        ctr[i] = new Point();
+        dir[i] = new Point();
+        pointslope(path, po[i], j, ctr[i], dir[i]);
+      }
+    
+      for (i=0; i<m; i++) {
+        q[i] = new Quad();
+        d = dir[i].x * dir[i].x + dir[i].y * dir[i].y;
+        if (d === 0.0) {
+          for (j=0; j<3; j++) {
+            for (k=0; k<3; k++) {
+              q[i].data[j * 3 + k] = 0;
+            }
+          }
+        } else {
+          v[0] = dir[i].y;
+          v[1] = -dir[i].x;
+          v[2] = - v[1] * ctr[i].y - v[0] * ctr[i].x;
+          for (l=0; l<3; l++) {
+            for (k=0; k<3; k++) {
+              q[i].data[l * 3 + k] = v[l] * v[k] / d;
+            }
+          }
+        }
+      }
+     
+      var Q, w, dx, dy, det, min, cand, xmin, ymin, z;
+      for (i=0; i<m; i++) {
+        Q = new Quad();
+        w = new Point();
+    
+        s.x = pt[po[i]].x-x0;
+        s.y = pt[po[i]].y-y0;
+    
+        j = mod(i-1,m);
+        
+        for (l=0; l<3; l++) {
+          for (k=0; k<3; k++) {
+            Q.data[l * 3 + k] = q[j].at(l, k) + q[i].at(l, k);
+          }
+        }
+        
+        while(1) {
+          
+          det = Q.at(0, 0)*Q.at(1, 1) - Q.at(0, 1)*Q.at(1, 0);
+          if (det !== 0.0) {
+            w.x = (-Q.at(0, 2)*Q.at(1, 1) + Q.at(1, 2)*Q.at(0, 1)) / det;
+            w.y = ( Q.at(0, 2)*Q.at(1, 0) - Q.at(1, 2)*Q.at(0, 0)) / det;
+            break;
+          }
+    
+          if (Q.at(0, 0)>Q.at(1, 1)) {
+            v[0] = -Q.at(0, 1);
+            v[1] = Q.at(0, 0);
+          } else if (Q.at(1, 1)) {
+            v[0] = -Q.at(1, 1);
+            v[1] = Q.at(1, 0);
+          } else {
+            v[0] = 1;
+            v[1] = 0;
+          }
+          d = v[0] * v[0] + v[1] * v[1];
+          v[2] = - v[1] * s.y - v[0] * s.x;
+          for (l=0; l<3; l++) {
+            for (k=0; k<3; k++) {
+              Q.data[l * 3 + k] += v[l] * v[k] / d;
+            }
+          }
+        }
+        dx = Math.abs(w.x-s.x);
+        dy = Math.abs(w.y-s.y);
+        if (dx <= 0.5 && dy <= 0.5) {
+          path.curve.vertex[i] = new Point(w.x+x0, w.y+y0);
+          continue;
+        }
+    
+        min = quadform(Q, s);
+        xmin = s.x;
+        ymin = s.y;
+    
+        if (Q.at(0, 0) !== 0.0) {
+          for (z=0; z<2; z++) {
+            w.y = s.y-0.5+z;
+            w.x = - (Q.at(0, 1) * w.y + Q.at(0, 2)) / Q.at(0, 0);
+            dx = Math.abs(w.x-s.x);
+            cand = quadform(Q, w);
+            if (dx <= 0.5 && cand < min) {
+              min = cand;
+              xmin = w.x;
+              ymin = w.y;
+            }
+          }
+        }
+  
+        if (Q.at(1, 1) !== 0.0) {
+          for (z=0; z<2; z++) {
+            w.x = s.x-0.5+z;
+            w.y = - (Q.at(1, 0) * w.x + Q.at(1, 2)) / Q.at(1, 1);
+            dy = Math.abs(w.y-s.y);
+            cand = quadform(Q, w);
+            if (dy <= 0.5 && cand < min) {
+              min = cand;
+              xmin = w.x;
+              ymin = w.y;
+            }
+          }
+        }
+  
+        for (l=0; l<2; l++) {
+          for (k=0; k<2; k++) {
+            w.x = s.x-0.5+l;
+            w.y = s.y-0.5+k;
+            cand = quadform(Q, w);
+            if (cand < min) {
+              min = cand;
+              xmin = w.x;
+              ymin = w.y;
+            }
+          }
+        }
+    
+        path.curve.vertex[i] = new Point(xmin + x0, ymin + y0);
+      }
+    }
+    
+    function reverse(path) {
+      var curve = path.curve, m = curve.n, v = curve.vertex, i, j, tmp;
+    
+      for (i=0, j=m-1; i<j; i++, j--) {
+        tmp = v[i];
+        v[i] = v[j];
+        v[j] = tmp;
+      }
+    }
+    
+    function smooth(path) {
+      var m = path.curve.n, curve = path.curve;
+
+      var i, j, k, dd, denom, alpha,
+        p2, p3, p4;
+    
+      for (i=0; i<m; i++) {
+        j = mod(i+1, m);
+        k = mod(i+2, m);
+        p4 = interval(1/2.0, curve.vertex[k], curve.vertex[j]);
+    
+        denom = ddenom(curve.vertex[i], curve.vertex[k]);
+        if (denom !== 0.0) {
+          dd = dpara(curve.vertex[i], curve.vertex[j], curve.vertex[k]) / denom;
+          dd = Math.abs(dd);
+          alpha = dd>1 ? (1 - 1.0/dd) : 0;
+          alpha = alpha / 0.75;
+        } else {
+          alpha = 4/3.0;
+        }
+        curve.alpha0[j] = alpha;
+    
+        if (alpha >= info.alphamax) { 
+          curve.tag[j] = "CORNER";
+          curve.c[3 * j + 1] = curve.vertex[j];
+          curve.c[3 * j + 2] = p4;
+        } else {
+          if (alpha < 0.55) {
+            alpha = 0.55;
+          } else if (alpha > 1) {
+            alpha = 1;
+          }
+          p2 = interval(0.5+0.5*alpha, curve.vertex[i], curve.vertex[j]);
+          p3 = interval(0.5+0.5*alpha, curve.vertex[k], curve.vertex[j]);
+          curve.tag[j] = "CURVE";
+          curve.c[3 * j + 0] = p2;
+          curve.c[3 * j + 1] = p3;
+          curve.c[3 * j + 2] = p4;
+        }
+        curve.alpha[j] = alpha;  
+        curve.beta[j] = 0.5;
+      }
+      curve.alphacurve = 1;
+    }
+    
+    function optiCurve(path) {
+      function Opti(){
+        this.pen = 0;
+        this.c = [new Point(), new Point()];
+        this.t = 0;
+        this.s = 0;
+        this.alpha = 0;
+      }
+      
+      function opti_penalty(path, i, j, res, opttolerance, convc, areac) {
+        var m = path.curve.n, curve = path.curve, vertex = curve.vertex, 
+          k, k1, k2, conv, i1,
+          area, alpha, d, d1, d2,
+          p0, p1, p2, p3, pt,
+          A, R, A1, A2, A3, A4,
+          s, t;
+      
+        if (i==j) {
+          return 1;
+        }
+      
+        k = i;
+        i1 = mod(i+1, m);
+        k1 = mod(k+1, m);
+        conv = convc[k1];
+        if (conv === 0) {
+          return 1;
+        }
+        d = ddist(vertex[i], vertex[i1]);
+        for (k=k1; k!=j; k=k1) {
+          k1 = mod(k+1, m);
+          k2 = mod(k+2, m);
+          if (convc[k1] != conv) {
+            return 1;
+          }
+          if (sign(cprod(vertex[i], vertex[i1], vertex[k1], vertex[k2])) !=
+              conv) {
+            return 1;
+          }
+          if (iprod1(vertex[i], vertex[i1], vertex[k1], vertex[k2]) <
+              d * ddist(vertex[k1], vertex[k2]) * -0.999847695156) {
+            return 1;
+          }
+        }
+    
+        p0 = curve.c[mod(i,m) * 3 + 2].copy();
+        p1 = vertex[mod(i+1,m)].copy();
+        p2 = vertex[mod(j,m)].copy();
+        p3 = curve.c[mod(j,m) * 3 + 2].copy();
+      
+        area = areac[j] - areac[i];
+        area -= dpara(vertex[0], curve.c[i * 3 + 2], curve.c[j * 3 + 2])/2;
+        if (i>=j) {
+          area += areac[m];
+        }
+      
+        A1 = dpara(p0, p1, p2);
+        A2 = dpara(p0, p1, p3);
+        A3 = dpara(p0, p2, p3);
+  
+        A4 = A1+A3-A2;    
+        
+        if (A2 == A1) {
+          return 1;
+        }
+      
+        t = A3/(A3-A4);
+        s = A2/(A2-A1);
+        A = A2 * t / 2.0;
+        
+        if (A === 0.0) {
+          return 1;
+        }
+      
+        R = area / A;
+        alpha = 2 - Math.sqrt(4 - R / 0.3);
+      
+        res.c[0] = interval(t * alpha, p0, p1);
+        res.c[1] = interval(s * alpha, p3, p2);
+        res.alpha = alpha;
+        res.t = t;
+        res.s = s;
+      
+        p1 = res.c[0].copy();
+        p2 = res.c[1].copy(); 
+      
+        res.pen = 0;
+      
+        for (k=mod(i+1,m); k!=j; k=k1) {
+          k1 = mod(k+1,m);
+          t = tangent(p0, p1, p2, p3, vertex[k], vertex[k1]);
+          if (t<-0.5) {
+            return 1;
+          }
+          pt = bezier(t, p0, p1, p2, p3);
+          d = ddist(vertex[k], vertex[k1]);
+          if (d === 0.0) {
+            return 1;
+          }
+          d1 = dpara(vertex[k], vertex[k1], pt) / d;
+          if (Math.abs(d1) > opttolerance) {
+            return 1;
+          }
+          if (iprod(vertex[k], vertex[k1], pt) < 0 ||
+              iprod(vertex[k1], vertex[k], pt) < 0) {
+            return 1;
+          }
+          res.pen += d1 * d1;
+        }
+      
+        for (k=i; k!=j; k=k1) {
+          k1 = mod(k+1,m);
+          t = tangent(p0, p1, p2, p3, curve.c[k * 3 + 2], curve.c[k1 * 3 + 2]);
+          if (t<-0.5) {
+            return 1;
+          }
+          pt = bezier(t, p0, p1, p2, p3);
+          d = ddist(curve.c[k * 3 + 2], curve.c[k1 * 3 + 2]);
+          if (d === 0.0) {
+            return 1;
+          }
+          d1 = dpara(curve.c[k * 3 + 2], curve.c[k1 * 3 + 2], pt) / d;
+          d2 = dpara(curve.c[k * 3 + 2], curve.c[k1 * 3 + 2], vertex[k1]) / d;
+          d2 *= 0.75 * curve.alpha[k1];
+          if (d2 < 0) {
+            d1 = -d1;
+            d2 = -d2;
+          }
+          if (d1 < d2 - opttolerance) {
+            return 1;
+          }
+          if (d1 < d2) {
+            res.pen += (d1 - d2) * (d1 - d2);
+          }
+        }
+      
+        return 0;
+      }
+    
+      var curve = path.curve, m = curve.n, vert = curve.vertex, 
+        pt = new Array(m + 1),
+        pen = new Array(m + 1),
+        len = new Array(m + 1),
+        opt = new Array(m + 1),
+        om, i,j,r,
+        o = new Opti(), p0,
+        i1, area, alpha, ocurve,
+        s, t;
+      
+      var convc = new Array(m), areac = new Array(m + 1);
+      
+      for (i=0; i<m; i++) {
+        if (curve.tag[i] == "CURVE") {
+          convc[i] = sign(dpara(vert[mod(i-1,m)], vert[i], vert[mod(i+1,m)]));
+        } else {
+          convc[i] = 0;
+        }
+      }
+    
+      area = 0.0;
+      areac[0] = 0.0;
+      p0 = curve.vertex[0];
+      for (i=0; i<m; i++) {
+        i1 = mod(i+1, m);
+        if (curve.tag[i1] == "CURVE") {
+          alpha = curve.alpha[i1];
+          area += 0.3 * alpha * (4-alpha) *
+              dpara(curve.c[i * 3 + 2], vert[i1], curve.c[i1 * 3 + 2])/2;
+          area += dpara(p0, curve.c[i * 3 + 2], curve.c[i1 * 3 + 2])/2;
+        }
+        areac[i+1] = area;
+      }
+    
+      pt[0] = -1;
+      pen[0] = 0;
+      len[0] = 0;
+    
+    
+      for (j=1; j<=m; j++) {
+        pt[j] = j-1;
+        pen[j] = pen[j-1];
+        len[j] = len[j-1]+1;
+    
+        for (i=j-2; i>=0; i--) {
+          r = opti_penalty(path, i, mod(j,m), o, info.opttolerance, convc, 
+              areac);
+          if (r) {
+            break;
+          }
+            if (len[j] > len[i]+1 ||
+                (len[j] == len[i]+1 && pen[j] > pen[i] + o.pen)) {
+              pt[j] = i;
+              pen[j] = pen[i] + o.pen;
+              len[j] = len[i] + 1;
+              opt[j] = o;
+              o = new Opti();
+            }
+        }
+      }
+      om = len[m];
+      ocurve = new Curve(om);
+      s = new Array(om);
+      t = new Array(om);
+    
+      j = m;
+      for (i=om-1; i>=0; i--) {
+        if (pt[j]==j-1) {
+          ocurve.tag[i]     = curve.tag[mod(j,m)];
+          ocurve.c[i * 3 + 0]    = curve.c[mod(j,m) * 3 + 0];
+          ocurve.c[i * 3 + 1]    = curve.c[mod(j,m) * 3 + 1];
+          ocurve.c[i * 3 + 2]    = curve.c[mod(j,m) * 3 + 2];
+          ocurve.vertex[i]  = curve.vertex[mod(j,m)];
+          ocurve.alpha[i]   = curve.alpha[mod(j,m)];
+          ocurve.alpha0[i]  = curve.alpha0[mod(j,m)];
+          ocurve.beta[i]    = curve.beta[mod(j,m)];
+          s[i] = t[i] = 1.0;
+        } else {
+          ocurve.tag[i] = "CURVE";
+          ocurve.c[i * 3 + 0] = opt[j].c[0];
+          ocurve.c[i * 3 + 1] = opt[j].c[1];
+          ocurve.c[i * 3 + 2] = curve.c[mod(j,m) * 3 + 2];
+          ocurve.vertex[i] = interval(opt[j].s, curve.c[mod(j,m) * 3 + 2],
+                                       vert[mod(j,m)]);
+          ocurve.alpha[i] = opt[j].alpha;
+          ocurve.alpha0[i] = opt[j].alpha;
+          s[i] = opt[j].s;
+          t[i] = opt[j].t;
+        }
+        j = pt[j];
+      }
+    
+      for (i=0; i<om; i++) {
+        i1 = mod(i+1,om);
+        ocurve.beta[i] = s[i] / (s[i] + t[i1]);
+      }
+      ocurve.alphacurve = 1;
+      path.curve = ocurve;
+    }
+    
+    for (var i = 0; i < pathlist.length; i++) {
+      var path = pathlist[i];
+      calcSums(path);
+      calcLon(path);
+      bestPolygon(path);
+      adjustVertices(path);
+      
+      if (path.sign === "-") {
+        reverse(path);
+      }
+      
+      smooth(path);
+      
+      if (info.optcurve) {
+        optiCurve(path);
+      }
+    }
+  
+  }
+
+  function process(c) {
+    if (c) {
+      callback = c;
+    }
+    if (!info.isReady) {
+      setTimeout(process, 100);
+      return;
+    }
+    bmToPathlist();
+    processPath();
+    callback();
+    callback = null;
+  }
+
+  function clear() {
+    bm = null;
+    pathlist = [];
+    callback = null;
+    info.isReady = false;
+  }
+  
+  function getSVG(size, opt_type) {
+  
+    function path(curve) {
+    
+      function bezier(i) {
+        var b = 'C ' + (curve.c[i * 3 + 0].x * size).toFixed(3) + ' ' +
+            (curve.c[i * 3 + 0].y * size).toFixed(3) + ',';
+        b += (curve.c[i * 3 + 1].x * size).toFixed(3) + ' ' +
+            (curve.c[i * 3 + 1].y * size).toFixed(3) + ',';
+        b += (curve.c[i * 3 + 2].x * size).toFixed(3) + ' ' +
+            (curve.c[i * 3 + 2].y * size).toFixed(3) + ' ';
+        return b;
+      }
+    
+      function segment(i) {
+        var s = 'L ' + (curve.c[i * 3 + 1].x * size).toFixed(3) + ' ' +
+            (curve.c[i * 3 + 1].y * size).toFixed(3) + ' ';
+        s += (curve.c[i * 3 + 2].x * size).toFixed(3) + ' ' +
+            (curve.c[i * 3 + 2].y * size).toFixed(3) + ' ';
+        return s;
+      }
+
+      var n = curve.n, i;
+      var p = 'M' + (curve.c[(n - 1) * 3 + 2].x * size).toFixed(3) +
+          ' ' + (curve.c[(n - 1) * 3 + 2].y * size).toFixed(3) + ' ';
+      for (i = 0; i < n; i++) {
+        if (curve.tag[i] === "CURVE") {
+          p += bezier(i);
+        } else if (curve.tag[i] === "CORNER") {
+          p += segment(i);
+        }
+      }
+      //p += 
+      return p;
+    }
+
+    var w = bm.w * size, h = bm.h * size,
+      len = pathlist.length, c, i, strokec, fillc, fillrule;
+
+    var svg = '<svg id="svg" version="1.1" width="' + w + '" height="' + h +
+        '" xmlns="http://www.w3.org/2000/svg">';
+    svg += '<path d="';
+    for (i = 0; i < len; i++) {
+      c = pathlist[i].curve;
+      svg += path(c);
+    }
+    if (opt_type === "curve") {
+      strokec = "black";
+      fillc = "none";
+      fillrule = '';
+    } else {
+      strokec = "none";
+      fillc = "black";
+      fillrule = ' fill-rule="evenodd"';
+    }
+    svg += '" stroke="' + strokec + '" fill="' + fillc + '"' + fillrule + '/></svg>';
+    return svg;
+  }
+  
+  return{
+    loadImageFromFile: loadImageFromFile,
+    loadImageFromUrl: loadImageFromUrl,
+    setParameter: setParameter,
+    process: process,
+    getSVG: getSVG,
+    img: imgElement
+  };
+})();
+
+// ══ SVG CONVERTER ══
 var svgActual = null;
 var svgNombreArchivo = 'imagen';
-var svgHistorial = [];
 
 function handleSVGDrop(e){
   e.preventDefault();
-  document.getElementById('svg-dropzone').style.borderColor='#E2DDD6';
-  var file = e.dataTransfer.files[0];
-  if(file && file.type.startsWith('image/')) cargarImagenSVG(file);
+  var dz=document.getElementById('svg-dropzone');if(dz)dz.style.borderColor='#E2DDD6';
+  var f=e.dataTransfer.files[0];
+  if(f&&f.type.startsWith('image/')) cargarImagenSVG(f);
 }
 
 function cargarImagenSVG(file){
-  if(!file) return;
-  svgNombreArchivo = file.name.replace(/\.[^.]+$/, '');
-  var reader = new FileReader();
-  reader.onload = function(e){
-    var imgEl = document.getElementById('svg-original-img');
-    imgEl.src = e.target.result;
-    imgEl.dataset.dataurl = e.target.result; // guardar DataURL directo
-    var origWrap = document.getElementById('svg-original-wrap');
-    var opciones = document.getElementById('svg-opciones');
-    var dropzone = document.getElementById('svg-dropzone');
-    var resWrap  = document.getElementById('svg-resultado-wrap');
-    var resPh    = document.getElementById('svg-resultado-placeholder');
-    var guardMsg = document.getElementById('svg-guardado-msg');
-    if(origWrap) origWrap.style.display='block';
-    if(opciones) opciones.style.display='block';
-    if(dropzone) dropzone.style.display='none';
-    svgActual = null;
-    if(resWrap)  resWrap.style.display='none';
-    if(resPh)    resPh.style.display='flex';
-    if(guardMsg) guardMsg.style.display='none';
+  if(!file||!file.type.startsWith('image/'))return;
+  svgNombreArchivo=file.name.replace(/[.][^.]+$/,'');
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    window._svgDataURL=ev.target.result;
+    var img=document.getElementById('svg-original-img');
+    if(img) img.src=ev.target.result;
+    ['svg-dropzone'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display='none';});
+    ['svg-original-wrap','svg-opciones'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display='block';});
+    ['svg-resultado-wrap','svg-guardado-msg'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display='none';});
+    var ph=document.getElementById('svg-resultado-placeholder');if(ph)ph.style.display='flex';
+    svgActual=null;
   };
   reader.readAsDataURL(file);
 }
 
 function convertirASVG(){
-  var imgEl = document.getElementById('svg-original-img');
-  if(!imgEl.src || imgEl.src === window.location.href) return;
+  var dataURL=window._svgDataURL;
+  if(!dataURL){alert('Primero seleccioná una imagen.');return;}
+  var btn=document.getElementById('btn-convertir');
+  if(btn){btn.textContent='Convirtiendo...';btn.disabled=true;}
 
-  var btn = document.getElementById('btn-convertir');
-  btn.innerHTML = '<div style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite"></div> Convirtiendo...';
-  btn.disabled = true;
+  var img=new Image();
+  img.onload=function(){
+    var maxPx=600, scale=Math.min(maxPx/img.width,maxPx/img.height,1);
+    var w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+    var canvas=document.createElement('canvas');
+    canvas.width=w; canvas.height=h;
+    var ctx=canvas.getContext('2d');
+    ctx.fillStyle='#ffffff';
+    ctx.fillRect(0,0,w,h);
+    ctx.drawImage(img,0,0,w,h);
 
-  // Draw image to canvas
-  var canvas = document.createElement('canvas');
-  var ctx = canvas.getContext('2d');
-  var img = new Image();
-  // usar el DataURL guardado para evitar problemas de CORS/file://
-  var imgElSrc = imgEl.dataset.dataurl || imgEl.src;
-  img.onload = function(){
-    // Max 800px para mejor performance
-    var maxW = 800, maxH = 800;
-    var scale = Math.min(maxW/img.width, maxH/img.height, 1);
-    canvas.width  = Math.round(img.width  * scale);
-    canvas.height = Math.round(img.height * scale);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-
-    var umbralBlanco = parseInt(document.getElementById('svg-umbral') ? document.getElementById('svg-umbral').value : 240);
-    var blur = parseInt(document.getElementById('svg-blur').value);
-    var tol  = parseInt(document.getElementById('svg-tolerancia').value);
-
-    // Pre-procesar: binarizar imagen (solo negro puro o transparente)
-    var rawData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    var pxData = rawData.data;
-    for(var pi = 0; pi < pxData.length; pi += 4){
-      var avg = (pxData[pi] + pxData[pi+1] + pxData[pi+2]) / 3;
-      if(avg > umbralBlanco || pxData[pi+3] < 128){
-        pxData[pi]=255; pxData[pi+1]=255; pxData[pi+2]=255; pxData[pi+3]=0; // transparente
-      } else {
-        pxData[pi]=0; pxData[pi+1]=0; pxData[pi+2]=0; pxData[pi+3]=255; // negro
-      }
+    // Binarizar con umbral
+    var umbral=parseInt((document.getElementById('svg-umbral')||{value:200}).value)||200;
+    var id=ctx.getImageData(0,0,w,h), d=id.data;
+    for(var i=0;i<d.length;i+=4){
+      var bright=(d[i]+d[i+1]+d[i+2])/3;
+      var dark=d[i+3]>30&&bright<umbral;
+      d[i]=dark?0:255; d[i+1]=dark?0:255; d[i+2]=dark?0:255; d[i+3]=255;
     }
-    ctx.putImageData(rawData, 0, 0);
+    ctx.putImageData(id,0,0);
 
-    setTimeout(function(){
-      try {
-        // Usar directamente el método de píxeles → rectángulos SVG
-        // para garantizar fondo 100% transparente, compatible con cualquier slicer
-        var svgString = pixelsAPathsSVG(canvas, umbralBlanco);
-        mostrarResultadoSVG(svgString, canvas.width, canvas.height);
-      } catch(err){
-        console.error(err);
-        btn.innerHTML = 'Convertir a SVG'; btn.disabled = false;
-        alert('Error al convertir: ' + err.message);
-      }
-    }, 50);
+    try{
+      Potrace.setParameter({turdsize:2,alphamax:1,opticurve:1,opttolerance:0.2});
+      // Cargar via data URL (la API de potrace acepta URLs)
+      var dataUrl=canvas.toDataURL('image/png');
+      Potrace.loadImageFromUrl(dataUrl);
+      Potrace.process(function(){
+        var svg=Potrace.getSVG(1);
+        // Limpiar: quitar rects de fondo, poner paths en negro
+        var parser=new DOMParser();
+        var doc=parser.parseFromString(svg,'image/svg+xml');
+        var svgEl=doc.querySelector('svg');
+        if(svgEl){
+          // Quitar todos los rects (fondo)
+          Array.from(svgEl.querySelectorAll('rect')).forEach(function(r){r.remove();});
+          // Paths en negro
+          Array.from(svgEl.querySelectorAll('path')).forEach(function(p){p.setAttribute('fill','#000000');});
+          svgEl.style.background='none';
+          svg=new XMLSerializer().serializeToString(svgEl);
+        }
+        mostrarResultadoSVG(svg,w,h);
+      });
+    }catch(err){
+      console.error('Potrace:',err);
+      if(btn){btn.textContent='Convertir a SVG';btn.disabled=false;}
+      alert('Error: '+err.message);
+    }
   };
-  img.src = imgElSrc;
+  img.onerror=function(){
+    if(btn){btn.textContent='Convertir a SVG';btn.disabled=false;}
+  };
+  img.src=dataURL;
 }
 
-function colorEsClaro(fill, umbral){
-  umbral = umbral || 230;
-  if(!fill) return false;
-  fill = fill.trim().toLowerCase();
-  if(fill === 'white' || fill === '#fff' || fill === '#ffffff') return true;
-  if(fill === 'none' || fill === 'transparent') return false;
-  var hex = null;
-  if(fill.startsWith('#')){
-    if(fill.length === 4) hex = fill[1]+fill[1]+fill[2]+fill[2]+fill[3]+fill[3];
-    else if(fill.length === 7) hex = fill.slice(1);
+function mostrarResultadoSVG(svgStr,w,h){
+  svgActual=svgStr;
+  var kb=(new Blob([svgStr]).size/1024).toFixed(1);
+  var preview=document.getElementById('svg-preview');
+  if(preview){
+    preview.innerHTML='';
+    var div=document.createElement('div');
+    div.style.cssText='width:100%;max-height:300px;overflow:hidden;background:#f5f5f5';
+    div.innerHTML=svgStr;
+    var s=div.querySelector('svg');
+    if(s){s.style.width='100%';s.style.height='auto';s.style.maxHeight='290px';}
+    preview.appendChild(div);
   }
-  if(hex){
-    var r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
-    return r > umbral && g > umbral && b > umbral;
-  }
-  var rgb = fill.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-  if(rgb) return parseInt(rgb[1])>umbral && parseInt(rgb[2])>umbral && parseInt(rgb[3])>umbral;
-  return false;
-}
-
-function quitarFondoSVG(svgString){
-  var umbral = parseInt(document.getElementById('svg-umbral') ? document.getElementById('svg-umbral').value : 230);
-  var parser = new DOMParser();
-  var doc = parser.parseFromString(svgString, 'image/svg+xml');
-  var svgEl = doc.querySelector('svg');
-  if(!svgEl) return svgString;
-
-  // Quitar cualquier rect de fondo claro
-  svgEl.querySelectorAll('rect').forEach(function(el){
-    if(colorEsClaro(el.getAttribute('fill'), umbral)) el.remove();
-  });
-
-  // Quitar TODOS los grupos con fill claro (no solo el primero)
-  svgEl.querySelectorAll('g').forEach(function(g){
-    var fill = g.getAttribute('fill') || '';
-    if(!fill){
-      // Intentar con el primer path hijo
-      var firstPath = g.querySelector('path');
-      if(firstPath) fill = firstPath.getAttribute('fill') || '';
-    }
-    if(colorEsClaro(fill, umbral)) g.remove();
-  });
-
-  // Quitar paths sueltos con fill claro
-  svgEl.querySelectorAll('path').forEach(function(p){
-    if(colorEsClaro(p.getAttribute('fill'), umbral)) p.remove();
-  });
-
-  // Fondo transparente explícito
-  svgEl.setAttribute('style','background:transparent');
-  // Quitar cualquier atributo de fondo
-  svgEl.removeAttribute('bgcolor');
-
-  var serializer = new XMLSerializer();
-  var result = serializer.serializeToString(svgEl);
-  // Reemplazar cualquier fill blanco residual que pueda quedar como atributo inline
-  result = result.replace(/fill="#fff(fff)?"/gi, 'fill="none"');
-  result = result.replace(/fill="white"/gi, 'fill="none"');
-  result = result.replace(/fill="rgb\(255,\s*255,\s*255\)"/gi, 'fill="none"');
-  return result;
-}
-
-function limpiarSVGParaSlicer(svgString, umbral){
-  umbral = umbral || 230;
-  var parser = new DOMParser();
-  var doc = parser.parseFromString(svgString, 'image/svg+xml');
-  var svgEl = doc.querySelector('svg');
-  if(!svgEl) return svgString;
-
-  // Eliminar rect de fondo
-  svgEl.querySelectorAll('rect').forEach(function(el){ el.remove(); });
-
-  // Eliminar TODOS los grupos/paths con fill claro
-  function esClaro(fill){
-    if(!fill || fill === 'none') return false;
-    fill = fill.trim().toLowerCase();
-    if(fill === '#fff' || fill === '#ffffff' || fill === 'white') return true;
-    if(fill.startsWith('#') && fill.length === 7){
-      var r=parseInt(fill.slice(1,3),16), g=parseInt(fill.slice(3,5),16), b=parseInt(fill.slice(5,7),16);
-      return (r+g+b)/3 > umbral;
-    }
-    return false;
-  }
-
-  svgEl.querySelectorAll('g').forEach(function(g){
-    var fill = g.getAttribute('fill') || '';
-    if(!fill){ var p = g.querySelector('path'); if(p) fill = p.getAttribute('fill')||''; }
-    if(esClaro(fill)) g.remove();
-  });
-  svgEl.querySelectorAll('path').forEach(function(p){
-    if(esClaro(p.getAttribute('fill'))) p.remove();
-  });
-
-  svgEl.removeAttribute('style');
-  // Asegurarse de que no haya fondo
-  var ser = new XMLSerializer();
-  var out = ser.serializeToString(svgEl);
-  out = out.replace(/fill\s*=\s*["']#f{3,6}["']/gi, 'fill="none"');
-  out = out.replace(/fill\s*=\s*["']white["']/gi, 'fill="none"');
-  return out;
-}
-
-// Trazar pixels directamente en rectángulos SVG — sin fondo, compatible con slicers
-function pixelsAPathsSVG(canvas, umbral){
-  var ctx = canvas.getContext('2d');
-  var w = canvas.width, h = canvas.height;
-  var data = ctx.getImageData(0, 0, w, h).data;
-  var rects = [];
-  var threshold = umbral || 200;
-
-  for(var y = 0; y < h; y++){
-    var startX = -1;
-    for(var x = 0; x <= w; x++){
-      var isDark = false;
-      if(x < w){
-        var i = (y * w + x) * 4;
-        var alpha = data[i+3];
-        var brightness = (data[i] + data[i+1] + data[i+2]) / 3;
-        isDark = alpha > 128 && brightness < threshold;
-      }
-      if(isDark && startX === -1){
-        startX = x;
-      } else if(!isDark && startX !== -1){
-        rects.push('<rect x="'+startX+'" y="'+y+'" width="'+(x-startX)+'" height="1"/>');
-        startX = -1;
-      }
-    }
-  }
-
-  // SVG con fill negro en el grupo, sin fondo, sin background
-  return '<?xml version="1.0" encoding="UTF-8"?>
-'+
-    '<svg xmlns="http://www.w3.org/2000/svg" '+
-    'viewBox="0 0 '+w+' '+h+'" '+
-    'width="'+w+'" height="'+h+'" '+
-    'style="background:none">'+
-    '<g fill="#000000" stroke="none">'+
-    rects.join('')+
-    '</g>'+
-    '</svg>';
-}
-
-function mostrarResultadoSVG(svgString, w, h){
-  // Quitar fondo blanco
-  svgString = quitarFondoSVG(svgString);
-  svgActual = svgString;
-  var bytes = new Blob([svgString]).size;
-  var kb = (bytes/1024).toFixed(1);
-
-  // Preview
-  var preview = document.getElementById('svg-preview');
-  preview.innerHTML = '';
-  var div = document.createElement('div');
-  div.style.cssText = 'width:100%;max-height:300px;overflow:hidden';
-  div.innerHTML = svgString;
-  var svgEl = div.querySelector('svg');
-  if(svgEl){ svgEl.style.width='100%'; svgEl.style.height='auto'; svgEl.style.maxHeight='290px'; }
-  preview.appendChild(div);
-
-  // Info
-  document.getElementById('svg-info').innerHTML =
-    '<b>Tamaño:</b> '+kb+' KB<br>'+
-    '<b>Dimensiones:</b> '+w+' × '+h+' px<br>'+
-    '<b>Archivo:</b> '+svgNombreArchivo+'.svg';
-
-  document.getElementById('svg-resultado-wrap').style.display='block';
-  document.getElementById('svg-resultado-placeholder').style.display='none';
-  document.getElementById('svg-guardado-msg').style.display='none';
-
-  var btn = document.getElementById('btn-convertir');
-  btn.innerHTML = 'Convertir de nuevo';
-  btn.disabled = false;
+  var info=document.getElementById('svg-info');
+  if(info) info.innerHTML='<b>Tamaño:</b> '+kb+' KB<br><b>Dimensiones:</b> '+w+' x '+h+' px<br><b>Archivo:</b> '+svgNombreArchivo+'.svg';
+  var show=function(id,v){var e=document.getElementById(id);if(e)e.style.display=v;};
+  show('svg-resultado-wrap','block');
+  show('svg-resultado-placeholder','none');
+  show('svg-guardado-msg','none');
+  var btn=document.getElementById('btn-convertir');
+  if(btn){btn.textContent='Convertir de nuevo';btn.disabled=false;}
 }
 
 function descargarSVG(){
-  if(!svgActual) return;
-  var blob = new Blob([svgActual], {type:'image/svg+xml'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = svgNombreArchivo + '.svg';
-  a.click();
+  if(!svgActual)return;
+  var blob=new Blob([svgActual],{type:'image/svg+xml'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download=svgNombreArchivo+'.svg';a.click();
   URL.revokeObjectURL(url);
 }
 
 function guardarSVGHistorial(){
-  if(!svgActual){ return; }
+  if(!svgActual)return;
+  if(!window.currentUser){mostrarLoginModal('svg');window._pendingSVG=true;return;}
+  var btn=document.getElementById('btn-guardar-svg');
+  if(btn){btn.textContent='Guardando...';btn.disabled=true;}
+  var bytes=new Blob([svgActual]).size;
+  if(bytes>500000){
+    var msg=document.getElementById('svg-guardado-msg');
+    if(msg){msg.style.display='block';msg.textContent='SVG muy grande (>500KB). Descargalo directamente.';}
+    if(btn){btn.textContent='Guardar en historial';btn.disabled=false;}
+    return;
+  }
+  firebase.firestore().collection('svg_historial').add({
+    uid:window.currentUser.uid,nombre:svgNombreArchivo,
+    fecha:firebase.firestore.FieldValue.serverTimestamp(),bytes:bytes,svgData:svgActual
+  }).then(function(){
+    var msg=document.getElementById('svg-guardado-msg');
+    if(msg){msg.style.display='block';msg.style.background='#F0FDF4';msg.style.color='#166534';msg.textContent='Guardado en tu historial.';}
+    if(btn){btn.textContent='Guardado';btn.style.background='#F0FDF4';btn.style.color='#166534';}
+    if(typeof cargarHistorialSVG==='function')cargarHistorialSVG();
+  }).catch(function(e){
+    var msg=document.getElementById('svg-guardado-msg');
+    if(msg){msg.style.display='block';msg.textContent='Error: '+e.message;}
+    if(btn){btn.textContent='Guardar en historial';btn.disabled=false;}
+  });
+}
+
+function cargarHistorialSVG(){
+  var cont=document.getElementById('svg-historial-contenido');
+  if(!cont)return;
   if(!window.currentUser){
-    window._pendingSVG = true;
-    mostrarLoginModal('svg');
+    cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:Outfit,sans-serif">Iniciá sesión para ver tu historial.</div></div>';
     return;
   }
-  var btn = document.getElementById('btn-guardar-svg');
-  btn.innerHTML = '⏳ Guardando...';
-  btn.disabled = true;
-
-  // Comprimir SVG si es muy grande (>500KB)
-  var bytes = new Blob([svgActual]).size;
-  if(bytes > 500000){
-    document.getElementById('svg-guardado-msg').style.display='block';
-    document.getElementById('svg-guardado-msg').style.background='#FEF2F2';
-    document.getElementById('svg-guardado-msg').style.color='#B91C1C';
-    document.getElementById('svg-guardado-msg').textContent='El SVG es muy grande para guardar en el historial (>500KB). Descargalo directamente.';
-    btn.innerHTML='Guardar en historial';
-    btn.disabled=false;
-    return;
-  }
-
-  var entry = {
-    uid: window.currentUser.uid,
-    nombre: svgNombreArchivo,
-    fecha: firebase.firestore.FieldValue.serverTimestamp(),
-    bytes: bytes,
-    svgData: svgActual
-  };
-
-  firebase.firestore().collection('svg_historial').add(entry)
-    .then(function(){
-      document.getElementById('svg-guardado-msg').style.display='block';
-      document.getElementById('svg-guardado-msg').style.background='#F0FDF4';
-      document.getElementById('svg-guardado-msg').style.color='#166534';
-      document.getElementById('svg-guardado-msg').textContent='✓ Guardado en tu historial. Lo podés descargar cuando quieras.';
-      btn.innerHTML='✓ Guardado';
-      btn.style.background='#F0FDF4';
-      btn.style.color='#166534';
-      cargarHistorialSVG();
-    })
-    .catch(function(e){
-      document.getElementById('svg-guardado-msg').style.display='block';
-      document.getElementById('svg-guardado-msg').textContent='Error al guardar: '+e.message;
-      btn.innerHTML='Guardar en historial';
-      btn.disabled=false;
+  cont.innerHTML='<div style="text-align:center;padding:1rem;color:#8A8479;font-family:Outfit,sans-serif">Cargando...</div>';
+  firebase.firestore().collection('svg_historial')
+    .where('uid','==',window.currentUser.uid)
+    .orderBy('fecha','desc').limit(20).get()
+    .then(function(snap){
+      var count=document.getElementById('svg-historial-count');
+      if(snap.empty){
+        cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:Outfit,sans-serif">Todavía no guardaste ningún SVG.</div></div>';
+        return;
+      }
+      if(count)count.textContent=snap.size+' archivo'+(snap.size!==1?'s':'');
+      cont.innerHTML='';
+      var grid=document.createElement('div');
+      grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px';
+      snap.forEach(function(doc){
+        var d=doc.data();
+        var fecha=d.fecha?d.fecha.toDate().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+        var kb=d.bytes?(d.bytes/1024).toFixed(1)+' KB':'—';
+        var card=document.createElement('div');
+        card.style.cssText='background:#fff;border:1px solid #E2DDD6;border-radius:10px;overflow:hidden';
+        var prev=document.createElement('div');
+        prev.style.cssText='background:#F5F2ED;height:120px;display:flex;align-items:center;justify-content:center;padding:8px';
+        if(d.svgData){
+          var blob=new Blob([d.svgData],{type:'image/svg+xml'});
+          var burl=URL.createObjectURL(blob);
+          var im=document.createElement('img');
+          im.src=burl;im.style.cssText='max-width:100%;max-height:100%;object-fit:contain';
+          prev.appendChild(im);
+        }
+        var info=document.createElement('div');
+        info.style.cssText='padding:10px 12px';
+        info.innerHTML='<div style="font-size:0.82rem;font-weight:600;color:#1A1814;margin-bottom:2px">'+(d.nombre||'svg')+'</div>'
+          +'<div style="font-size:0.72rem;color:#8A8479;margin-bottom:8px">'+fecha+' · '+kb+'</div>'
+          +'<div style="display:flex;gap:6px">'
+            +'<button data-id="'+doc.id+'" class="btn-dl-svg" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer">SVG</button>'
+            +'<button data-id="'+doc.id+'" class="btn-del-svg" style="padding:6px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.75rem;cursor:pointer">🗑</button>'
+          +'</div>';
+        card.appendChild(prev);card.appendChild(info);grid.appendChild(card);
+      });
+      cont.appendChild(grid);
+    }).catch(function(e){
+      cont.innerHTML='<div style="color:#B91C1C;padding:1rem;font-size:0.85rem">Error: '+e.message+'</div>';
     });
 }
 
-
-
-function guardarPresupuesto(datos){
-  if(!window.currentUser) return;
-  firebase.firestore().collection('presupuestos').add({
-    uid: window.currentUser.uid, email: window.currentUser.email, nombre: window.currentUser.displayName||'',
-    fecha: firebase.firestore.FieldValue.serverTimestamp(), proyecto: datos.proyecto||'', descripcion: datos.descripcion||'',
-    cantidad: datos.cantidad||1, precioUnit: datos.precioUnit||0, precioTotal: datos.precioTotal||0,
-    validez: datos.validez||'', condiciones: datos.condiciones||'', cliente: datos.cliente||'', estado: 'Enviado',
-    items: datos.items||[], empresa: datos.empresa||'', tel: datos.tel||'', email2: datos.email2||'',
-    web: datos.web||'', colorPrimario: datos.colorPrimario||'', colorSecundario: datos.colorSecundario||''
-  }).catch(function(e){ console.error('Error guardando presupuesto:', e); });
-}
-
-function regenerarPDF(docId, d){
-  var jsPDF=window.jspdf&&window.jspdf.jsPDF?window.jspdf.jsPDF:window.jsPDF;
-  if(!jsPDF){alert('Error: no se pudo cargar la librería PDF.');return;}
-  var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  var w=210,h=297;
-  var rgb1=hexToRgb(d.colorPrimario||'#4797ff');
-  var rgb2=hexToRgb(d.colorSecundario||'#6200ff');
-  doc.setFillColor(rgb1[0],rgb1[1],rgb1[2]); doc.rect(0,0,w,45,'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(20); doc.setFont('helvetica','bold');
-  doc.text(d.empresa||'Chulengo Estudio', pdfLogoBase64?46:14, 22);
-  var contactX=pdfLogoBase64?46:14; var contactY=28;
-  doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(255,255,255);
-  if(d.tel){ doc.setFillColor(37,211,102); doc.roundedRect(contactX,contactY-3.2,6,4,1,1,'F'); doc.setTextColor(255,255,255); doc.setFontSize(5.5); doc.setFont('helvetica','bold'); doc.text('WA',contactX+1,contactY-0.6); doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.text(d.tel,contactX+8,contactY); contactY+=5; }
-  if(d.email2){ doc.setFillColor(180,210,255); doc.roundedRect(contactX,contactY-3.2,6,4,1,1,'F'); doc.setTextColor(rgb1[0],rgb1[1],rgb1[2]); doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.text('@',contactX+1.8,contactY-0.5); doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(255,255,255); doc.text(d.email2,contactX+8,contactY); contactY+=5; }
-  if(d.web){ var esIG=d.web.toLowerCase().includes('instagram')||d.web.startsWith('@'); doc.setFillColor(esIG?193:100,esIG?53:100,esIG?132:255); doc.roundedRect(contactX,contactY-3.2,6,4,1,1,'F'); doc.setTextColor(255,255,255); doc.setFontSize(5.5); doc.setFont('helvetica','bold'); doc.text(esIG?'IG':'Web',contactX+(esIG?1.2:0.5),contactY-0.6); doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.text(d.web,contactX+8,contactY); }
-  doc.setTextColor(255,255,255); doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.text('PRESUPUESTO',w-14,15,{align:'right'});
-  var fecha=d.fecha?d.fecha.toDate().toLocaleDateString('es-AR'):'—';
-  var nro='P-'+Math.floor(Math.random()*900000+100000);
-  doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.text('N° '+nro,w-14,21,{align:'right'}); doc.text('Fecha: '+fecha,w-14,27,{align:'right'}); if(d.validez) doc.text('Válido: '+d.validez,w-14,33,{align:'right'});
-  doc.setTextColor(rgb1[0],rgb1[1],rgb1[2]); doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.text(d.proyecto||'',14,58);
-  if(d.descripcion){doc.setTextColor(80,80,80);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(d.descripcion,14,65);}
-  var tableY=d.descripcion?72:65;
-  doc.setFillColor(rgb1[0],rgb1[1],rgb1[2]); doc.rect(14,tableY,w-28,9,'F'); doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
-  doc.text('Descripción',18,tableY+6); doc.text('Cant.',120,tableY+6,{align:'center'}); doc.text('Precio unit.',155,tableY+6,{align:'right'}); doc.text('Total',w-18,tableY+6,{align:'right'});
-  var items=d.items&&d.items.length>0?d.items:[{nombre:d.proyecto||'',precio:d.precioTotal||0}];
-  var rowY=tableY+9; var grandTotal=0;
-  items.forEach(function(item,idx){
-    if(idx%2===0){doc.setFillColor(248,248,248);}else{doc.setFillColor(255,255,255);}
-    doc.rect(14,rowY,w-28,10,'F'); doc.setTextColor(30,30,30); doc.setFont('helvetica','normal'); doc.setFontSize(9);
-    var nm=item.nombre&&item.nombre.length>55?item.nombre.substring(0,52)+'...':item.nombre||'';
-    doc.text(nm,18,rowY+7); doc.text('1',120,rowY+7,{align:'center'});
-    doc.text(new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(item.precio),155,rowY+7,{align:'right'});
-    doc.text(new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(item.precio),w-18,rowY+7,{align:'right'});
-    grandTotal+=item.precio; rowY+=10;
+function descargarSVGHistorial(id){
+  firebase.firestore().collection('svg_historial').doc(id).get().then(function(doc){
+    if(!doc.exists)return;
+    var d=doc.data();
+    var blob=new Blob([d.svgData],{type:'image/svg+xml'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download=(d.nombre||'svg')+'.svg';a.click();
+    URL.revokeObjectURL(url);
   });
-  doc.setDrawColor(220,220,220); doc.rect(14,tableY,w-28,rowY-tableY);
-  var totalY=rowY+10;
-  doc.setFillColor(45,106,79); doc.roundedRect(w-80,totalY,66,16,3,3,'F'); doc.setTextColor(255,255,255); doc.setFontSize(10); doc.setFont('helvetica','bold');
-  doc.text('TOTAL:',w-76,totalY+7); doc.setFontSize(12);
-  doc.text(new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(grandTotal),w-18,totalY+10,{align:'right'});
-  if(d.condiciones){ var condY=totalY+30; doc.setDrawColor(rgb1[0],rgb1[1],rgb1[2]); doc.setLineWidth(0.5); doc.line(14,condY,w-14,condY); doc.setTextColor(50,50,50); doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.text('Condiciones:',14,condY+7); doc.setFont('helvetica','normal'); doc.text(d.condiciones,14,condY+13); }
-  doc.setFillColor(rgb1[0],rgb1[1],rgb1[2]); doc.rect(0,h-18,w,18,'F'); doc.setTextColor(180,180,180); doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.text(d.empresa||'Chulengo Estudio',w/2,h-8,{align:'center'});
-  doc.save('Presupuesto-'+nro+'.pdf');
 }
-
-function eliminarPresupuesto(docId, el){
-  if(!confirm('¿Eliminar este presupuesto?')) return;
-  firebase.firestore().collection('presupuestos').doc(docId).delete()
-    .then(function(){ el.closest('.pres-card').remove(); })
-    .catch(function(e){ alert('Error al eliminar.'); });
+function eliminarSVGHistorial(id){
+  if(!confirm('Eliminar este SVG?'))return;
+  firebase.firestore().collection('svg_historial').doc(id).delete().then(cargarHistorialSVG);
 }
-
-function cargarMisPresupuestos(){
-  if(!window.currentUser){
-    document.getElementById('lista-presupuestos').innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Iniciá sesión para ver tus presupuestos.</p>';
-    return;
-  }
-  var lista = document.getElementById('lista-presupuestos');
-  lista.innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Cargando...</p>';
-  firebase.firestore().collection('presupuestos').where('uid','==',window.currentUser.uid).get()
-    .then(function(snap){
-      todosPresupuestos=[];
-      snap.forEach(function(doc){todosPresupuestos.push({id:doc.id,data:doc.data()});});
-      todosPresupuestos.sort(function(a,b){ var ta=a.data.fecha?a.data.fecha.toMillis():0; var tb=b.data.fecha?b.data.fecha.toMillis():0; return tb-ta; });
-      var count=document.getElementById('pres-count');
-      if(count) count.textContent=todosPresupuestos.length+' presupuesto'+(todosPresupuestos.length!==1?'s':'');
-      filtroEstadoActual='Todos';
-      document.querySelectorAll('.pres-filtro').forEach(function(b){b.classList.remove('active');});
-      var btnTodos=document.querySelector('.pres-filtro[data-estado="Todos"]');
-      if(btnTodos) btnTodos.classList.add('active');
-      var search=document.getElementById('pres-search');
-      if(search) search.value='';
-      renderListaPresupuestos(todosPresupuestos);
-      calcularEstadisticas(todosPresupuestos);
-    })
-    .catch(function(e){ console.error(e); lista.innerHTML='<p style="color:#DC2626;font-size:0.85rem;text-align:center;padding:2rem">Error al cargar. Intentá de nuevo.</p>'; });
-}
+document.addEventListener('click',function(e){
+  var dl=e.target.closest('.btn-dl-svg');
+  var del=e.target.closest('.btn-del-svg');
+  if(dl)descargarSVGHistorial(dl.dataset.id);
+  if(del)eliminarSVGHistorial(del.dataset.id);
+});
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
@@ -1689,8 +2796,11 @@ function cerrarHerramienta(){
         <!-- Panel izquierdo: upload + opciones -->
         <div>
           <!-- Drop zone -->
-          <div id="svg-dropzone" onclick="var fi=document.getElementById('svg-file-input');if(fi){fi.value='';fi.click();}" ondragover="event.preventDefault();this.style.borderColor='#2D6A4F'" ondragleave="this.style.borderColor='#E2DDD6'" ondrop="handleSVGDrop(event)" style="background:#F9F9F9;border:2px dashed #E2DDD6;border-radius:12px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:1rem">
-            <div style="font-size:2.5rem;margin-bottom:0.75rem">📁</div>
+          <div id="svg-dropzone" ondragover="event.preventDefault();this.style.borderColor='#2D6A4F'" ondragleave="this.style.borderColor='#E2DDD6'" ondrop="handleSVGDrop(event)" style="background:#F9F9F9;border:2px dashed #E2DDD6;border-radius:12px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:1rem;position:relative">
+            <div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:4px">Hacé clic aquí o arrastrá una imagen</div>
+            <div style="font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif">PNG · JPG · GIF · BMP</div>
+            <input type="file" id="svg-file-input" accept="image/*" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
+          </div>
             <div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:Outfit,sans-serif;margin-bottom:4px">Arrastrá tu imagen acá</div>
             <div style="font-size:0.78rem;color:#8A8479;font-family:Outfit,sans-serif">o hacé clic para seleccionar · PNG, JPG, GIF, BMP</div>
             <input type="file" id="svg-file-input" accept="image/*" style="display:none" onchange="var f=this.files[0];cargarImagenSVG(f);">
@@ -1735,7 +2845,7 @@ function cerrarHerramienta(){
               <input type="range" id="svg-tolerancia" min="1" max="128" value="32" oninput="document.getElementById('svg-tol-val').textContent=this.value" style="width:100%;accent-color:#2D6A4F">
             </div>
 
-            <button onclick="convertirASVG()" id="btn-convertir" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
+            <button id="btn-convertir" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
               Convertir a SVG
             </button>
           </div>
@@ -3750,5 +4860,23 @@ document.addEventListener('click', function(e){
 </div>
 
 </div><!-- fin app -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Wire file input
+  var fi=document.getElementById('svg-file-input');
+  if(fi){
+    fi.addEventListener('change',function(){
+      if(this.files&&this.files[0]) cargarImagenSVG(this.files[0]);
+    });
+  }
+  // Wire convertir button
+  document.addEventListener('click',function(e){
+    var t=e.target;
+    if(t&&(t.id==='btn-convertir'||t.closest('#btn-convertir'))){
+      if(typeof convertirASVG==='function') convertirASVG();
+    }
+  });
+});
+</script>
 </body>
 </html>
