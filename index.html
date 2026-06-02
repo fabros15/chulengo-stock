@@ -123,7 +123,7 @@ function loginConGoogle(){
 function doLogout(){ firebase.auth().signOut(); }
 </script>
 <script>
-/* Potrace — real vector tracing with Bezier curves */
+/* Potrace — vector tracing with Bezier curves (patched with loadFromImageData) */
 /* Copyright (C) 2001-2013 Peter Selinger.
  *
  * A javascript port of Potrace (http://potrace.sourceforge.net).
@@ -1419,9 +1419,20 @@ var Potrace = (function() {
     return svg;
   }
   
+  // Extra: carga desde ImageData directamente (sin async, sin canvas taint)
+  function loadFromImageData(imageData) {
+    if (info.isReady) { bm=null; pathlist=[]; info.isReady=false; }
+    imgCanvas.width = imageData.width;
+    imgCanvas.height = imageData.height;
+    var ctx = imgCanvas.getContext('2d');
+    ctx.putImageData(imageData, 0, 0);
+    loadBm();
+  }
+
   return{
     loadImageFromFile: loadImageFromFile,
     loadImageFromUrl: loadImageFromUrl,
+    loadFromImageData: loadFromImageData,
     setParameter: setParameter,
     process: process,
     getSVG: getSVG,
@@ -1432,57 +1443,61 @@ var Potrace = (function() {
 
 var svgActual = null;
 var svgNombreArchivo = 'imagen';
-var _svgFile = null; // guardamos el File original para Potrace
 
 function handleSVGDrop(e){
   e.preventDefault();
   var dz=document.getElementById('svg-dropzone');if(dz)dz.style.borderColor='#E2DDD6';
-  var f=e.dataTransfer.files[0];
-  if(f&&f.type.startsWith('image/')) cargarImagenSVG(f);
+  var f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))cargarImagenSVG(f);
 }
 
 function cargarImagenSVG(file){
   if(!file||!file.type.startsWith('image/'))return;
-  _svgFile = file; // guardar File original para Potrace
   svgNombreArchivo=file.name.replace(/[.][^.]+$/,'');
   var reader=new FileReader();
   reader.onload=function(ev){
     window._svgDataURL=ev.target.result;
     var img=document.getElementById('svg-original-img');
-    if(img) img.src=ev.target.result;
+    if(img)img.src=ev.target.result;
     var s=function(id,v){var el=document.getElementById(id);if(el)el.style.display=v;};
-    s('svg-dropzone','none'); s('svg-original-wrap','block'); s('svg-opciones','block');
-    s('svg-resultado-wrap','none'); s('svg-resultado-placeholder','flex'); s('svg-guardado-msg','none');
+    s('svg-dropzone','none');s('svg-original-wrap','block');s('svg-opciones','block');
+    s('svg-resultado-wrap','none');s('svg-resultado-placeholder','flex');s('svg-guardado-msg','none');
     svgActual=null;
   };
   reader.readAsDataURL(file);
 }
 
 function convertirASVG(){
-  if(!_svgFile){alert('Seleccioná una imagen primero.');return;}
+  var dataURL=window._svgDataURL;
+  if(!dataURL){alert('Primero seleccioná una imagen.');return;}
   var btn=document.getElementById('btn-convertir');
   if(btn){btn.textContent='Convirtiendo...';btn.disabled=true;}
 
-  Potrace.setParameter({turdsize:2,alphamax:1,opticurve:true,opttolerance:0.2});
+  var img=new Image();
+  img.onload=function(){
+    var maxPx=600,scale=Math.min(maxPx/img.width,maxPx/img.height,1);
+    var w=Math.round(img.width*scale),h=Math.round(img.height*scale);
+    var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+    var ctx=canvas.getContext('2d');
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
+    ctx.drawImage(img,0,0,w,h);
 
-  // Usar Object URL en vez de FileReader para evitar que el canvas quede "tainted"
-  var objURL = URL.createObjectURL(_svgFile);
-  Potrace.loadImageFromUrl(objURL);
-  Potrace.process(function(){
-    URL.revokeObjectURL(objURL);
-    try{
-      var svg=Potrace.getSVG(1);
-      // Quitar rect de fondo blanco
-      svg=svg.replace(/<rect[^>]*\/>/g,'');
-      var w=Potrace.img?Potrace.img.width:400;
-      var h=Potrace.img?Potrace.img.height:400;
-      mostrarResultadoSVG(svg,w,h);
-    }catch(e){
-      var btn2=document.getElementById('btn-convertir');
-      if(btn2){btn2.textContent='Convertir a SVG';btn2.disabled=false;}
-      alert('Error al generar SVG: '+e.message);
-    }
-  });
+    // Pasar ImageData directamente a Potrace — sin async, sin canvas taint
+    var imageData=ctx.getImageData(0,0,w,h);
+    Potrace.setParameter({turdsize:2,alphamax:1,opticurve:true,opttolerance:0.2});
+    Potrace.loadFromImageData(imageData); // sync — isReady=true inmediatamente
+    Potrace.process(function(){
+      try{
+        var svg=Potrace.getSVG(1);
+        // getSVG devuelve un solo <path fill="black"> — sin rect de fondo
+        mostrarResultadoSVG(svg,w,h);
+      }catch(e){
+        if(btn){btn.textContent='Convertir a SVG';btn.disabled=false;}
+        alert('Error: '+e.message);
+      }
+    });
+  };
+  img.onerror=function(){if(btn){btn.textContent='Convertir a SVG';btn.disabled=false;}};
+  img.src=dataURL;
 }
 
 function mostrarResultadoSVG(svgStr,w,h){
@@ -1492,7 +1507,7 @@ function mostrarResultadoSVG(svgStr,w,h){
   if(preview){
     preview.innerHTML='';
     var div=document.createElement('div');
-    div.style.cssText='width:100%;max-height:300px;overflow:hidden;background:#F0F0F0';
+    div.style.cssText='width:100%;max-height:300px;overflow:hidden;background:#e8e8e8';
     div.innerHTML=svgStr;
     var s=div.querySelector('svg');
     if(s){s.style.width='100%';s.style.height='auto';s.style.maxHeight='290px';}
@@ -1501,9 +1516,9 @@ function mostrarResultadoSVG(svgStr,w,h){
   var info=document.getElementById('svg-info');
   if(info)info.innerHTML='<b>Tamaño:</b> '+kb+' KB<br><b>Dimensiones:</b> '+w+' × '+h+' px<br><b>Archivo:</b> '+svgNombreArchivo+'.svg';
   var show=function(id,v){var el=document.getElementById(id);if(el)el.style.display=v;};
-  show('svg-resultado-wrap','block'); show('svg-resultado-placeholder','none'); show('svg-guardado-msg','none');
-  var btn=document.getElementById('btn-convertir');
-  if(btn){btn.textContent='Convertir de nuevo';btn.disabled=false;}
+  show('svg-resultado-wrap','block');show('svg-resultado-placeholder','none');show('svg-guardado-msg','none');
+  var b=document.getElementById('btn-convertir');
+  if(b){b.textContent='Convertir de nuevo';b.disabled=false;}
 }
 
 function descargarSVG(){
@@ -1522,9 +1537,8 @@ function guardarSVGHistorial(){
   var bytes=new Blob([svgActual]).size;
   if(bytes>500000){
     var msg=document.getElementById('svg-guardado-msg');
-    if(msg){msg.style.display='block';msg.textContent='SVG muy grande (>500KB). Descargalo directamente.';}
-    if(btn){btn.textContent='Guardar en historial';btn.disabled=false;}
-    return;
+    if(msg){msg.style.display='block';msg.textContent='SVG muy grande. Descargalo directamente.';}
+    if(btn){btn.textContent='Guardar en historial';btn.disabled=false;}return;
   }
   firebase.firestore().collection('svg_historial').add({
     uid:window.currentUser.uid,nombre:svgNombreArchivo,
@@ -1544,55 +1558,34 @@ function guardarSVGHistorial(){
 function cargarHistorialSVG(){
   var cont=document.getElementById('svg-historial-contenido');if(!cont)return;
   if(!window.currentUser){
-    cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:Outfit,sans-serif">Iniciá sesión para ver tu historial.</div></div>';
-    return;
+    cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:Outfit,sans-serif">Iniciá sesión para ver tu historial.</div></div>';return;
   }
   cont.innerHTML='<div style="text-align:center;padding:1rem;color:#8A8479;font-family:Outfit,sans-serif">Cargando...</div>';
   firebase.firestore().collection('svg_historial')
     .where('uid','==',window.currentUser.uid).orderBy('fecha','desc').limit(20).get()
     .then(function(snap){
       var count=document.getElementById('svg-historial-count');
-      if(snap.empty){cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:Outfit,sans-serif">Todavía no guardaste ningún SVG.</div></div>';return;}
+      if(snap.empty){cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479">Todavía no guardaste ningún SVG.</div></div>';return;}
       if(count)count.textContent=snap.size+' archivo'+(snap.size!==1?'s':'');
       cont.innerHTML='';
-      var grid=document.createElement('div');
-      grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px';
+      var grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px';
       snap.forEach(function(doc){
         var d=doc.data();
         var fecha=d.fecha?d.fecha.toDate().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
         var kb=d.bytes?(d.bytes/1024).toFixed(1)+' KB':'—';
-        var card=document.createElement('div');
-        card.style.cssText='background:#fff;border:1px solid #E2DDD6;border-radius:10px;overflow:hidden';
-        var prev=document.createElement('div');
-        prev.style.cssText='background:#F5F2ED;height:120px;display:flex;align-items:center;justify-content:center;padding:8px';
+        var card=document.createElement('div');card.style.cssText='background:#fff;border:1px solid #E2DDD6;border-radius:10px;overflow:hidden';
+        var prev=document.createElement('div');prev.style.cssText='background:#F5F2ED;height:120px;display:flex;align-items:center;justify-content:center;padding:8px';
         if(d.svgData){var blob=new Blob([d.svgData],{type:'image/svg+xml'});var burl=URL.createObjectURL(blob);var im=document.createElement('img');im.src=burl;im.style.cssText='max-width:100%;max-height:100%;object-fit:contain';prev.appendChild(im);}
         var info=document.createElement('div');info.style.cssText='padding:10px 12px';
-        info.innerHTML='<div style="font-size:0.82rem;font-weight:600;color:#1A1814;margin-bottom:2px">'+(d.nombre||'svg')+'</div>'
-          +'<div style="font-size:0.72rem;color:#8A8479;margin-bottom:8px">'+fecha+' · '+kb+'</div>'
-          +'<div style="display:flex;gap:6px">'
-            +'<button data-id="'+doc.id+'" class="btn-dl-svg" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer">SVG</button>'
-            +'<button data-id="'+doc.id+'" class="btn-del-svg" style="padding:6px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.75rem;cursor:pointer">🗑</button>'
-          +'</div>';
+        info.innerHTML='<div style="font-size:0.82rem;font-weight:600;color:#1A1814;margin-bottom:2px">'+(d.nombre||'svg')+'</div><div style="font-size:0.72rem;color:#8A8479;margin-bottom:8px">'+fecha+' · '+kb+'</div><div style="display:flex;gap:6px"><button data-id="'+doc.id+'" class="btn-dl-svg" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer">SVG</button><button data-id="'+doc.id+'" class="btn-del-svg" style="padding:6px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.75rem;cursor:pointer">🗑</button></div>';
         card.appendChild(prev);card.appendChild(info);grid.appendChild(card);
       });
       cont.appendChild(grid);
     }).catch(function(e){cont.innerHTML='<div style="color:#B91C1C;padding:1rem;font-size:0.85rem">Error: '+e.message+'</div>';});
 }
-function descargarSVGHistorial(id){
-  firebase.firestore().collection('svg_historial').doc(id).get().then(function(doc){
-    if(!doc.exists)return;var d=doc.data();
-    var blob=new Blob([d.svgData],{type:'image/svg+xml'});var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');a.href=url;a.download=(d.nombre||'svg')+'.svg';a.click();URL.revokeObjectURL(url);
-  });
-}
-function eliminarSVGHistorial(id){
-  if(!confirm('Eliminar este SVG?'))return;
-  firebase.firestore().collection('svg_historial').doc(id).delete().then(cargarHistorialSVG);
-}
-document.addEventListener('click',function(e){
-  var dl=e.target.closest('.btn-dl-svg'),del=e.target.closest('.btn-del-svg');
-  if(dl)descargarSVGHistorial(dl.dataset.id);if(del)eliminarSVGHistorial(del.dataset.id);
-});
+function descargarSVGHistorial(id){firebase.firestore().collection('svg_historial').doc(id).get().then(function(doc){if(!doc.exists)return;var d=doc.data();var blob=new Blob([d.svgData],{type:'image/svg+xml'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=(d.nombre||'svg')+'.svg';a.click();URL.revokeObjectURL(url);});}
+function eliminarSVGHistorial(id){if(!confirm('Eliminar este SVG?'))return;firebase.firestore().collection('svg_historial').doc(id).delete().then(cargarHistorialSVG);}
+document.addEventListener('click',function(e){var dl=e.target.closest('.btn-dl-svg'),del=e.target.closest('.btn-del-svg');if(dl)descargarSVGHistorial(dl.dataset.id);if(del)eliminarSVGHistorial(del.dataset.id);});
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
@@ -2765,9 +2758,7 @@ function cerrarHerramienta(){
 
           <!-- Opciones de conversión -->
           <div id="svg-opciones" style="display:none;margin-top:1rem">
-            <button id="btn-convertir" style="width:100%;padding:13px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif">
-              Convertir a SVG
-            </button>
+            <button id="btn-convertir" style="width:100%;padding:13px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif">Convertir a SVG</button>
           </div>
         </div>
 
