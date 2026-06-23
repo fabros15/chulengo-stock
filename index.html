@@ -1580,17 +1580,17 @@ function cargarHistorialSVG(){
   var cont=document.getElementById('svg-historial-contenido');
   if(!cont)return;
   if(!window.currentUser){
-    cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:'Inter',sans-serif">Iniciá sesión para ver tu historial.</div></div>';
+    cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:"Inter",sans-serif">Iniciá sesión para ver tu historial.</div></div>';
     return;
   }
-  cont.innerHTML='<div style="text-align:center;padding:1rem;color:#8A8479;font-family:'Inter',sans-serif">Cargando...</div>';
+  cont.innerHTML='<div style="text-align:center;padding:1rem;color:#8A8479;font-family:"Inter",sans-serif">Cargando...</div>';
   firebase.firestore().collection('svg_historial')
     .where('uid','==',window.currentUser.uid)
     .orderBy('fecha','desc').limit(20).get()
     .then(function(snap){
       var count=document.getElementById('svg-historial-count');
       if(snap.empty){
-        cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:'Inter',sans-serif">Todavía no guardaste ningún SVG.</div></div>';
+        cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:"Inter",sans-serif">Todavía no guardaste ningún SVG.</div></div>';
         return;
       }
       if(count)count.textContent=snap.size+' archivo'+(snap.size!==1?'s':'');
@@ -1887,14 +1887,14 @@ function generarPDF(sendWA){
 <style>
 *{box-sizing:border-box;margin:0;padding:0;max-width:100%}
 html{overflow-x:clip;width:100%}
-body{font-family:'Inter',sans-serif;background:#F5F2ED;color:#1A1814;min-height:100vh;overflow-x:clip;width:100%;-webkit-overflow-scrolling:touch}
+body{font-family:"Inter",sans-serif;background:#F5F2ED;color:#1A1814;min-height:100vh;overflow-x:clip;width:100%;-webkit-overflow-scrolling:touch}
 .site-header{background:#1A1814;color:#fff;position:-webkit-sticky;position:sticky;top:0;z-index:100;width:100%;box-shadow:0 2px 8px rgba(0,0,0,0.25)}
 .header-row1{display:flex;align-items:center;gap:12px;padding:0.55rem 1.5rem}
 .header-row2{background:#221F1B;border-top:1px solid rgba(255,255,255,0.07);padding:0 1.5rem;display:flex;align-items:center}
-.site-title{font-family:'Inter',sans-serif;font-size:0.95rem;font-weight:700;color:#fff;letter-spacing:-0.01em;white-space:nowrap}
+.site-title{font-family:"Inter",sans-serif;font-size:0.95rem;font-weight:700;color:#fff;letter-spacing:-0.01em;white-space:nowrap}
 .logo{width:34px;height:34px;border-radius:8px;object-fit:cover;flex-shrink:0}
 .header-search{flex:1;max-width:620px;position:relative;margin:0 12px}
-.header-search input{width:100%;padding:9px 44px 9px 16px;border:none;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;background:#fff;color:#1A1814;outline:none;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+.header-search input{width:100%;padding:9px 44px 9px 16px;border:none;border-radius:8px;font-size:0.9rem;font-family:"Inter",sans-serif;background:#fff;color:#1A1814;outline:none;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
 .header-search-btn{position:absolute;right:0;top:0;bottom:0;width:44px;background:#2D6A4F;border:none;border-radius:0 8px 8px 0;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .header-search-btn svg{color:#fff}
 .header-actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
@@ -1903,7 +1903,7 @@ body{font-family:'Inter',sans-serif;background:#F5F2ED;color:#1A1814;min-height:
 .user-chip{display:none;align-items:center;gap:8px;background:none;border:none;padding:4px 6px;cursor:pointer;border-radius:8px;transition:background 0.15s;position:relative}
 .user-chip:hover{background:rgba(255,255,255,0.08)}
 .user-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,0.3)}
-.user-name{font-size:0.85rem;font-weight:600;color:#fff;font-family:'Inter',sans-serif;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-name{font-size:0.85rem;font-weight:600;color:#fff;font-family:"Inter",sans-serif;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .user-chevron{font-size:0.65rem;color:rgba(255,255,255,0.5);transition:transform 0.2s;flex-shrink:0}
 .user-avatar-placeholder{width:30px;height:30px;border-radius:50%;background:#2D6A4F;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;flex-shrink:0}
 .user-dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.25);min-width:240px;z-index:999;overflow:hidden;animation:fadeUp 0.15s ease}
@@ -1911,19 +1911,19 @@ body{font-family:'Inter',sans-serif;background:#F5F2ED;color:#1A1814;min-height:
 .user-dropdown-header{padding:1rem 1.25rem;border-bottom:1px solid #F0EDE8;display:flex;align-items:center;gap:10px}
 .user-dropdown-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #E2DDD6;flex-shrink:0}
 .user-dropdown-avatar-ph{width:40px;height:40px;border-radius:50%;background:#2D6A4F;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#fff;flex-shrink:0}
-.user-dropdown-name{font-size:0.9rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif}
-.user-dropdown-email{font-size:0.75rem;color:#8A8479;font-family:'Inter',sans-serif;margin-top:2px}
-.user-dropdown-item{display:flex;align-items:center;gap:10px;padding:10px 1.25rem;font-size:0.875rem;color:#1A1814;font-family:'Inter',sans-serif;cursor:pointer;transition:background 0.1s;border:none;background:none;width:100%;text-align:left}
+.user-dropdown-name{font-size:0.9rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif}
+.user-dropdown-email{font-size:0.75rem;color:#8A8479;font-family:"Inter",sans-serif;margin-top:2px}
+.user-dropdown-item{display:flex;align-items:center;gap:10px;padding:10px 1.25rem;font-size:0.875rem;color:#1A1814;font-family:"Inter",sans-serif;cursor:pointer;transition:background 0.1s;border:none;background:none;width:100%;text-align:left}
 .user-dropdown-item:hover{background:#F5F2ED}
 .user-dropdown-item.danger{color:#DC2626}
 .user-dropdown-item.danger:hover{background:#FEF2F2}
 .user-dropdown-sep{height:1px;background:#F0EDE8;margin:4px 0}
 #btn-salir{display:none!important}
 #btn-salir:hover{background:rgba(255,255,255,0.15)!important;color:#fff!important}
-#btn-entrar{background:#2D6A4F;border:none;color:#fff;border-radius:8px;padding:7px 16px;font-size:0.82rem;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:600}
+#btn-entrar{background:#2D6A4F;border:none;color:#fff;border-radius:8px;padding:7px 16px;font-size:0.82rem;font-family:"Inter",sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:600}
 #btn-entrar:hover{background:#1B4332!important}
 .nav-tabs{display:flex;gap:0;flex:1}
-.nav-tab{padding:10px 18px;font-size:0.83rem;font-weight:500;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,0.55);transition:all 0.15s;font-family:'Inter',sans-serif;border-bottom:3px solid transparent;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.nav-tab{padding:10px 18px;font-size:0.83rem;font-weight:500;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,0.55);transition:all 0.15s;font-family:"Inter",sans-serif;border-bottom:3px solid transparent;display:flex;align-items:center;gap:5px;white-space:nowrap}
 .nav-tab.active{color:#fff;border-bottom-color:#2D6A4F;font-weight:600}
 .nav-tab:hover:not(.active){color:#fff;background:rgba(255,255,255,0.06)}
 .nav-tab-badge{font-size:0.6rem;background:#E53935;color:#fff;border-radius:3px;padding:1px 4px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em}
@@ -1942,11 +1942,11 @@ body{font-family:'Inter',sans-serif;background:#F5F2ED;color:#1A1814;min-height:
 .filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.75rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
 .search-wrap{position:relative;flex:1;min-width:180px}
 .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#A09890;pointer-events:none}
-input[type=text]{width:100%;padding:8px 12px 8px 34px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.875rem;font-family:'Inter',sans-serif;background:#F5F2ED;color:#1A1814;outline:none;transition:all 0.2s}
+input[type=text]{width:100%;padding:8px 12px 8px 34px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.875rem;font-family:"Inter",sans-serif;background:#F5F2ED;color:#1A1814;outline:none;transition:all 0.2s}
 input[type=text]:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12);background:#fff}
-select{padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-family:'Inter',sans-serif;background:#F5F2ED;color:#1A1814;cursor:pointer;outline:none;transition:all 0.2s}
+select{padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-family:"Inter",sans-serif;background:#F5F2ED;color:#1A1814;cursor:pointer;outline:none;transition:all 0.2s}
 select:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12)}
-.stats-bar{padding:0.5rem 1rem;display:flex;gap:1.25rem;font-size:0.78rem;color:#8A8479;font-family:'Inter',sans-serif;background:#FAFAFA;border-bottom:1px solid #E2DDD6;flex-wrap:wrap}
+.stats-bar{padding:0.5rem 1rem;display:flex;gap:1.25rem;font-size:0.78rem;color:#8A8479;font-family:"Inter",sans-serif;background:#FAFAFA;border-bottom:1px solid #E2DDD6;flex-wrap:wrap}
 .stats-bar b{color:#1A1814}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;padding:1.5rem 1rem}
 .card{background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;display:flex;flex-direction:column;gap:6px;transition:all 0.2s;animation:fadeUp 0.3s ease both}
@@ -1960,7 +1960,7 @@ select:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12)}
 .card-img-ph{display:flex;align-items:center;justify-content:center;background:#F5F2ED;color:#A09890;font-size:0.75rem;border-radius:8px;margin-bottom:4px;height:130px}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .card-title{font-size:0.83rem;font-weight:600;line-height:1.4;flex:1;color:#1A1814}
-.badge{font-size:0.68rem;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;font-family:'Inter',sans-serif}
+.badge{font-size:0.68rem;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;font-family:"Inter",sans-serif}
 .b-ok{background:#F0FDF4;color:#1B4332;border:1px solid #BBF7D0}
 .b-low{background:#FFFBEB;color:#B45309;border:1px solid #FDE68A}
 .b-out{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
@@ -1991,18 +1991,18 @@ select:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12)}
 .modal-title{font-size:1rem;font-weight:700;color:#1A1814;margin-bottom:6px}
 .modal-meta{font-size:0.82rem;color:#8A8479;margin-bottom:1.25rem;line-height:1.6}
 .modal-meta b{color:#1A1814}
-.btn-wa{display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:10px;padding:13px 20px;font-size:0.95rem;font-weight:700;width:100%;cursor:pointer;text-decoration:none;font-family:'Inter',sans-serif;transition:background 0.2s}
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:10px;padding:13px 20px;font-size:0.95rem;font-weight:700;width:100%;cursor:pointer;text-decoration:none;font-family:"Inter",sans-serif;transition:background 0.2s}
 .btn-wa:hover{background:#1ebe5d}
-.pres-filtro{padding:5px 12px;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer;border:1px solid #E2DDD6;background:#fff;color:#8A8479;font-family:'Inter',sans-serif;transition:all 0.15s}
+.pres-filtro{padding:5px 12px;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer;border:1px solid #E2DDD6;background:#fff;color:#8A8479;font-family:"Inter",sans-serif;transition:all 0.15s}
 .pres-filtro.active,.pres-filtro:hover{background:#1A1814;color:#fff;border-color:#1A1814}
-.estado-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;border:1px solid transparent}
+.estado-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:"Inter",sans-serif;border:1px solid transparent}
 .estado-Enviado{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE}
 .estado-Aprobado{background:#F0FDF4;color:#1B4332;border-color:#BBF7D0}
 .estado-Senado{background:#FFFBEB;color:#B45309;border-color:#FDE68A}
 .estado-Pagado{background:#DCFCE7;color:#1B4332;border-color:#86EFAC}
 .estado-Cancelado{background:#FEF2F2;color:#B91C1C;border-color:#FECACA}
 .ficha-back-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.75rem 1.25rem;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
-.ficha-back-btn{background:none;border:none;color:#1A1814;font-size:0.875rem;cursor:pointer;padding:4px;line-height:1;display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;font-weight:500}
+.ficha-back-btn{background:none;border:none;color:#1A1814;font-size:0.875rem;cursor:pointer;padding:4px;line-height:1;display:flex;align-items:center;gap:8px;font-family:"Inter",sans-serif;font-weight:500}
 .ficha-back-btn:hover{color:#2D6A4F}
 .ficha-img{width:100%;max-height:280px;object-fit:contain;background:#F5F2ED}
 .ficha-img-placeholder{width:100%;height:160px;background:linear-gradient(135deg,#F5F2ED,#F5F2ED);display:flex;align-items:center;justify-content:center;font-size:3rem}
@@ -2038,20 +2038,20 @@ select:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12)}
 .fspec-lbl{font-size:0.7rem;color:#8A8479;margin-bottom:2px;font-weight:500}
 .fspec-val{font-size:0.82rem;font-weight:600;color:#1A1814;font-variant-numeric:tabular-nums}
 .ficha-footer{position:fixed;bottom:0;left:0;right:0;padding:1rem 1.25rem;border-top:1px solid #E2DDD6;background:#fff;display:flex;gap:10px;z-index:100}
-.btn-ficha-agregar{flex:1;padding:13px;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;border:none;background:#1A1814;color:#fff;transition:background 0.2s}
+.btn-ficha-agregar{flex:1;padding:13px;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:"Inter",sans-serif;border:none;background:#1A1814;color:#fff;transition:background 0.2s}
 .btn-ficha-agregar:hover{background:#2A2520}
 .btn-ficha-agregar.en-carrito{background:#2D6A4F}
-.btn-ficha-wa{padding:13px 16px;border-radius:10px;background:#25D366;color:#fff;border:none;cursor:pointer;font-size:0.85rem;font-weight:700;font-family:'Inter',sans-serif;text-decoration:none;display:flex;align-items:center}
+.btn-ficha-wa{padding:13px 16px;border-radius:10px;background:#25D366;color:#fff;border:none;cursor:pointer;font-size:0.85rem;font-weight:700;font-family:"Inter",sans-serif;text-decoration:none;display:flex;align-items:center}
 .carousel-wrap{position:relative;width:100%;overflow:hidden;background:#1A1814;line-height:0}
 .carousel-track{display:flex;transition:transform 0.5s cubic-bezier(.4,0,.2,1);will-change:transform}
 .carousel-slide{min-width:100%;position:relative;overflow:hidden;cursor:pointer}
 .carousel-slide img{width:100%;height:auto;display:block}
 .carousel-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0.6) 0%,rgba(0,0,0,0.2) 60%,rgba(0,0,0,0) 100%);display:flex;align-items:center;padding:2rem;pointer-events:none}
 .carousel-content{max-width:480px;color:#fff}
-.carousel-tag{display:inline-block;background:rgba(45,106,79,0.9);border-radius:5px;padding:3px 10px;font-size:0.7rem;font-weight:700;font-family:'Inter',sans-serif;margin-bottom:0.75rem;letter-spacing:0.07em;text-transform:uppercase}
-.carousel-titulo{font-size:1.75rem;font-weight:800;font-family:'Inter',sans-serif;line-height:1.15;margin-bottom:0.5rem;text-shadow:0 2px 8px rgba(0,0,0,0.3);letter-spacing:-0.03em}
-.carousel-desc{font-size:0.88rem;font-family:'Inter',sans-serif;opacity:0.85;margin-bottom:1.25rem;line-height:1.5}
-.carousel-cta{display:inline-block;padding:10px 20px;border-radius:8px;font-size:0.875rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;text-decoration:none;border:none;transition:opacity 0.2s}
+.carousel-tag{display:inline-block;background:rgba(45,106,79,0.9);border-radius:5px;padding:3px 10px;font-size:0.7rem;font-weight:700;font-family:"Inter",sans-serif;margin-bottom:0.75rem;letter-spacing:0.07em;text-transform:uppercase}
+.carousel-titulo{font-size:1.75rem;font-weight:800;font-family:"Inter",sans-serif;line-height:1.15;margin-bottom:0.5rem;text-shadow:0 2px 8px rgba(0,0,0,0.3);letter-spacing:-0.03em}
+.carousel-desc{font-size:0.88rem;font-family:"Inter",sans-serif;opacity:0.85;margin-bottom:1.25rem;line-height:1.5}
+.carousel-cta{display:inline-block;padding:10px 20px;border-radius:8px;font-size:0.875rem;font-weight:700;font-family:"Inter",sans-serif;cursor:pointer;text-decoration:none;border:none;transition:opacity 0.2s}
 .carousel-cta:hover{opacity:0.85}
 .carousel-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.12);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:1.5rem;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:background 0.2s;line-height:1}
 .carousel-btn:hover{background:rgba(255,255,255,0.25)}
@@ -2083,7 +2083,7 @@ select:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12)}
 .field:last-child{margin-bottom:0}
 .field label{display:block;font-size:0.82rem;font-weight:600;color:#1A1814;margin-bottom:5px}
 .label-hint{font-size:0.75rem;color:#8A8479;font-weight:400;margin-left:4px}
-input[type=number]{width:100%;padding:9px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.88rem;font-family:'Inter',sans-serif;background:#F5F2ED;color:#1A1814;outline:none;transition:all 0.2s;font-variant-numeric:tabular-nums}
+input[type=number]{width:100%;padding:9px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.88rem;font-family:"Inter",sans-serif;background:#F5F2ED;color:#1A1814;outline:none;transition:all 0.2s;font-variant-numeric:tabular-nums}
 input[type=number]:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12);background:#fff}
 .calc-section select{width:100%;padding:9px 12px;margin-bottom:0}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -2099,17 +2099,17 @@ input[type=number]:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,7
 .toggle input:checked+.tslider:before{transform:translateX(20px)}
 .insumo-item{display:grid;grid-template-columns:1fr 110px 110px 36px;gap:8px;align-items:center;margin-bottom:8px}
 .btn-remove{background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;width:36px;height:36px;cursor:pointer;font-size:1rem;color:#B91C1C;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.btn-add{display:flex;align-items:center;gap:6px;background:none;border:1px dashed #D4D4D8;border-radius:8px;padding:8px 14px;font-size:0.82rem;color:#8A8479;cursor:pointer;width:100%;justify-content:center;margin-top:4px;transition:all 0.2s;font-family:'Inter',sans-serif}
+.btn-add{display:flex;align-items:center;gap:6px;background:none;border:1px dashed #D4D4D8;border-radius:8px;padding:8px 14px;font-size:0.82rem;color:#8A8479;cursor:pointer;width:100%;justify-content:center;margin-top:4px;transition:all 0.2s;font-family:"Inter",sans-serif}
 .btn-add:hover{border-color:#2D6A4F;color:#2D6A4F}
 .badge-info{display:inline-block;background:#F5F2ED;color:#8A8479;font-size:0.72rem;padding:2px 8px;border-radius:6px;font-weight:500;margin-left:6px}
 .tip{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:#E2DDD6;border-radius:50%;font-size:0.65rem;color:#8A8479;cursor:help;margin-left:4px;position:relative;flex-shrink:0;vertical-align:middle}
-.tip:hover::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 6px);background:#1A1814;color:#fff;font-size:0.75rem;padding:6px 10px;border-radius:8px;white-space:normal;width:220px;z-index:10;line-height:1.4;font-family:'Inter',sans-serif;font-weight:400}
+.tip:hover::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 6px);background:#1A1814;color:#fff;font-size:0.75rem;padding:6px 10px;border-radius:8px;white-space:normal;width:220px;z-index:10;line-height:1.4;font-family:"Inter",sans-serif;font-weight:400}
 .resultado{background:#1A1814;border-radius:12px;padding:1.5rem;margin-top:1.5rem;color:#fff}
 .resultado h2{color:#fff;border-bottom:1px solid #2A2520;padding-bottom:0.75rem;margin-bottom:0.75rem;font-size:0.95rem}
 .res-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1A1A1A;font-size:0.875rem}
 .res-row:last-of-type{border:none}
 .res-lbl{color:#A09890}
-.res-val{font-family:'Inter',sans-serif;font-weight:600;font-variant-numeric:tabular-nums}
+.res-val{font-family:"Inter",sans-serif;font-weight:600;font-variant-numeric:tabular-nums}
 .res-total{display:flex;justify-content:space-between;align-items:center;margin-top:1rem;padding-top:1rem;border-top:2px solid #2A2520}
 .res-total-lbl{font-size:1rem;font-weight:700}
 .res-total-val{font-variant-numeric:tabular-nums;font-size:1.4rem;font-weight:700;color:#4ade80}
@@ -2121,14 +2121,14 @@ input[type=number]:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,7
 .rep-lbl{font-size:0.7rem;color:#8A8479;margin-bottom:2px}
 .rep-val{font-variant-numeric:tabular-nums;font-size:0.9rem;font-weight:600}
 .readonly-field{background:#F0FDF4!important;color:#1B4332!important;font-variant-numeric:tabular-nums;font-weight:600!important}
-footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-family:'Inter',sans-serif;border-top:1px solid #E2DDD6;margin-top:1rem}
+footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-family:"Inter",sans-serif;border-top:1px solid #E2DDD6;margin-top:1rem}
 #page-ficha.active ~ footer{display:none}
-.btn-agregar{margin-top:6px;width:100%;padding:8px;border:1.5px solid #1A1814;border-radius:8px;background:transparent;color:#1A1814;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
+.btn-agregar{margin-top:6px;width:100%;padding:8px;border:1.5px solid #1A1814;border-radius:8px;background:transparent;color:#1A1814;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;transition:all 0.15s}
 .btn-agregar:hover{background:#1A1814;color:#fff}
 .btn-agregar.en-carrito{background:#2D6A4F;color:#fff;border-color:#2D6A4F}
 .carrito-flotante{position:fixed;bottom:1.5rem;right:1.5rem;z-index:200;display:none}
 .carrito-flotante.visible{display:block}
-.carrito-btn{background:#1A1814;color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);transition:transform 0.2s}
+.carrito-btn{background:#1A1814;color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);transition:transform 0.2s}
 .carrito-btn:hover{transform:scale(1.04)}
 .carrito-count{background:#2D6A4F;color:#fff;border-radius:50%;width:22px;height:22px;font-size:0.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .carrito-panel{position:fixed;bottom:0;right:0;width:100%;max-width:420px;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -4px 30px rgba(0,0,0,0.12);z-index:300;transform:translateY(100%);transition:transform 0.3s ease;max-height:85vh;display:flex;flex-direction:column}
@@ -2154,12 +2154,12 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 .carrito-total{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
 .carrito-total-lbl{font-size:0.9rem;font-weight:600}
 .carrito-total-val{font-variant-numeric:tabular-nums;font-size:1.25rem;font-weight:700;color:#1A1814}
-.btn-pedir{display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;width:100%;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.2s;text-decoration:none}
+.btn-pedir{display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;width:100%;cursor:pointer;font-family:"Inter",sans-serif;transition:background 0.2s;text-decoration:none}
 .btn-pedir:hover{background:#1ebe5d}
 .carrito-vacio{text-align:center;padding:2rem;color:#8A8479;font-size:0.9rem}
 .overlay-carrito{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:250;backdrop-filter:blur(2px)}
 .overlay-carrito.open{display:block}
-.btn-pdf{display:flex;align-items:center;justify-content:center;gap:8px;background:#1A1814;color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.9rem;font-weight:600;width:100%;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.2s;margin-top:10px}
+.btn-pdf{display:flex;align-items:center;justify-content:center;gap:8px;background:#1A1814;color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.9rem;font-weight:600;width:100%;cursor:pointer;font-family:"Inter",sans-serif;transition:background 0.2s;margin-top:10px}
 .btn-pdf:hover{background:#2A2520}
 .pdf-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)}
 .pdf-modal-overlay.open{display:flex}
@@ -2167,14 +2167,14 @@ footer{text-align:center;padding:2rem;font-size:0.75rem;color:#8A8479;font-famil
 .pdf-modal h3{font-size:1rem;font-weight:700;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid #E2DDD6}
 .pdf-modal .field{margin-bottom:0.875rem}
 .pdf-modal label{display:block;font-size:0.82rem;font-weight:600;color:#1A1814;margin-bottom:4px}
-.pdf-modal input,.pdf-modal textarea{width:100%;padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:'Inter',sans-serif;background:#F5F2ED;color:#1A1814;outline:none;transition:all 0.2s}
+.pdf-modal input,.pdf-modal textarea{width:100%;padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:"Inter",sans-serif;background:#F5F2ED;color:#1A1814;outline:none;transition:all 0.2s}
 .pdf-modal input:focus,.pdf-modal textarea:focus{border-color:#2D6A4F;box-shadow:0 0 0 3px rgba(45,106,79,0.12);background:#fff}
 .pdf-modal textarea{resize:vertical;min-height:70px}
 .color-row{display:flex;gap:10px;align-items:center}
 .color-row input[type=color]{width:44px;height:36px;padding:2px;border:1px solid #E2DDD6;border-radius:8px;cursor:pointer;background:#F5F2ED}
 .color-row input[type=text]{flex:1}
 .pdf-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn-generar{display:flex;align-items:center;justify-content:center;gap:8px;background:#1A1814;color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.95rem;font-weight:700;width:100%;cursor:pointer;font-family:'Inter',sans-serif;margin-top:1rem;transition:background 0.2s}
+.btn-generar{display:flex;align-items:center;justify-content:center;gap:8px;background:#1A1814;color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.95rem;font-weight:700;width:100%;cursor:pointer;font-family:"Inter",sans-serif;margin-top:1rem;transition:background 0.2s}
 .btn-generar:hover{background:#2A2520}
 .pdf-close{position:absolute;top:1rem;right:1rem;background:#F5F2ED;border:none;font-size:1rem;cursor:pointer;color:#8A8479;padding:0;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
 .preview-color{width:24px;height:24px;border-radius:50%;border:1px solid #E2DDD6;flex-shrink:0}
@@ -2398,12 +2398,12 @@ function cerrarHerramienta(){
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;gap:12px">
     <div>
       <h2 style="border:none;padding:0;margin:0">Mis perfiles de impresión</h2>
-      <div style="font-size:0.78rem;color:#8A8479;font-family:'Inter',sans-serif;margin-top:3px">Guardá tu impresora y filamento como un perfil reutilizable. Se carga con un clic.</div>
+      <div style="font-size:0.78rem;color:#8A8479;font-family:"Inter",sans-serif;margin-top:3px">Guardá tu impresora y filamento como un perfil reutilizable. Se carga con un clic.</div>
     </div>
-    <button onclick="abrirModalGuardarPerfil()" style="background:#2D6A4F;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;flex-shrink:0">+ Guardar perfil actual</button>
+    <button onclick="abrirModalGuardarPerfil()" style="background:#2D6A4F;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;white-space:nowrap;flex-shrink:0">+ Guardar perfil actual</button>
   </div>
   <div id="perfiles-lista" style="display:flex;gap:8px;flex-wrap:wrap;min-height:32px">
-    <div id="perfiles-empty" style="font-size:0.82rem;color:#8A8479;font-family:'Inter',sans-serif;padding:4px 0">Todavía no guardaste ningún perfil. Configurá la calculadora y guardalo.</div>
+    <div id="perfiles-empty" style="font-size:0.82rem;color:#8A8479;font-family:"Inter",sans-serif;padding:4px 0">Todavía no guardaste ningún perfil. Configurá la calculadora y guardalo.</div>
   </div>
 </div>
 
@@ -2419,8 +2419,8 @@ function cerrarHerramienta(){
           <option value="custom">+ Otro filamento (precio manual)</option>
         </select>
         <div style="display:flex;gap:8px;margin-top:6px">
-          <button id="btn-fav-fil" onclick="toggleFavoritoFilamento()" style="display:none;flex:1;padding:6px 10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#B45309">☆ Guardar en favoritos</button>
-          <button onclick="abrirModalFilamentoPropio()" style="flex:1;padding:6px 10px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#4B4640">+ Agregar mi filamento</button>
+          <button id="btn-fav-fil" onclick="toggleFavoritoFilamento()" style="display:none;flex:1;padding:6px 10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;color:#B45309">☆ Guardar en favoritos</button>
+          <button onclick="abrirModalFilamentoPropio()" style="flex:1;padding:6px 10px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;color:#4B4640">+ Agregar mi filamento</button>
         </div>
       </div>
       <div class="field" id="campo-custom-mat" style="display:none">
@@ -2562,19 +2562,19 @@ function cerrarHerramienta(){
 
       <div style="background:#FFE600;border-radius:10px;padding:1rem;margin-top:0.75rem">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap">
-          <span style="font-size:0.78rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif">🛒 Precio para Mercado Libre</span>
-          <select id="ml-tipo" onchange="calcularML()" style="background:rgba(0,0,0,0.1);border:none;border-radius:6px;padding:4px 8px;font-size:0.72rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;cursor:pointer;outline:none">
+          <span style="font-size:0.78rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif">🛒 Precio para Mercado Libre</span>
+          <select id="ml-tipo" onchange="calcularML()" style="background:rgba(0,0,0,0.1);border:none;border-radius:6px;padding:4px 8px;font-size:0.72rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;cursor:pointer;outline:none">
             <option value="0.1275">Clásica (~12.75%)</option>
             <option value="0.1699" selected>Premium (~17%)</option>
             <option value="custom">Personalizada</option>
           </select>
         </div>
         <div id="ml-custom-row" style="display:none;margin-bottom:8px;display:flex;align-items:center;gap:6px">
-          <input type="number" id="ml-comision-custom" min="1" max="99" value="15" placeholder="%" oninput="calcularML()" style="width:65px;padding:5px 8px;border:1px solid rgba(0,0,0,0.15);border-radius:6px;font-size:0.85rem;font-family:'Inter',sans-serif;background:rgba(255,255,255,0.6);outline:none;color:#1A1814">
-          <span style="font-size:0.78rem;color:#1A1814;font-family:'Inter',sans-serif">% comisión</span>
+          <input type="number" id="ml-comision-custom" min="1" max="99" value="15" placeholder="%" oninput="calcularML()" style="width:65px;padding:5px 8px;border:1px solid rgba(0,0,0,0.15);border-radius:6px;font-size:0.85rem;font-family:"Inter",sans-serif;background:rgba(255,255,255,0.6);outline:none;color:#1A1814">
+          <span style="font-size:0.78rem;color:#1A1814;font-family:"Inter",sans-serif">% comisión</span>
         </div>
-        <div style="font-size:1.6rem;font-weight:800;color:#1A1814;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums" id="r-precio-ml">—</div>
-        <div style="font-size:0.7rem;color:rgba(0,0,0,0.5);font-family:'Inter',sans-serif;margin-top:3px;line-height:1.4" id="r-precio-ml-sub"></div>
+        <div style="font-size:1.6rem;font-weight:800;color:#1A1814;font-family:"Inter",sans-serif;font-variant-numeric:tabular-nums" id="r-precio-ml">—</div>
+        <div style="font-size:0.7rem;color:rgba(0,0,0,0.5);font-family:"Inter",sans-serif;margin-top:3px;line-height:1.4" id="r-precio-ml-sub"></div>
       </div>
       <button class="btn-pdf" onclick="agregarItemPresupuesto()" style="background:#2D6A4F;margin-bottom:8px">
         <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2582,13 +2582,13 @@ function cerrarHerramienta(){
       </button>
       <div id="presupuesto-items-box" style="display:none;background:#F5F2ED;border-radius:12px;padding:1rem;margin-bottom:8px;border:1px solid #E2DDD6">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-          <span style="font-size:0.85rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif">Items del presupuesto</span>
-          <button onclick="limpiarPresupuesto()" style="background:none;border:none;color:#DC2626;font-size:0.75rem;cursor:pointer;font-family:'Inter',sans-serif">Limpiar todo</button>
+          <span style="font-size:0.85rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif">Items del presupuesto</span>
+          <button onclick="limpiarPresupuesto()" style="background:none;border:none;color:#DC2626;font-size:0.75rem;cursor:pointer;font-family:"Inter",sans-serif">Limpiar todo</button>
         </div>
         <div id="presupuesto-items-lista"></div>
         <div style="border-top:1px solid #E2DDD6;margin-top:0.75rem;padding-top:0.75rem;display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:0.85rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif">Total presupuesto</span>
-          <span id="presupuesto-total" style="font-variant-numeric:tabular-nums;font-size:1rem;font-weight:700;color:#2D6A4F;font-family:'Inter',sans-serif"></span>
+          <span style="font-size:0.85rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif">Total presupuesto</span>
+          <span id="presupuesto-total" style="font-variant-numeric:tabular-nums;font-size:1rem;font-weight:700;color:#2D6A4F;font-family:"Inter",sans-serif"></span>
         </div>
       </div>
       <button id="btn-generar-pdf" class="btn-pdf" onclick="abrirPDFModal()" style="display:none">
@@ -2628,8 +2628,8 @@ function cerrarHerramienta(){
 
     <!-- Header -->
     <div id="herramientas-main-header" style="margin-bottom:2rem">
-      <h1 style="font-size:1.4rem;font-weight:800;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:6px">Herramientas</h1>
-      <p style="font-size:0.875rem;color:#8A8479;font-family:'Inter',sans-serif">Utilidades para tu flujo de trabajo de impresión 3D</p>
+      <h1 style="font-size:1.4rem;font-weight:800;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:6px">Herramientas</h1>
+      <p style="font-size:0.875rem;color:#8A8479;font-family:"Inter",sans-serif">Utilidades para tu flujo de trabajo de impresión 3D</p>
     </div>
 
     <!-- Tools grid -->
@@ -2639,8 +2639,8 @@ function cerrarHerramienta(){
       <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('svg-converter')" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
         <div style="background:linear-gradient(135deg,#1A1814 0%,#2D6A4F 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem"></div>
         <div style="padding:1.25rem">
-          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:5px">Imagen a SVG</div>
-          <div style="font-size:0.82rem;color:#8A8479;font-family:'Inter',sans-serif;line-height:1.5">Convertí fotos o logos en vectores SVG listos para usar en tus diseños 3D. Descarga gratuita, sin login.</div>
+          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:5px">Imagen a SVG</div>
+          <div style="font-size:0.82rem;color:#8A8479;font-family:"Inter",sans-serif;line-height:1.5">Convertí fotos o logos en vectores SVG listos para usar en tus diseños 3D. Descarga gratuita, sin login.</div>
           <div style="margin-top:1rem;display:flex;gap:6px;flex-wrap:wrap">
             <span style="background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Gratuito</span>
             <span style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Sin registro</span>
@@ -2653,8 +2653,8 @@ function cerrarHerramienta(){
       <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('qr-generator')" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
         <div style="background:linear-gradient(135deg,#1D4ED8 0%,#1A1814 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">QR</div>
         <div style="padding:1.25rem">
-          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:5px">Generador de QR</div>
-          <div style="font-size:0.82rem;color:#8A8479;font-family:'Inter',sans-serif;line-height:1.5">Creá códigos QR para tu WhatsApp, Instagram, link de producto o cualquier URL. Descargá en PNG o SVG.</div>
+          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:5px">Generador de QR</div>
+          <div style="font-size:0.82rem;color:#8A8479;font-family:"Inter",sans-serif;line-height:1.5">Creá códigos QR para tu WhatsApp, Instagram, link de producto o cualquier URL. Descargá en PNG o SVG.</div>
           <div style="margin-top:1rem;display:flex;gap:6px;flex-wrap:wrap">
             <span style="background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Gratuito</span>
             <span style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Sin registro</span>
@@ -2665,18 +2665,18 @@ function cerrarHerramienta(){
       <!-- Más herramientas próximamente -->
       <div style="background:#F5F2ED;border:1.5px dashed #D4CFC8;border-radius:14px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;text-align:center">
         <div style="font-size:2rem;margin-bottom:0.75rem;opacity:0.4"></div>
-        <div style="font-size:0.875rem;font-weight:600;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:4px">Más herramientas</div>
-        <div style="font-size:0.78rem;color:#A09890;font-family:'Inter',sans-serif">Próximamente</div>
+        <div style="font-size:0.875rem;font-weight:600;color:#8A8479;font-family:"Inter",sans-serif;margin-bottom:4px">Más herramientas</div>
+        <div style="font-size:0.78rem;color:#A09890;font-family:"Inter",sans-serif">Próximamente</div>
       </div>
     </div>
 
     <!-- QR GENERATOR TOOL -->
     <div id="herramienta-qr-generator" style="display:none">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem">
-        <button onclick="cerrarHerramienta()" style="background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;padding:7px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#1A1814;display:flex;align-items:center;gap:6px">← Volver</button>
+        <button onclick="cerrarHerramienta()" style="background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;padding:7px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;color:#1A1814;display:flex;align-items:center;gap:6px">← Volver</button>
         <div>
-          <div style="font-size:1.1rem;font-weight:800;color:#1A1814;font-family:'Inter',sans-serif">Generador de QR</div>
-          <div style="font-size:0.78rem;color:#8A8479;font-family:'Inter',sans-serif">Creá códigos QR personalizados para compartir</div>
+          <div style="font-size:1.1rem;font-weight:800;color:#1A1814;font-family:"Inter",sans-serif">Generador de QR</div>
+          <div style="font-size:0.78rem;color:#8A8479;font-family:"Inter",sans-serif">Creá códigos QR personalizados para compartir</div>
         </div>
       </div>
 
@@ -2684,48 +2684,48 @@ function cerrarHerramienta(){
         <!-- Configuración -->
         <div>
           <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem;margin-bottom:1rem">
-            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:1rem">¿Qué querés poner en el QR?</div>
+            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:1rem">¿Qué querés poner en el QR?</div>
 
             <!-- Tipos presets -->
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem" id="qr-tipos">
-              <button class="qr-tipo-btn active" data-tipo="url" onclick="setQRTipo(this,'url')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:#1A1814;color:#fff;border:1.5px solid #1A1814">URL</button>
-              <button class="qr-tipo-btn" data-tipo="wa" onclick="setQRTipo(this,'wa')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">WhatsApp</button>
-              <button class="qr-tipo-btn" data-tipo="ig" onclick="setQRTipo(this,'ig')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">Instagram</button>
-              <button class="qr-tipo-btn" data-tipo="tel" onclick="setQRTipo(this,'tel')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">Teléfono</button>
-              <button class="qr-tipo-btn" data-tipo="texto" onclick="setQRTipo(this,'texto')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">Texto</button>
+              <button class="qr-tipo-btn active" data-tipo="url" onclick="setQRTipo(this,'url')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;background:#1A1814;color:#fff;border:1.5px solid #1A1814">URL</button>
+              <button class="qr-tipo-btn" data-tipo="wa" onclick="setQRTipo(this,'wa')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">WhatsApp</button>
+              <button class="qr-tipo-btn" data-tipo="ig" onclick="setQRTipo(this,'ig')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">Instagram</button>
+              <button class="qr-tipo-btn" data-tipo="tel" onclick="setQRTipo(this,'tel')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">Teléfono</button>
+              <button class="qr-tipo-btn" data-tipo="texto" onclick="setQRTipo(this,'texto')" style="padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;background:#F5F2ED;color:#1A1814;border:1.5px solid #E2DDD6">Texto</button>
             </div>
 
             <div id="qr-input-wrap">
-              <label id="qr-input-label" style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">URL o link</label>
-              <input type="text" id="qr-input" placeholder="https://..." oninput="generarQR()" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box;transition:border-color 0.2s">
-              <div id="qr-input-hint" style="font-size:0.72rem;color:#8A8479;font-family:'Inter',sans-serif;margin-top:4px"></div>
+              <label id="qr-input-label" style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;display:block;margin-bottom:5px">URL o link</label>
+              <input type="text" id="qr-input" placeholder="https://..." oninput="generarQR()" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:"Inter",sans-serif;color:#1A1814;outline:none;box-sizing:border-box;transition:border-color 0.2s">
+              <div id="qr-input-hint" style="font-size:0.72rem;color:#8A8479;font-family:"Inter",sans-serif;margin-top:4px"></div>
             </div>
 
             <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 1fr;gap:10px">
               <div>
-                <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Color del QR</label>
+                <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;display:block;margin-bottom:5px">Color del QR</label>
                 <div style="display:flex;gap:6px;align-items:center">
                   <input type="color" id="qr-color-dark" value="#1A1814" oninput="generarQR()" style="width:38px;height:34px;padding:2px;border:1px solid #E2DDD6;border-radius:6px;cursor:pointer;background:#F9F9F9">
-                  <input type="text" id="qr-color-dark-hex" value="#1A1814" oninput="document.getElementById('qr-color-dark').value=this.value;generarQR()" style="flex:1;padding:7px 8px;border:1px solid #E2DDD6;border-radius:6px;font-size:0.82rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+                  <input type="text" id="qr-color-dark-hex" value="#1A1814" oninput="document.getElementById('qr-color-dark').value=this.value;generarQR()" style="flex:1;padding:7px 8px;border:1px solid #E2DDD6;border-radius:6px;font-size:0.82rem;font-family:"Inter",sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
                 </div>
               </div>
               <div>
-                <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Fondo</label>
+                <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;display:block;margin-bottom:5px">Fondo</label>
                 <div style="display:flex;gap:6px;align-items:center">
                   <input type="color" id="qr-color-light" value="#FFFFFF" oninput="generarQR()" style="width:38px;height:34px;padding:2px;border:1px solid #E2DDD6;border-radius:6px;cursor:pointer;background:#F9F9F9">
-                  <input type="text" id="qr-color-light-hex" value="#FFFFFF" oninput="document.getElementById('qr-color-light').value=this.value;generarQR()" style="flex:1;padding:7px 8px;border:1px solid #E2DDD6;border-radius:6px;font-size:0.82rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+                  <input type="text" id="qr-color-light-hex" value="#FFFFFF" oninput="document.getElementById('qr-color-light').value=this.value;generarQR()" style="flex:1;padding:7px 8px;border:1px solid #E2DDD6;border-radius:6px;font-size:0.82rem;font-family:"Inter",sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
                 </div>
               </div>
             </div>
 
             <div style="margin-top:1rem">
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Tamaño: <span id="qr-size-val">256</span>px</label>
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;display:block;margin-bottom:5px">Tamaño: <span id="qr-size-val">256</span>px</label>
               <input type="range" id="qr-size" min="128" max="512" value="256" step="32" oninput="document.getElementById('qr-size-val').textContent=this.value;generarQR()" style="width:100%;accent-color:#2D6A4F">
             </div>
 
             <div style="margin-top:1rem">
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Corrección de errores</label>
-              <select id="qr-ec" oninput="generarQR()" style="width:100%;padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:'Inter',sans-serif;background:#F9F9F9;color:#1A1814;outline:none">
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;display:block;margin-bottom:5px">Corrección de errores</label>
+              <select id="qr-ec" oninput="generarQR()" style="width:100%;padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:"Inter",sans-serif;background:#F9F9F9;color:#1A1814;outline:none">
                 <option value="L">L — Baja (datos más compactos)</option>
                 <option value="M" selected>M — Media (recomendado)</option>
                 <option value="Q">Q — Alta</option>
@@ -2736,10 +2736,10 @@ function cerrarHerramienta(){
 
           <!-- Presets rápidos -->
           <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem">
-            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:0.875rem">Presets rápidos de Chulengo</div>
+            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:0.875rem">Presets rápidos de Chulengo</div>
             <div style="display:flex;flex-direction:column;gap:6px">
-              <button onclick="aplicarPresetQR('wa')" style="text-align:left;padding:8px 12px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#1A1814">WhatsApp de Chulengo</button>
-              <button onclick="aplicarPresetQR('web')" style="text-align:left;padding:8px 12px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#1A1814">Página web de Chulengo</button>
+              <button onclick="aplicarPresetQR('wa')" style="text-align:left;padding:8px 12px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;color:#1A1814">WhatsApp de Chulengo</button>
+              <button onclick="aplicarPresetQR('web')" style="text-align:left;padding:8px 12px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;color:#1A1814">Página web de Chulengo</button>
             </div>
           </div>
         </div>
@@ -2747,36 +2747,36 @@ function cerrarHerramienta(){
         <!-- Preview QR -->
         <div>
           <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.5rem;text-align:center;margin-bottom:1rem">
-            <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:1rem">Vista previa</div>
+            <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:"Inter",sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:1rem">Vista previa</div>
             <div id="qr-preview-wrap" style="display:flex;align-items:center;justify-content:center;min-height:260px">
               <div id="qr-canvas-container" style="display:inline-block;border-radius:8px;overflow:hidden"></div>
               <div id="qr-placeholder" style="display:flex;flex-direction:column;align-items:center;gap:8px;color:#A09890">
                 <div style="font-size:3rem;opacity:0.3">◼</div>
-                <div style="font-size:0.82rem;font-family:'Inter',sans-serif">Escribí algo para generar el QR</div>
+                <div style="font-size:0.82rem;font-family:"Inter",sans-serif">Escribí algo para generar el QR</div>
               </div>
             </div>
           </div>
 
           <div style="display:flex;gap:8px;margin-bottom:8px">
-            <button onclick="descargarQR('png')" id="btn-dl-qr-png" disabled style="flex:1;padding:11px;background:#1A1814;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;opacity:0.4">PNG</button>
-            <button onclick="descargarQR('svg')" id="btn-dl-qr-svg" disabled style="flex:1;padding:11px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;opacity:0.4">SVG</button>
+            <button onclick="descargarQR('png')" id="btn-dl-qr-png" disabled style="flex:1;padding:11px;background:#1A1814;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:"Inter",sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;opacity:0.4">PNG</button>
+            <button onclick="descargarQR('svg')" id="btn-dl-qr-svg" disabled style="flex:1;padding:11px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:"Inter",sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;opacity:0.4">SVG</button>
           </div>
-          <button onclick="guardarQRHistorial()" id="btn-guardar-qr" disabled style="width:100%;padding:11px;background:#FFF7ED;color:#9A3412;border:1.5px solid #FED7AA;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px;opacity:0.4">Guardar en historial</button>
-          <div id="qr-guardado-msg" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;font-size:0.78rem;color:#166534;font-family:'Inter',sans-serif;margin-bottom:8px"></div>
+          <button onclick="guardarQRHistorial()" id="btn-guardar-qr" disabled style="width:100%;padding:11px;background:#FFF7ED;color:#9A3412;border:1.5px solid #FED7AA;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:"Inter",sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px;opacity:0.4">Guardar en historial</button>
+          <div id="qr-guardado-msg" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;font-size:0.78rem;color:#166534;font-family:"Inter",sans-serif;margin-bottom:8px"></div>
 
-          <div id="qr-link-preview" style="background:#F5F2ED;border-radius:8px;padding:10px 12px;font-size:0.78rem;color:#8A8479;font-family:'Inter',sans-serif;word-break:break-all;display:none"></div>
+          <div id="qr-link-preview" style="background:#F5F2ED;border-radius:8px;padding:10px 12px;font-size:0.78rem;color:#8A8479;font-family:"Inter",sans-serif;word-break:break-all;display:none"></div>
         </div>
       </div>
 
       <!-- HISTORIAL QR -->
       <div style="margin-top:2.5rem">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif">Mi historial de QRs</div>
-          <div id="qr-historial-count" style="font-size:0.78rem;color:#8A8479;font-family:'Inter',sans-serif"></div>
+          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif">Mi historial de QRs</div>
+          <div id="qr-historial-count" style="font-size:0.78rem;color:#8A8479;font-family:"Inter",sans-serif"></div>
         </div>
         <div id="qr-historial-contenido">
           <div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center">
-            <div style="font-size:0.875rem;color:#8A8479;font-family:'Inter',sans-serif">Iniciá sesión para guardar y ver tu historial de QRs.</div>
+            <div style="font-size:0.875rem;color:#8A8479;font-family:"Inter",sans-serif">Iniciá sesión para guardar y ver tu historial de QRs.</div>
           </div>
         </div>
       </div>
@@ -2785,10 +2785,10 @@ function cerrarHerramienta(){
     <!-- SVG CONVERTER TOOL -->
     <div id="herramienta-svg-converter" style="display:none">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem">
-        <button onclick="cerrarHerramienta()" style="background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;padding:7px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#1A1814;display:flex;align-items:center;gap:6px">← Volver</button>
+        <button onclick="cerrarHerramienta()" style="background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;padding:7px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;color:#1A1814;display:flex;align-items:center;gap:6px">← Volver</button>
         <div>
-          <div style="font-size:1.1rem;font-weight:800;color:#1A1814;font-family:'Inter',sans-serif">Imagen a SVG</div>
-          <div style="font-size:0.78rem;color:#8A8479;font-family:'Inter',sans-serif">Convertí PNG, JPG o GIF a vectores SVG</div>
+          <div style="font-size:1.1rem;font-weight:800;color:#1A1814;font-family:"Inter",sans-serif">Imagen a SVG</div>
+          <div style="font-size:0.78rem;color:#8A8479;font-family:"Inter",sans-serif">Convertí PNG, JPG o GIF a vectores SVG</div>
         </div>
       </div>
 
@@ -2797,42 +2797,42 @@ function cerrarHerramienta(){
         <div>
           <!-- Drop zone -->
           <div id="svg-dropzone" ondragover="event.preventDefault();this.style.borderColor='#2D6A4F'" ondragleave="this.style.borderColor='#E2DDD6'" ondrop="handleSVGDrop(event)" style="background:#F9F9F9;border:2px dashed #E2DDD6;border-radius:12px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:1rem;position:relative">
-            <div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:4px">Hacé clic aquí o arrastrá una imagen</div>
-            <div style="font-size:0.78rem;color:#8A8479;font-family:'Inter',sans-serif">PNG · JPG · GIF · BMP</div>
+            <div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:4px">Hacé clic aquí o arrastrá una imagen</div>
+            <div style="font-size:0.78rem;color:#8A8479;font-family:"Inter",sans-serif">PNG · JPG · GIF · BMP</div>
             <input type="file" id="svg-file-input" accept="image/*" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
           </div>
-            <div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:4px">Arrastrá tu imagen acá</div>
-            <div style="font-size:0.78rem;color:#8A8479;font-family:'Inter',sans-serif">o hacé clic para seleccionar · PNG, JPG, GIF, BMP</div>
+            <div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:4px">Arrastrá tu imagen acá</div>
+            <div style="font-size:0.78rem;color:#8A8479;font-family:"Inter",sans-serif">o hacé clic para seleccionar · PNG, JPG, GIF, BMP</div>
             <input type="file" id="svg-file-input" accept="image/*" style="display:none" onchange="var f=this.files[0];cargarImagenSVG(f);">
           </div>
 
           <!-- Preview imagen original -->
           <div id="svg-original-wrap" style="display:none;margin-bottom:1rem">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-              <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:0.05em">Imagen original</div>
-              <button onclick="document.getElementById('svg-original-wrap').style.display='none';document.getElementById('svg-opciones').style.display='none';document.getElementById('svg-dropzone').style.display='block';document.getElementById('svg-file-input').value=''" style="font-size:0.75rem;font-weight:600;color:#2D6A4F;background:none;border:1px solid #2D6A4F;border-radius:6px;padding:3px 10px;cursor:pointer;font-family:'Inter',sans-serif">Cambiar imagen</button>
+              <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:"Inter",sans-serif;text-transform:uppercase;letter-spacing:0.05em">Imagen original</div>
+              <button onclick="document.getElementById('svg-original-wrap').style.display='none';document.getElementById('svg-opciones').style.display='none';document.getElementById('svg-dropzone').style.display='block';document.getElementById('svg-file-input').value=''" style="font-size:0.75rem;font-weight:600;color:#2D6A4F;background:none;border:1px solid #2D6A4F;border-radius:6px;padding:3px 10px;cursor:pointer;font-family:"Inter",sans-serif">Cambiar imagen</button>
             </div>
             <img id="svg-original-img" style="width:100%;border-radius:10px;border:1px solid #E2DDD6;max-height:250px;object-fit:contain;background:#F5F2ED">
           </div>
 
           <!-- Opciones de conversión -->
           <div id="svg-opciones" style="display:none;background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem">
-            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:1rem">Opciones de conversión</div>
+            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:1rem">Opciones de conversión</div>
 
             <div style="margin-bottom:0.875rem">
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Número de colores <span id="svg-colores-val" style="color:#2D6A4F">8</span></label>
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;display:block;margin-bottom:5px">Número de colores <span id="svg-colores-val" style="color:#2D6A4F">8</span></label>
               <input type="range" id="svg-colores" min="2" max="32" value="8" oninput="document.getElementById('svg-colores-val').textContent=this.value" style="width:100%;accent-color:#2D6A4F">
             </div>
 
             <div style="margin-bottom:0.875rem">
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Eliminar fondo blanco <span id="svg-umbral-val" style="color:#2D6A4F">240</span> / 255</label>
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;display:block;margin-bottom:5px">Eliminar fondo blanco <span id="svg-umbral-val" style="color:#2D6A4F">240</span> / 255</label>
               <input type="range" id="svg-umbral" min="100" max="255" value="240" oninput="document.getElementById('svg-umbral-val').textContent=this.value" style="width:100%;accent-color:#2D6A4F;margin-bottom:4px">
-              <div style="font-size:0.7rem;color:#8A8479;font-family:'Inter',sans-serif">Subí el valor para eliminar solo el blanco puro, bajalo para eliminar también grises claros.</div>
+              <div style="font-size:0.7rem;color:#8A8479;font-family:"Inter",sans-serif">Subí el valor para eliminar solo el blanco puro, bajalo para eliminar también grises claros.</div>
             </div>
 
             <div style="margin-bottom:0.875rem">
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Suavizado de bordes</label>
-              <select id="svg-blur" style="width:100%;padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:'Inter',sans-serif;background:#F9F9F9;color:#1A1814;outline:none">
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;display:block;margin-bottom:5px">Suavizado de bordes</label>
+              <select id="svg-blur" style="width:100%;padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:"Inter",sans-serif;background:#F9F9F9;color:#1A1814;outline:none">
                 <option value="0">Sin suavizado (más nítido)</option>
                 <option value="1" selected>Leve (recomendado)</option>
                 <option value="2">Medio</option>
@@ -2841,11 +2841,11 @@ function cerrarHerramienta(){
             </div>
 
             <div style="margin-bottom:1rem">
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Tolerancia de color <span id="svg-tol-val" style="color:#2D6A4F">32</span></label>
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;display:block;margin-bottom:5px">Tolerancia de color <span id="svg-tol-val" style="color:#2D6A4F">32</span></label>
               <input type="range" id="svg-tolerancia" min="1" max="128" value="32" oninput="document.getElementById('svg-tol-val').textContent=this.value" style="width:100%;accent-color:#2D6A4F">
             </div>
 
-            <button id="btn-convertir" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
+            <button id="btn-convertir" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:"Inter",sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
               Convertir a SVG
             </button>
           </div>
@@ -2854,28 +2854,28 @@ function cerrarHerramienta(){
         <!-- Panel derecho: resultado -->
         <div>
           <div id="svg-resultado-wrap" style="display:none">
-            <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Resultado SVG</div>
+            <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:"Inter",sans-serif;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Resultado SVG</div>
             <div id="svg-preview" style="background:#F5F2ED;border:1px solid #E2DDD6;border-radius:10px;min-height:250px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:1rem"></div>
 
             <div style="display:flex;gap:8px;margin-bottom:0.75rem">
-              <button onclick="descargarSVG()" style="flex:1;padding:11px;background:#1A1814;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px">
+              <button onclick="descargarSVG()" style="flex:1;padding:11px;background:#1A1814;color:#fff;border:none;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:"Inter",sans-serif;display:flex;align-items:center;justify-content:center;gap:7px">
                 Descargar SVG
               </button>
-              <button onclick="guardarSVGHistorial()" id="btn-guardar-svg" style="flex:1;padding:11px;background:#FFF7ED;color:#9A3412;border:1px solid #FED7AA;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px">
+              <button onclick="guardarSVGHistorial()" id="btn-guardar-svg" style="flex:1;padding:11px;background:#FFF7ED;color:#9A3412;border:1px solid #FED7AA;border-radius:10px;font-size:0.875rem;font-weight:700;cursor:pointer;font-family:"Inter",sans-serif;display:flex;align-items:center;justify-content:center;gap:7px">
                 Guardar en historial
               </button>
             </div>
-            <div id="svg-guardado-msg" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;font-size:0.78rem;color:#166534;font-family:'Inter',sans-serif;margin-bottom:0.75rem"></div>
+            <div id="svg-guardado-msg" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;font-size:0.78rem;color:#166534;font-family:"Inter",sans-serif;margin-bottom:0.75rem"></div>
 
             <div style="background:#fff;border:1px solid #E2DDD6;border-radius:10px;padding:1rem">
-              <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:6px">Info del archivo</div>
-              <div id="svg-info" style="font-size:0.82rem;color:#1A1814;font-family:'Inter',sans-serif;line-height:1.6"></div>
+              <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:"Inter",sans-serif;margin-bottom:6px">Info del archivo</div>
+              <div id="svg-info" style="font-size:0.82rem;color:#1A1814;font-family:"Inter",sans-serif;line-height:1.6"></div>
             </div>
           </div>
 
           <div id="svg-resultado-placeholder" style="background:#F9F9F9;border:1px solid #E2DDD6;border-radius:10px;min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem">
             <div style="font-size:2rem;margin-bottom:0.75rem;opacity:0.3">📐</div>
-            <div style="font-size:0.875rem;color:#A09890;font-family:'Inter',sans-serif">El SVG generado aparecerá acá</div>
+            <div style="font-size:0.875rem;color:#A09890;font-family:"Inter",sans-serif">El SVG generado aparecerá acá</div>
           </div>
         </div>
       </div>
@@ -2883,12 +2883,12 @@ function cerrarHerramienta(){
       <!-- HISTORIAL -->
       <div id="svg-historial-section" style="margin-top:2.5rem">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif">Mi historial de SVGs</div>
-          <div id="svg-historial-count" style="font-size:0.78rem;color:#8A8479;font-family:'Inter',sans-serif"></div>
+          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif">Mi historial de SVGs</div>
+          <div id="svg-historial-count" style="font-size:0.78rem;color:#8A8479;font-family:"Inter",sans-serif"></div>
         </div>
         <div id="svg-historial-contenido">
           <div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center">
-            <div style="font-size:0.875rem;color:#8A8479;font-family:'Inter',sans-serif" id="svg-historial-msg">Iniciá sesión para guardar y ver tu historial de SVGs.</div>
+            <div style="font-size:0.875rem;color:#8A8479;font-family:"Inter",sans-serif" id="svg-historial-msg">Iniciá sesión para guardar y ver tu historial de SVGs.</div>
           </div>
         </div>
       </div>
@@ -2901,22 +2901,22 @@ function cerrarHerramienta(){
 <div class="page" id="page-busqueda">
   <div style="max-width:1300px;margin:0 auto;padding:1.5rem 1.25rem 4rem">
     <div id="busqueda-header" style="margin-bottom:1.5rem">
-      <div id="busqueda-titulo" style="font-size:1.1rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:4px"></div>
-      <div id="busqueda-sub" style="font-size:0.82rem;color:#8A8479;font-family:'Inter',sans-serif"></div>
+      <div id="busqueda-titulo" style="font-size:1.1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:4px"></div>
+      <div id="busqueda-sub" style="font-size:0.82rem;color:#8A8479;font-family:"Inter",sans-serif"></div>
     </div>
     <div style="display:flex;gap:1.5rem;align-items:flex-start">
       <!-- Filtros laterales -->
       <div id="busqueda-filtros" style="width:200px;flex-shrink:0;display:none">
         <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:1rem">
-          <div style="font-size:0.78rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Material</div>
+          <div style="font-size:0.78rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Material</div>
           <div id="fil-busqueda-material" style="display:flex;flex-direction:column;gap:5px"></div>
         </div>
         <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:1rem">
-          <div style="font-size:0.78rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Marca</div>
+          <div style="font-size:0.78rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Marca</div>
           <div id="fil-busqueda-marca" style="display:flex;flex-direction:column;gap:5px"></div>
         </div>
         <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem">
-          <div style="font-size:0.78rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Stock</div>
+          <div style="font-size:0.78rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Stock</div>
           <div id="fil-busqueda-stock" style="display:flex;flex-direction:column;gap:5px"></div>
         </div>
       </div>
@@ -2934,14 +2934,14 @@ function cerrarHerramienta(){
 <div class="page" id="page-ofertas">
   <div style="max-width:600px;margin:0 auto;padding:4rem 1.5rem;text-align:center">
     <div style="font-size:3rem;margin-bottom:1rem">🏷️</div>
-    <div style="font-size:1.3rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:0.5rem">No hay ofertas por ahora</div>
-    <div style="font-size:0.9rem;color:#8A8479;font-family:'Inter',sans-serif;line-height:1.6;margin-bottom:2rem">Cuando haya descuentos especiales en filamentos los vas a ver acá.<br>Te avisamos cuando aparezca algo.</div>
+    <div style="font-size:1.3rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:0.5rem">No hay ofertas por ahora</div>
+    <div style="font-size:0.9rem;color:#8A8479;font-family:"Inter",sans-serif;line-height:1.6;margin-bottom:2rem">Cuando haya descuentos especiales en filamentos los vas a ver acá.<br>Te avisamos cuando aparezca algo.</div>
     <div style="display:flex;flex-direction:column;gap:10px;max-width:360px;margin:0 auto">
-      <a id="btn-avisar-oferta-wa" href="#" target="_blank" onclick="setAvisarWA('oferta',this)" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:13px 20px;font-size:0.95rem;font-weight:700;text-decoration:none;font-family:'Inter',sans-serif;transition:background 0.2s">
+      <a id="btn-avisar-oferta-wa" href="#" target="_blank" onclick="setAvisarWA('oferta',this)" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:13px 20px;font-size:0.95rem;font-weight:700;text-decoration:none;font-family:"Inter",sans-serif;transition:background 0.2s">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.115.549 4.1 1.508 5.83L.057 23.077a.75.75 0 0 0 .916.953l5.453-1.427A11.933 11.933 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.715 9.715 0 0 1-4.951-1.355l-.355-.211-3.676.962.98-3.578-.231-.368A9.715 9.715 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
         Avisarme por WhatsApp
       </a>
-      <a id="btn-avisar-oferta-mail" href="#" onclick="suscribirAviso('oferta',this);return false" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#1D4ED8;color:#fff;border:none;border-radius:12px;padding:13px 20px;font-size:0.95rem;font-weight:700;text-decoration:none;font-family:'Inter',sans-serif;transition:background 0.2s">
+      <a id="btn-avisar-oferta-mail" href="#" onclick="suscribirAviso('oferta',this);return false" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#1D4ED8;color:#fff;border:none;border-radius:12px;padding:13px 20px;font-size:0.95rem;font-weight:700;text-decoration:none;font-family:"Inter",sans-serif;transition:background 0.2s">
         <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
         Avisarme por Email
       </a>
@@ -2953,14 +2953,14 @@ function cerrarHerramienta(){
 <div class="page" id="page-cupones">
   <div style="max-width:600px;margin:0 auto;padding:4rem 1.5rem;text-align:center">
     <div style="font-size:3rem;margin-bottom:1rem">🎫</div>
-    <div style="font-size:1.3rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:0.5rem">No hay cupones disponibles</div>
-    <div style="font-size:0.9rem;color:#8A8479;font-family:'Inter',sans-serif;line-height:1.6;margin-bottom:2rem">Cuando tengamos cupones de descuento los vas a ver acá.<br>Te avisamos cuando aparezca algo.</div>
+    <div style="font-size:1.3rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:0.5rem">No hay cupones disponibles</div>
+    <div style="font-size:0.9rem;color:#8A8479;font-family:"Inter",sans-serif;line-height:1.6;margin-bottom:2rem">Cuando tengamos cupones de descuento los vas a ver acá.<br>Te avisamos cuando aparezca algo.</div>
     <div style="display:flex;flex-direction:column;gap:10px;max-width:360px;margin:0 auto">
-      <a id="btn-avisar-cupon-wa" href="#" target="_blank" onclick="setAvisarWA('cupon',this)" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:13px 20px;font-size:0.95rem;font-weight:700;text-decoration:none;font-family:'Inter',sans-serif;transition:background 0.2s">
+      <a id="btn-avisar-cupon-wa" href="#" target="_blank" onclick="setAvisarWA('cupon',this)" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:13px 20px;font-size:0.95rem;font-weight:700;text-decoration:none;font-family:"Inter",sans-serif;transition:background 0.2s">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.115.549 4.1 1.508 5.83L.057 23.077a.75.75 0 0 0 .916.953l5.453-1.427A11.933 11.933 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.715 9.715 0 0 1-4.951-1.355l-.355-.211-3.676.962.98-3.578-.231-.368A9.715 9.715 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
         Avisarme por WhatsApp
       </a>
-      <a id="btn-avisar-cupon-mail" href="#" onclick="suscribirAviso('cupon',this);return false" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#1D4ED8;color:#fff;border:none;border-radius:12px;padding:13px 20px;font-size:0.95rem;font-weight:700;text-decoration:none;font-family:'Inter',sans-serif;transition:background 0.2s">
+      <a id="btn-avisar-cupon-mail" href="#" onclick="suscribirAviso('cupon',this);return false" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#1D4ED8;color:#fff;border:none;border-radius:12px;padding:13px 20px;font-size:0.95rem;font-weight:700;text-decoration:none;font-family:"Inter",sans-serif;transition:background 0.2s">
         <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
         Avisarme por Email
       </a>
@@ -3059,7 +3059,7 @@ function calcularEstadisticas(docs){
     if(porEstado[est]===0)return;
     var pct=Math.round(porEstado[est]/docs.length*100);
     var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:8px';
-    row.innerHTML='<div style="width:80px;font-size:0.78rem;color:#4B4640;font-family:'Inter',sans-serif;flex-shrink:0">'+est+'</div>'+
+    row.innerHTML='<div style="width:80px;font-size:0.78rem;color:#4B4640;font-family:"Inter",sans-serif;flex-shrink:0">'+est+'</div>'+
       '<div style="flex:1;background:#F5F2ED;border-radius:4px;height:8px;overflow:hidden">'+
         '<div style="width:'+pct+'%;background:'+colores[est]+';height:100%;border-radius:4px;transition:width 0.5s"></div>'+
       '</div>'+
@@ -3084,7 +3084,7 @@ function calcularEstadisticas(docs){
     bar.innerHTML='<div style="font-size:0.68rem;color:#8A8479;font-family:monospace">'+(m.count||'')+'</div>'+
       '<div style="width:100%;background:'+(m.count>0?'#2D6A4F':'#E2DDD6')+';border-radius:4px 4px 0 0;height:'+(pct||4)+'%;min-height:4px;transition:height 0.5s"></div>';
     grafico.appendChild(bar);
-    var lbl=document.createElement('div'); lbl.style.cssText='flex:1;text-align:center;font-size:0.68rem;color:#8A8479;font-family:'Inter',sans-serif;text-transform:capitalize';
+    var lbl=document.createElement('div'); lbl.style.cssText='flex:1;text-align:center;font-size:0.68rem;color:#8A8479;font-family:"Inter",sans-serif;text-transform:capitalize';
     lbl.textContent=m.label; labels.appendChild(lbl);
   });
 }
@@ -3209,9 +3209,9 @@ function renderListaPresupuestos(docs){
     if(todosPresupuestos.length === 0){
       lista.innerHTML='<div style="text-align:center;padding:2.5rem 1rem">'+
         '<div style="font-size:2.5rem;margin-bottom:0.75rem">📄</div>'+
-        '<div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:0.5rem">Todavía no generaste ningún presupuesto</div>'+
-        '<div style="font-size:0.82rem;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:1.25rem">Usá la calculadora para calcular el costo y generar un presupuesto para tu cliente.</div>'+
-        '<button onclick="showPage(\'calc\',document.querySelectorAll(\'.nav-tab\')[1])" style="background:#1A1814;color:#fff;border:none;border-radius:10px;padding:11px 24px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Ir a la calculadora</button>'+
+        '<div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:0.5rem">Todavía no generaste ningún presupuesto</div>'+
+        '<div style="font-size:0.82rem;color:#8A8479;font-family:"Inter",sans-serif;margin-bottom:1.25rem">Usá la calculadora para calcular el costo y generar un presupuesto para tu cliente.</div>'+
+        '<button onclick="showPage(\'calc\',document.querySelectorAll(\'.nav-tab\')[1])" style="background:#1A1814;color:#fff;border:none;border-radius:10px;padding:11px 24px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif">Ir a la calculadora</button>'+
         '</div>';
     } else { lista.innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">No hay presupuestos con ese filtro.</p>'; }
     return;
@@ -3227,15 +3227,15 @@ function renderListaPresupuestos(docs){
     var header=document.createElement('div'); header.style.cssText='padding:1rem;display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer;user-select:none;gap:10px';
     var hLeft=document.createElement('div'); hLeft.style.cssText='flex:1;min-width:0';
     hLeft.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap">'+
-      '<span style="font-weight:600;color:#1A1814;font-size:0.9rem;font-family:'Inter',sans-serif">'+(d.proyecto||'Sin nombre')+'</span>'+
-      (d.cliente?'<span style="font-size:0.75rem;color:#8A8479;font-family:'Inter',sans-serif">· '+d.cliente+'</span>':'')+
-      '</div><div style="font-size:0.75rem;color:#8A8479;font-family:'Inter',sans-serif">'+fecha+' · '+fmtPeso(d.precioTotal)+'</div>';
+      '<span style="font-weight:600;color:#1A1814;font-size:0.9rem;font-family:"Inter",sans-serif">'+(d.proyecto||'Sin nombre')+'</span>'+
+      (d.cliente?'<span style="font-size:0.75rem;color:#8A8479;font-family:"Inter",sans-serif">· '+d.cliente+'</span>':'')+
+      '</div><div style="font-size:0.75rem;color:#8A8479;font-family:"Inter",sans-serif">'+fecha+' · '+fmtPeso(d.precioTotal)+'</div>';
     var hBadge=document.createElement('span'); hBadge.className='estado-badge header-estado-badge estado-'+estadoClase; hBadge.textContent=estado;
     var hChev=document.createElement('span'); hChev.style.cssText='color:#8A8479;font-size:1.1rem;transition:transform 0.2s;flex-shrink:0;margin-top:2px'; hChev.textContent='▾';
     header.appendChild(hLeft); header.appendChild(hBadge); header.appendChild(hChev);
     var detalle=document.createElement('div'); detalle.style.cssText='display:none;border-top:1px solid #F5F2ED;padding:1rem';
     var estadoGrp=document.createElement('div'); estadoGrp.setAttribute('data-estado-group','1'); estadoGrp.style.cssText='margin-bottom:0.875rem';
-    estadoGrp.innerHTML='<div style="font-size:0.72rem;font-weight:600;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Estado</div>';
+    estadoGrp.innerHTML='<div style="font-size:0.72rem;font-weight:600;color:#8A8479;font-family:"Inter",sans-serif;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Estado</div>';
     var estadoBtns=document.createElement('div'); estadoBtns.style.cssText='display:flex;gap:6px;flex-wrap:wrap';
     ESTADOS.forEach(function(est){
       var cls=ESTADO_CLASE[est]||est; var btn=document.createElement('button');
@@ -3246,19 +3246,19 @@ function renderListaPresupuestos(docs){
     estadoGrp.appendChild(estadoBtns); detalle.appendChild(estadoGrp);
     var itemsDiv=document.createElement('div'); itemsDiv.style.cssText='margin-bottom:0.75rem';
     items.forEach(function(item){
-      var row=document.createElement('div'); row.style.cssText='display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F5F2ED;font-size:0.82rem;font-family:'Inter',sans-serif';
+      var row=document.createElement('div'); row.style.cssText='display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F5F2ED;font-size:0.82rem;font-family:"Inter",sans-serif';
       row.innerHTML='<span style="color:#1A1814">'+item.nombre+'</span><span style="color:#2D6A4F;font-variant-numeric:tabular-nums;font-weight:600">'+fmtPeso(item.precio)+'</span>';
       itemsDiv.appendChild(row);
     });
-    if(items.length>1){ var tot=document.createElement('div'); tot.style.cssText='display:flex;justify-content:space-between;padding:6px 0;font-size:0.88rem;font-weight:700;font-family:'Inter',sans-serif'; tot.innerHTML='<span>Total</span><span style="color:#2D6A4F;font-variant-numeric:tabular-nums">'+fmtPeso(d.precioTotal)+'</span>'; itemsDiv.appendChild(tot); }
+    if(items.length>1){ var tot=document.createElement('div'); tot.style.cssText='display:flex;justify-content:space-between;padding:6px 0;font-size:0.88rem;font-weight:700;font-family:"Inter",sans-serif'; tot.innerHTML='<span>Total</span><span style="color:#2D6A4F;font-variant-numeric:tabular-nums">'+fmtPeso(d.precioTotal)+'</span>'; itemsDiv.appendChild(tot); }
     detalle.appendChild(itemsDiv);
-    if(d.descripcion){var desc=document.createElement('div');desc.style.cssText='font-size:0.8rem;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:0.75rem';desc.textContent=d.descripcion;detalle.appendChild(desc);}
-    if(d.condiciones){var cond=document.createElement('div');cond.style.cssText='font-size:0.78rem;color:#4B4640;font-family:'Inter',sans-serif;margin-bottom:0.75rem';cond.innerHTML='<b>Condiciones:</b> '+d.condiciones;detalle.appendChild(cond);}
+    if(d.descripcion){var desc=document.createElement('div');desc.style.cssText='font-size:0.8rem;color:#8A8479;font-family:"Inter",sans-serif;margin-bottom:0.75rem';desc.textContent=d.descripcion;detalle.appendChild(desc);}
+    if(d.condiciones){var cond=document.createElement('div');cond.style.cssText='font-size:0.78rem;color:#4B4640;font-family:"Inter",sans-serif;margin-bottom:0.75rem';cond.innerHTML='<b>Condiciones:</b> '+d.condiciones;detalle.appendChild(cond);}
     var acciones=document.createElement('div'); acciones.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin-top:0.5rem';
-    var btnPDF=document.createElement('button'); btnPDF.style.cssText='flex:1;min-width:120px;padding:9px;background:#1A1814;color:#fff;border:none;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px'; btnPDF.textContent='Descargar PDF'; btnPDF.addEventListener('click',function(){regenerarPDF(id,d);});
-    var btnWA=document.createElement('a'); btnWA.style.cssText='flex:1;min-width:120px;padding:9px;background:#25D366;color:#fff;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none'; btnWA.textContent='💬 Enviar WA'; btnWA.target='_blank';
+    var btnPDF=document.createElement('button'); btnPDF.style.cssText='flex:1;min-width:120px;padding:9px;background:#1A1814;color:#fff;border:none;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;display:flex;align-items:center;justify-content:center;gap:6px'; btnPDF.textContent='Descargar PDF'; btnPDF.addEventListener('click',function(){regenerarPDF(id,d);});
+    var btnWA=document.createElement('a'); btnWA.style.cssText='flex:1;min-width:120px;padding:9px;background:#25D366;color:#fff;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none'; btnWA.textContent='💬 Enviar WA'; btnWA.target='_blank';
     var waMsg='Hola! Te envio el presupuesto de *'+(d.proyecto||'tu pedido')+'* por '+fmtPeso(d.precioTotal)+'.'; btnWA.href='https://wa.me/'+WA+'?text='+encodeURIComponent(waMsg);
-    var btnDel=document.createElement('button'); btnDel.style.cssText='padding:9px 14px;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;border-radius:8px;font-size:0.82rem;cursor:pointer;font-family:'Inter',sans-serif'; btnDel.textContent='🗑'; btnDel.addEventListener('click',function(){eliminarPresupuesto(id,btnDel);});
+    var btnDel=document.createElement('button'); btnDel.style.cssText='padding:9px 14px;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;border-radius:8px;font-size:0.82rem;cursor:pointer;font-family:"Inter",sans-serif'; btnDel.textContent='🗑'; btnDel.addEventListener('click',function(){eliminarPresupuesto(id,btnDel);});
     acciones.appendChild(btnPDF); acciones.appendChild(btnWA); acciones.appendChild(btnDel); detalle.appendChild(acciones);
     header.addEventListener('click',function(){ var isOpen=detalle.style.display!=='none'; detalle.style.display=isOpen?'none':'block'; hChev.style.transform=isOpen?'':'rotate(180deg)'; });
     card.appendChild(header); card.appendChild(detalle); lista.appendChild(card);
@@ -3289,23 +3289,23 @@ function abrirModalNombreItem(precio){
   box.style.cssText = 'background:#fff;border-radius:16px;padding:1.75rem;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.2s ease';
 
   var title = document.createElement('div');
-  title.style.cssText = 'font-size:1rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:0.5rem';
+  title.style.cssText = 'font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:0.5rem';
   title.textContent = precio <= 0 ? 'Completá el cálculo primero' : '¿Cómo se llama este ítem?';
   box.appendChild(title);
 
   if(precio <= 0){
     var err = document.createElement('div');
-    err.style.cssText = 'background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 14px;font-size:0.85rem;color:#B91C1C;font-family:'Inter',sans-serif;margin-bottom:1rem';
+    err.style.cssText = 'background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 14px;font-size:0.85rem;color:#B91C1C;font-family:"Inter",sans-serif;margin-bottom:1rem';
     err.textContent = 'Completá todos los campos del formulario para obtener un precio de venta.';
     box.appendChild(err);
     var btnOk = document.createElement('button');
     btnOk.textContent = 'Entendido';
-    btnOk.style.cssText = 'float:right;padding:9px 20px;background:#1A1814;border:none;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#fff';
+    btnOk.style.cssText = 'float:right;padding:9px 20px;background:#1A1814;border:none;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;color:#fff';
     btnOk.onclick = function(){ modal.remove(); };
     box.appendChild(btnOk);
   } else {
     var hint = document.createElement('div');
-    hint.style.cssText = 'font-size:0.82rem;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:1.25rem';
+    hint.style.cssText = 'font-size:0.82rem;color:#8A8479;font-family:"Inter",sans-serif;margin-bottom:1.25rem';
     hint.textContent = 'Ej: Estatuilla dragón, Tapa celular, Soporte de pared...';
     box.appendChild(hint);
 
@@ -3313,7 +3313,7 @@ function abrirModalNombreItem(precio){
     inp.id = 'input-nombre-item';
     inp.type = 'text';
     inp.placeholder = 'Nombre del ítem';
-    inp.style.cssText = 'width:100%;padding:10px 14px;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.95rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box;margin-bottom:1.25rem';
+    inp.style.cssText = 'width:100%;padding:10px 14px;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.95rem;font-family:"Inter",sans-serif;color:#1A1814;outline:none;box-sizing:border-box;margin-bottom:1.25rem';
     inp.addEventListener('keydown', function(e){ if(e.key==='Enter') confirmarItemPresupuesto(precio); });
     box.appendChild(inp);
 
@@ -3322,12 +3322,12 @@ function abrirModalNombreItem(precio){
 
     var btnCancel = document.createElement('button');
     btnCancel.textContent = 'Cancelar';
-    btnCancel.style.cssText = 'padding:9px 20px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#1A1814';
+    btnCancel.style.cssText = 'padding:9px 20px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;color:#1A1814';
     btnCancel.onclick = function(){ modal.remove(); };
 
     var btnAdd = document.createElement('button');
     btnAdd.textContent = '+ Agregar';
-    btnAdd.style.cssText = 'padding:9px 20px;background:#2D6A4F;border:none;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#fff';
+    btnAdd.style.cssText = 'padding:9px 20px;background:#2D6A4F;border:none;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;color:#fff';
     btnAdd.onclick = function(){ confirmarItemPresupuesto(precio); };
 
     btnRow.appendChild(btnCancel);
@@ -3359,7 +3359,7 @@ function renderItemsPresupuesto(){
   itemsPresupuesto.forEach(function(item, idx){
     total += item.precio;
     var row = document.createElement('div'); row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #E2DDD6';
-    row.innerHTML = '<span style="font-size:0.82rem;color:#1A1814;font-family:'Inter',sans-serif;flex:1">' + item.nombre + '</span>' +
+    row.innerHTML = '<span style="font-size:0.82rem;color:#1A1814;font-family:"Inter",sans-serif;flex:1">' + item.nombre + '</span>' +
       '<span style="font-variant-numeric:tabular-nums;font-size:0.82rem;color:#2D6A4F;margin:0 12px;font-weight:600">' + fmtPeso(item.precio) + '</span>' +
       '<button onclick="eliminarItemPresupuesto(' + idx + ')" style="background:none;border:none;color:#DC2626;cursor:pointer;font-size:0.9rem;padding:2px 6px">✕</button>';
     lista.appendChild(row);
@@ -3822,7 +3822,7 @@ function renderBusqueda(q){
     if(!f.el) return;
     Object.keys(f.items).sort().forEach(function(val){
       var lbl = document.createElement('label');
-      lbl.style.cssText = 'display:flex;align-items:center;gap:7px;font-size:0.82rem;color:#1A1814;font-family:'Inter',sans-serif;cursor:pointer;padding:3px 0';
+      lbl.style.cssText = 'display:flex;align-items:center;gap:7px;font-size:0.82rem;color:#1A1814;font-family:"Inter",sans-serif;cursor:pointer;padding:3px 0';
       var chk = document.createElement('input');
       chk.type = 'checkbox';
       chk.style.cssText = 'accent-color:#2D6A4F;cursor:pointer;width:14px;height:14px';
@@ -3842,7 +3842,7 @@ function renderBusqueda(q){
   // Stock filter
   if(filtrosStock){
     var lbl = document.createElement('label');
-    lbl.style.cssText = 'display:flex;align-items:center;gap:7px;font-size:0.82rem;color:#1A1814;font-family:'Inter',sans-serif;cursor:pointer;padding:3px 0';
+    lbl.style.cssText = 'display:flex;align-items:center;gap:7px;font-size:0.82rem;color:#1A1814;font-family:"Inter",sans-serif;cursor:pointer;padding:3px 0';
     var chk = document.createElement('input');
     chk.type = 'checkbox';
     chk.style.cssText = 'accent-color:#2D6A4F;cursor:pointer;width:14px;height:14px';
@@ -4004,25 +4004,25 @@ function abrirModalGuardarPerfil(){
   box.style.cssText = 'background:#fff;border-radius:16px;padding:1.75rem;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.2s ease';
 
   var title = document.createElement('div');
-  title.style.cssText = 'font-size:1rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:0.5rem';
+  title.style.cssText = 'font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:0.5rem';
   title.textContent = '🖨️ Guardar perfil de impresión';
   box.appendChild(title);
 
   var hint = document.createElement('div');
-  hint.style.cssText = 'font-size:0.8rem;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:1.25rem;background:#F5F2ED;border-radius:8px;padding:10px 12px;line-height:1.5';
+  hint.style.cssText = 'font-size:0.8rem;color:#8A8479;font-family:"Inter",sans-serif;margin-bottom:1.25rem;background:#F5F2ED;border-radius:8px;padding:10px 12px;line-height:1.5';
   hint.innerHTML = '<b style="color:#1A1814">Impresora:</b> '+config.impresoraLabel+'<br>'+
     '<b style="color:#1A1814">Filamento:</b> '+(config.filamentoLabel||'No seleccionado');
   box.appendChild(hint);
 
   var lbl = document.createElement('div');
-  lbl.style.cssText = 'font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:5px';
+  lbl.style.cssText = 'font-size:0.8rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:5px';
   lbl.textContent = 'Nombre del perfil';
   box.appendChild(lbl);
 
   var inp = document.createElement('input');
   inp.type = 'text';
   inp.placeholder = 'Ej: Bambu A1 + PLA Chulengo, Perfil nocturno...';
-  inp.style.cssText = 'width:100%;padding:10px 14px;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.95rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box;margin-bottom:1.25rem';
+  inp.style.cssText = 'width:100%;padding:10px 14px;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.95rem;font-family:"Inter",sans-serif;color:#1A1814;outline:none;box-sizing:border-box;margin-bottom:1.25rem';
   inp.addEventListener('keydown', function(e){ if(e.key==='Enter') confirmarGuardarPerfil(config, inp.value); });
   box.appendChild(inp);
 
@@ -4030,11 +4030,11 @@ function abrirModalGuardarPerfil(){
   btnRow.style.cssText = 'display:flex;gap:10px;justify-content:flex-end';
   var btnCancel = document.createElement('button');
   btnCancel.textContent = 'Cancelar';
-  btnCancel.style.cssText = 'padding:9px 20px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#1A1814';
+  btnCancel.style.cssText = 'padding:9px 20px;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;color:#1A1814';
   btnCancel.onclick = function(){ modal.remove(); };
   var btnSave = document.createElement('button');
   btnSave.textContent = 'Guardar perfil';
-  btnSave.style.cssText = 'padding:9px 20px;background:#2D6A4F;border:none;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#fff';
+  btnSave.style.cssText = 'padding:9px 20px;background:#2D6A4F;border:none;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;color:#fff';
   btnSave.onclick = function(){ confirmarGuardarPerfil(config, inp.value); };
   btnRow.appendChild(btnCancel);
   btnRow.appendChild(btnSave);
@@ -4142,7 +4142,7 @@ function renderPerfiles(){
   if(perfilesGuardados.length === 0){
     var emptyDiv = document.createElement('div');
     emptyDiv.id = 'perfiles-empty';
-    emptyDiv.style.cssText = 'font-size:0.82rem;color:#8A8479;font-family:'Inter',sans-serif;padding:4px 0';
+    emptyDiv.style.cssText = 'font-size:0.82rem;color:#8A8479;font-family:"Inter",sans-serif;padding:4px 0';
     emptyDiv.textContent = 'Todavía no guardaste ningún perfil. Configurá la calculadora y guardalo.';
     lista.appendChild(emptyDiv);
     return;
@@ -4159,12 +4159,12 @@ function renderPerfiles(){
     info.style.cssText = 'flex:1;min-width:0';
 
     var nombre = document.createElement('div');
-    nombre.style.cssText = 'font-size:0.82rem;font-weight:700;color:inherit;font-family:'Inter',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    nombre.style.cssText = 'font-size:0.82rem;font-weight:700;color:inherit;font-family:"Inter",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
     nombre.textContent = p.nombre;
     info.appendChild(nombre);
 
     var sub = document.createElement('div');
-    sub.style.cssText = 'font-size:0.7rem;color:#8A8479;font-family:'Inter',sans-serif;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    sub.style.cssText = 'font-size:0.7rem;color:#8A8479;font-family:"Inter",sans-serif;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
     // Shorten labels
     var impLabel = (p.impresoraLabel||'').split(' — ')[0];
     var filLabel = (p.filamentoLabel||'').replace(/⭐|🎨/g,'').split(' —')[0].trim();
@@ -4199,7 +4199,7 @@ function mostrarToastCalc(msg){
   if(!t){
     t = document.createElement('div');
     t.id = 'toast-calc';
-    t.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1A1814;color:#fff;padding:10px 20px;border-radius:10px;font-size:0.875rem;font-weight:600;z-index:9999;font-family:'Inter',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:opacity 0.3s';
+    t.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1A1814;color:#fff;padding:10px 20px;border-radius:10px;font-size:0.875rem;font-weight:600;z-index:9999;font-family:"Inter",sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:opacity 0.3s';
     document.body.appendChild(t);
   }
   t.textContent = msg;
@@ -4319,7 +4319,7 @@ function generarQR(){
       container.innerHTML = '<div style="padding:2rem;color:#B91C1C;font-size:0.85rem">Error: librería QR no cargada. Recargá la página.</div>';
     }
   } catch(e){
-    container.innerHTML = '<div style="padding:1rem;color:#B91C1C;font-size:0.82rem;font-family:'Inter',sans-serif">Error: '+e.message+'</div>';
+    container.innerHTML = '<div style="padding:1rem;color:#B91C1C;font-size:0.82rem;font-family:"Inter",sans-serif">Error: '+e.message+'</div>';
   }
 
   // Link preview
@@ -4456,11 +4456,11 @@ function cargarHistorialQR(){
   if(!cont) return;
 
   if(!window.currentUser){
-    cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:'Inter',sans-serif">Iniciá sesión para guardar y ver tu historial de QRs.</div></div>';
+    cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:"Inter",sans-serif">Iniciá sesión para guardar y ver tu historial de QRs.</div></div>';
     return;
   }
 
-  cont.innerHTML='<div style="text-align:center;padding:1.5rem;color:#8A8479;font-family:'Inter',sans-serif;font-size:0.875rem">Cargando historial...</div>';
+  cont.innerHTML='<div style="text-align:center;padding:1.5rem;color:#8A8479;font-family:"Inter",sans-serif;font-size:0.875rem">Cargando historial...</div>';
 
   firebase.firestore().collection('qr_historial')
     .where('uid','==',window.currentUser.uid)
@@ -4469,7 +4469,7 @@ function cargarHistorialQR(){
     .get()
     .then(function(snap){
       if(snap.empty){
-        cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:'Inter',sans-serif">Todavía no guardaste ningún QR. Generá uno y guardalo.</div></div>';
+        cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:"Inter",sans-serif">Todavía no guardaste ningún QR. Generá uno y guardalo.</div></div>';
         return;
       }
       if(count) count.textContent = snap.size + ' QR'+(snap.size!==1?'s':'');
@@ -4502,12 +4502,12 @@ function cargarHistorialQR(){
         var info = document.createElement('div');
         info.style.cssText='padding:10px 12px';
         info.innerHTML=
-          '<div style="font-size:0.72rem;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:2px">'+tipoLabel+'</div>'+
-          '<div style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(d.input||d.valor||'—')+'</div>'+
-          '<div style="font-size:0.7rem;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:8px">'+fecha+'</div>'+
+          '<div style="font-size:0.72rem;color:#8A8479;font-family:"Inter",sans-serif;margin-bottom:2px">'+tipoLabel+'</div>'+
+          '<div style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(d.input||d.valor||'—')+'</div>'+
+          '<div style="font-size:0.7rem;color:#8A8479;font-family:"Inter",sans-serif;margin-bottom:8px">'+fecha+'</div>'+
           '<div style="display:flex;gap:5px">'+
-            '<button data-qrid="'+doc.id+'" class="btn-regenerar-qr" style="flex:1;padding:6px;background:#2D6A4F;color:#fff;border:none;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Cargar</button>'+
-            '<button data-qrid="'+doc.id+'" class="btn-dl-qr-hist" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">PNG</button>'+
+            '<button data-qrid="'+doc.id+'" class="btn-regenerar-qr" style="flex:1;padding:6px;background:#2D6A4F;color:#fff;border:none;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif">Cargar</button>'+
+            '<button data-qrid="'+doc.id+'" class="btn-dl-qr-hist" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif">PNG</button>'+
             '<button data-qrid="'+doc.id+'" class="btn-del-qr" style="padding:6px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.72rem;cursor:pointer">🗑</button>'+
           '</div>';
 
@@ -4518,7 +4518,7 @@ function cargarHistorialQR(){
       cont.appendChild(grid);
     })
     .catch(function(e){
-      cont.innerHTML='<div style="color:#B91C1C;padding:1rem;font-size:0.85rem;font-family:'Inter',sans-serif">Error: '+e.message+'</div>';
+      cont.innerHTML='<div style="color:#B91C1C;padding:1rem;font-size:0.85rem;font-family:"Inter",sans-serif">Error: '+e.message+'</div>';
     });
 }
 
@@ -4600,11 +4600,11 @@ function cargarHistorialSVG(){
   if(!cont) return;
 
   if(!window.currentUser){
-    cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:'Inter',sans-serif">Iniciá sesión para guardar y ver tu historial de SVGs.</div></div>';
+    cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:"Inter",sans-serif">Iniciá sesión para guardar y ver tu historial de SVGs.</div></div>';
     return;
   }
 
-  cont.innerHTML='<div style="text-align:center;padding:1.5rem;color:#8A8479;font-family:'Inter',sans-serif;font-size:0.875rem">Cargando historial...</div>';
+  cont.innerHTML='<div style="text-align:center;padding:1.5rem;color:#8A8479;font-family:"Inter",sans-serif;font-size:0.875rem">Cargando historial...</div>';
 
   firebase.firestore().collection('svg_historial')
     .where('uid','==',window.currentUser.uid)
@@ -4613,7 +4613,7 @@ function cargarHistorialSVG(){
     .get()
     .then(function(snap){
       if(snap.empty){
-        cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:'Inter',sans-serif">Todavía no guardaste ningún SVG. Convertí una imagen y guardala.</div></div>';
+        cont.innerHTML='<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:"Inter",sans-serif">Todavía no guardaste ningún SVG. Convertí una imagen y guardala.</div></div>';
         return;
       }
       if(count) count.textContent = snap.size + ' archivo' + (snap.size!==1?'s':'');
@@ -4645,10 +4645,10 @@ function cargarHistorialSVG(){
 
         var info = document.createElement('div');
         info.style.cssText='padding:10px 12px';
-        info.innerHTML='<div style="font-size:0.82rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(d.nombre||'svg')+'</div>'+
-          '<div style="font-size:0.72rem;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:8px">'+fecha+' · '+kb+'</div>'+
+        info.innerHTML='<div style="font-size:0.82rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(d.nombre||'svg')+'</div>'+
+          '<div style="font-size:0.72rem;color:#8A8479;font-family:"Inter",sans-serif;margin-bottom:8px">'+fecha+' · '+kb+'</div>'+
           '<div style="display:flex;gap:6px">'+
-            '<button data-id="'+doc.id+'" class="btn-dl-svg" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">SVG</button>'+
+            '<button data-id="'+doc.id+'" class="btn-dl-svg" style="flex:1;padding:6px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif">SVG</button>'+
             '<button data-id="'+doc.id+'" class="btn-del-svg" style="padding:6px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.75rem;cursor:pointer">🗑</button>'+
           '</div>';
 
@@ -4659,7 +4659,7 @@ function cargarHistorialSVG(){
       cont.appendChild(grid);
     })
     .catch(function(e){
-      cont.innerHTML='<div style="color:#B91C1C;padding:1rem;font-size:0.85rem;font-family:'Inter',sans-serif">Error al cargar historial: '+e.message+'</div>';
+      cont.innerHTML='<div style="color:#B91C1C;padding:1rem;font-size:0.85rem;font-family:"Inter",sans-serif">Error al cargar historial: '+e.message+'</div>';
     });
 }
 
@@ -4701,13 +4701,13 @@ document.addEventListener('click', function(e){
     <button onclick="document.getElementById('google-login-modal').style.display='none'" style="float:right;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#8A8479;margin-top:-8px">✕</button>
     <div style="clear:both"></div>
     <div id="login-modal-icon" style="font-size:2.5rem;margin-bottom:0.75rem">📄</div>
-    <div id="login-modal-titulo" style="font-size:1.1rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:0.5rem">Guardá tus presupuestos</div>
-    <div id="login-modal-desc" style="font-size:0.82rem;color:#8A8479;font-family:'Inter',sans-serif;line-height:1.6;margin-bottom:1.5rem">Iniciá sesión gratis con Google para generar presupuestos en PDF, guardar tu historial y recibir avisos de ofertas y cupones.</div>
-    <button onclick="loginConGoogle()" style="width:100%;padding:12px;background:#fff;color:#1A1814;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.95rem;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:0.75rem;transition:background 0.2s" onmouseover="this.style.background='#F5F2ED'" onmouseout="this.style.background='#fff'">
+    <div id="login-modal-titulo" style="font-size:1.1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:0.5rem">Guardá tus presupuestos</div>
+    <div id="login-modal-desc" style="font-size:0.82rem;color:#8A8479;font-family:"Inter",sans-serif;line-height:1.6;margin-bottom:1.5rem">Iniciá sesión gratis con Google para generar presupuestos en PDF, guardar tu historial y recibir avisos de ofertas y cupones.</div>
+    <button onclick="loginConGoogle()" style="width:100%;padding:12px;background:#fff;color:#1A1814;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.95rem;font-weight:600;font-family:"Inter",sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:0.75rem;transition:background 0.2s" onmouseover="this.style.background='#F5F2ED'" onmouseout="this.style.background='#fff'">
       <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
       Continuar con Google
     </button>
-    <div style="font-size:0.75rem;color:#A09890;font-family:'Inter',sans-serif">Es gratis y tarda 5 segundos</div>
+    <div style="font-size:0.75rem;color:#A09890;font-family:"Inter",sans-serif">Es gratis y tarda 5 segundos</div>
   </div>
 </div>
 
@@ -4715,22 +4715,22 @@ document.addEventListener('click', function(e){
 <div id="modal-fil-propio" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;align-items:center;justify-content:center;padding:1.5rem">
   <div style="background:#fff;border-radius:16px;padding:1.5rem;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
-      <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif">Agregar mi filamento</div>
+      <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif">Agregar mi filamento</div>
       <button onclick="cerrarModalFilamentoPropio()" style="background:#F5F2ED;border:none;font-size:1rem;cursor:pointer;color:#8A8479;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center">✕</button>
     </div>
     <div style="margin-bottom:0.875rem">
-      <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Nombre del filamento</label>
-      <input id="fil-propio-nombre" type="text" placeholder="Ej: PLA+ Bambu Lab" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box">
+      <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;display:block;margin-bottom:5px">Nombre del filamento</label>
+      <input id="fil-propio-nombre" type="text" placeholder="Ej: PLA+ Bambu Lab" style="width:100%;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:"Inter",sans-serif;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:1.25rem">
-      <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Precio por kg</label>
+      <label style="font-size:0.8rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;display:block;margin-bottom:5px">Precio por kg</label>
       <div style="position:relative">
         <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.88rem">$</span>
-        <input id="fil-propio-precio" type="number" min="0" placeholder="Ej: 28000" style="width:100%;padding:10px 12px 10px 24px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box">
+        <input id="fil-propio-precio" type="number" min="0" placeholder="Ej: 28000" style="width:100%;padding:10px 12px 10px 24px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:"Inter",sans-serif;outline:none;box-sizing:border-box">
       </div>
     </div>
-    <div id="fil-propio-err" style="color:#DC2626;font-size:0.78rem;font-family:'Inter',sans-serif;margin-bottom:0.75rem;min-height:1rem"></div>
-    <button onclick="guardarFilamentoPropio()" style="width:100%;padding:11px;background:#1A1814;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer">Guardar filamento</button>
+    <div id="fil-propio-err" style="color:#DC2626;font-size:0.78rem;font-family:"Inter",sans-serif;margin-bottom:0.75rem;min-height:1rem"></div>
+    <button onclick="guardarFilamentoPropio()" style="width:100%;padding:11px;background:#1A1814;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:600;font-family:"Inter",sans-serif;cursor:pointer">Guardar filamento</button>
   </div>
 </div>
 
@@ -4785,8 +4785,8 @@ document.addEventListener('click', function(e){
     <div class="field">
       <label>Descuento <span style="font-size:0.75rem;color:#8A8479;font-weight:400">(opcional)</span></label>
       <div style="display:flex;gap:8px;align-items:center">
-        <div style="position:relative;flex:1"><input type="number" id="pdf-descuento" min="0" max="100" step="1" placeholder="0" oninput="actualizarDescuento()" style="width:100%;padding:10px 32px 10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:1rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.88rem;pointer-events:none">%</span></div>
-        <div id="descuento-preview" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;text-align:center;min-width:110px"><div style="font-size:0.68rem;color:#8A8479;font-family:'Inter',sans-serif">Total con descuento</div><div id="descuento-preview-val" style="font-size:1rem;font-weight:700;color:#2D6A4F;font-variant-numeric:tabular-nums"></div></div>
+        <div style="position:relative;flex:1"><input type="number" id="pdf-descuento" min="0" max="100" step="1" placeholder="0" oninput="actualizarDescuento()" style="width:100%;padding:10px 32px 10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:1rem;font-family:"Inter",sans-serif;outline:none;box-sizing:border-box"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.88rem;pointer-events:none">%</span></div>
+        <div id="descuento-preview" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;text-align:center;min-width:110px"><div style="font-size:0.68rem;color:#8A8479;font-family:"Inter",sans-serif">Total con descuento</div><div id="descuento-preview-val" style="font-size:1rem;font-weight:700;color:#2D6A4F;font-variant-numeric:tabular-nums"></div></div>
       </div>
     </div>
     <div class="field"><label>Condiciones / notas <span style="font-size:0.75rem;color:#8A8479;font-weight:400">(opcional)</span></label><textarea id="pdf-notas" placeholder="Ej: Seña del 50% para iniciar. Entrega en 5 días hábiles."></textarea></div>
@@ -4809,44 +4809,44 @@ document.addEventListener('click', function(e){
     <div id="cuenta-header" style="background:#1A1814;border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem">
       <img id="cuenta-avatar" src="" style="width:48px;height:48px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);display:none">
       <div style="flex:1">
-        <div id="cuenta-nombre" style="font-size:1rem;font-weight:700;color:#fff;font-family:'Inter',sans-serif"></div>
-        <div id="cuenta-email" style="font-size:0.78rem;color:rgba(255,255,255,0.5);font-family:'Inter',sans-serif"></div>
+        <div id="cuenta-nombre" style="font-size:1rem;font-weight:700;color:#fff;font-family:"Inter",sans-serif"></div>
+        <div id="cuenta-email" style="font-size:0.78rem;color:rgba(255,255,255,0.5);font-family:"Inter",sans-serif"></div>
       </div>
-      <button onclick="doLogout()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:7px 14px;font-size:0.8rem;cursor:pointer;font-family:'Inter',sans-serif">Cerrar sesión</button>
+      <button onclick="doLogout()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:7px 14px;font-size:0.8rem;cursor:pointer;font-family:"Inter",sans-serif">Cerrar sesión</button>
     </div>
     <div id="stats-box" style="display:none;margin-bottom:1.5rem">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem">
-          <div style="font-size:0.72rem;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Total generado</div>
+          <div style="font-size:0.72rem;color:#8A8479;font-family:"Inter",sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Total generado</div>
           <div id="stat-total" style="font-size:1.3rem;font-weight:700;color:#2D6A4F;font-variant-numeric:tabular-nums"></div>
-          <div id="stat-total-sub" style="font-size:0.72rem;color:#8A8479;font-family:'Inter',sans-serif;margin-top:2px"></div>
+          <div id="stat-total-sub" style="font-size:0.72rem;color:#8A8479;font-family:"Inter",sans-serif;margin-top:2px"></div>
         </div>
         <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem">
-          <div style="font-size:0.72rem;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Tasa de aprobación</div>
+          <div style="font-size:0.72rem;color:#8A8479;font-family:"Inter",sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Tasa de aprobación</div>
           <div id="stat-tasa" style="font-size:1.3rem;font-weight:700;color:#1A1814;font-variant-numeric:tabular-nums"></div>
-          <div id="stat-tasa-sub" style="font-size:0.72rem;color:#8A8479;font-family:'Inter',sans-serif;margin-top:2px"></div>
+          <div id="stat-tasa-sub" style="font-size:0.72rem;color:#8A8479;font-family:"Inter",sans-serif;margin-top:2px"></div>
         </div>
       </div>
       <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:10px">
-        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:0.75rem">Presupuestos por estado</div>
+        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:0.75rem">Presupuestos por estado</div>
         <div id="stat-estados" style="display:flex;flex-direction:column;gap:6px"></div>
       </div>
       <div id="stat-cliente-box" style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem;margin-bottom:10px;display:none">
-        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:4px">Cliente más frecuente</div>
-        <div id="stat-cliente" style="font-size:0.95rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif"></div>
-        <div id="stat-cliente-sub" style="font-size:0.78rem;color:#8A8479;font-family:'Inter',sans-serif"></div>
+        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:4px">Cliente más frecuente</div>
+        <div id="stat-cliente" style="font-size:0.95rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif"></div>
+        <div id="stat-cliente-sub" style="font-size:0.78rem;color:#8A8479;font-family:"Inter",sans-serif"></div>
       </div>
       <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1rem">
-        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:0.875rem">Presupuestos por mes</div>
+        <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:0.875rem">Presupuestos por mes</div>
         <div id="stat-grafico" style="display:flex;align-items:flex-end;gap:6px;height:80px"></div>
         <div id="stat-grafico-labels" style="display:flex;gap:6px;margin-top:4px"></div>
       </div>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.875rem">
-      <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif">Mis presupuestos</div>
-      <div id="pres-count" style="font-size:0.78rem;color:#8A8479;font-family:'Inter',sans-serif"></div>
+      <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif">Mis presupuestos</div>
+      <div id="pres-count" style="font-size:0.78rem;color:#8A8479;font-family:"Inter",sans-serif"></div>
     </div>
-    <input id="pres-search" type="text" placeholder="Buscar por cliente o proyecto..." oninput="filtrarPresupuestos()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;margin-bottom:0.75rem">
+    <input id="pres-search" type="text" placeholder="Buscar por cliente o proyecto..." oninput="filtrarPresupuestos()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.88rem;font-family:"Inter",sans-serif;outline:none;box-sizing:border-box;margin-bottom:0.75rem">
     <div id="pres-filtros" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem">
       <button class="pres-filtro active" data-estado="Todos" onclick="setFiltroEstado(this)">Todos</button>
       <button class="pres-filtro" data-estado="Enviado" onclick="setFiltroEstado(this)">Enviado</button>
