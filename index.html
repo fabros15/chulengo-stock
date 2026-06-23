@@ -3150,14 +3150,17 @@ function guardarPrefsUsuario(){
 }
 
 var SLIDES = [
-  { img: 'banner/banner3.png', tag: 'Servicio', titulo: 'Calculadora de costos 3D', desc: 'Calculá el costo exacto de tu impresión y generá un presupuesto profesional en PDF.', btnTxt: 'Ir a la calculadora', btnColor: '#1A1814', btnAccion: function(){ showPage('calc', document.querySelectorAll('.nav-tab')[1]); } },
-  { img: 'banner/banner1.png', tag: 'Novedades', titulo: 'Dorado Silk GST3D', desc: 'PLA+ Sedoso con acabado metálico premium. Black Edition, hecho en Argentina.', btnTxt: 'Ver producto', btnColor: '#D4AF37', btnAccion: function(){ showPage('stock', document.querySelector('.nav-tab')); setTimeout(function(){ var search = document.getElementById('search'); if(search){ search.value = 'Dorado Silk GST3D'; search.dispatchEvent(new Event('input')); } }, 100); } }
+  { img: 'banner/banner3.png', tag: 'Servicio', titulo: 'Calculadora de costos 3D', desc: 'Calculá el costo exacto de tu impresión y generá un presupuesto profesional en PDF.', btnTxt: 'Ir a la calculadora', btnColor: '#1A1814', btnAccion: function(){ showPage('calc', document.querySelectorAll('.nav-tab')[1]); } }
 ];
 
 var carruselIdx = 0; var carruselTimer = null;
 function initCarrusel(){
   var track = document.getElementById('carousel-track'); var dots = document.getElementById('carousel-dots'); if(!track) return;
   track.innerHTML = ''; dots.innerHTML = '';
+  var wrap = document.getElementById('carousel-wrap');
+  var soloUno = SLIDES.length <= 1;
+  if(wrap){ wrap.querySelectorAll('.carousel-btn').forEach(function(b){ b.style.display = soloUno ? 'none' : ''; }); }
+  dots.style.display = soloUno ? 'none' : '';
   SLIDES.forEach(function(slide, i){
     var div = document.createElement('div'); div.className = 'carousel-slide'; div.style.cursor = 'pointer';
     var img = document.createElement('img'); img.src = slide.img; img.alt = slide.titulo;
@@ -3170,7 +3173,7 @@ function initCarrusel(){
 }
 function irASlide(idx){ carruselIdx = idx; document.getElementById('carousel-track').style.transform = 'translateX(-'+idx+'00%)'; document.querySelectorAll('.carousel-dot').forEach(function(d,i){ d.className='carousel-dot'+(i===idx?' active':''); }); reiniciarTimerCarrusel(); }
 function moverCarrusel(dir){ irASlide((carruselIdx+dir+SLIDES.length)%SLIDES.length); }
-function iniciarTimerCarrusel(){ carruselTimer=setInterval(function(){moverCarrusel(1);},9000); }
+function iniciarTimerCarrusel(){ if(SLIDES.length<=1) return; carruselTimer=setInterval(function(){moverCarrusel(1);},9000); }
 function reiniciarTimerCarrusel(){ clearInterval(carruselTimer); iniciarTimerCarrusel(); }
 if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', function(){ initCarrusel(); }); } else { initCarrusel(); }
 
