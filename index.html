@@ -1064,13 +1064,9 @@ body.dark .pres-filtro{background:#1C1C1C;border-color:#2A2520;color:#8A8479}
 body.dark .pres-filtro.active,.pres-filtro:hover{background:#FAFAFA;color:#1A1814}
 body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
 @media print{
-  body.printing-etiqueta > *{visibility:hidden !important}
-  body.printing-etiqueta #etiqueta-preview-wrap,
-  body.printing-etiqueta #etiqueta-preview-wrap *,
-  body.printing-etiqueta #etiqueta-print-area,
-  body.printing-etiqueta #etiqueta-print-area *{visibility:visible !important}
-  body.printing-etiqueta #etiqueta-preview-wrap{position:fixed !important;top:15mm !important;left:0 !important;right:0 !important;width:auto !important;height:auto !important;overflow:visible !important;background:#fff !important;display:flex !important;justify-content:center !important}
-  body.printing-etiqueta #etiqueta-print-area{position:relative !important;top:0 !important;left:0 !important;width:420px !important;height:594px !important;margin:0 !important;transform:scale(1.62) !important;transform-origin:top center !important;box-shadow:none !important;border:none !important}
+  body.printing-etiqueta #app{display:none !important}
+  body.printing-etiqueta #etiqueta-imprimir-area{display:flex !important;justify-content:center;width:100%}
+  #etiqueta-imprimir-area .etiq-print-clon{width:420px;height:594px;margin:15mm auto 0;transform:scale(1.62);transform-origin:top center;box-shadow:none !important;border:none !important}
   @page{size:A4;margin:0}
 }
 </style><script>
@@ -3726,6 +3722,19 @@ function chequearNombreSimilar(){
 }
 
 function dispararImpresionEtiqueta(){
+  var original = document.getElementById('etiqueta-print-area');
+  var clone = original.cloneNode(true);
+  clone.removeAttribute('id');
+  clone.classList.add('etiq-print-clon');
+  clone.style.transform = 'scale(1.62)';
+  clone.style.transformOrigin = 'top center';
+  clone.style.margin = '15mm auto 0';
+  clone.style.boxShadow = 'none';
+  clone.style.border = 'none';
+  var destino = document.getElementById('etiqueta-imprimir-area');
+  destino.innerHTML = '';
+  destino.appendChild(clone);
+
   document.body.classList.add('printing-etiqueta');
   setTimeout(function(){
     window.print();
@@ -3733,6 +3742,8 @@ function dispararImpresionEtiqueta(){
 }
 window.addEventListener('afterprint', function(){
   document.body.classList.remove('printing-etiqueta');
+  var destino = document.getElementById('etiqueta-imprimir-area');
+  if(destino) destino.innerHTML = '';
 });
 
 function guardarEImprimirEtiqueta(){
@@ -4032,6 +4043,7 @@ document.addEventListener('click', function(e){
 </div>
 
 </div><!-- fin app -->
+<div id="etiqueta-imprimir-area" style="display:none"></div>
 <script>
 // El input de archivo y el botón "Convertir a SVG" ya están cableados
 // directamente en el HTML (onchange / onclick), no se necesita wiring extra acá.
