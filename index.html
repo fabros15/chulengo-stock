@@ -1065,9 +1065,12 @@ body.dark .pres-filtro.active,.pres-filtro:hover{background:#FAFAFA;color:#1A181
 body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
 @media print{
   body.printing-etiqueta > *{visibility:hidden !important}
+  body.printing-etiqueta #etiqueta-preview-wrap,
+  body.printing-etiqueta #etiqueta-preview-wrap *,
   body.printing-etiqueta #etiqueta-print-area,
   body.printing-etiqueta #etiqueta-print-area *{visibility:visible !important}
-  body.printing-etiqueta #etiqueta-print-area{position:absolute !important;top:0;left:0;width:210mm;min-height:297mm;margin:0;box-shadow:none !important;border:none !important}
+  body.printing-etiqueta #etiqueta-preview-wrap{position:fixed !important;top:0 !important;left:0 !important;right:0 !important;width:auto !important;height:auto !important;overflow:visible !important;background:#fff !important;display:flex !important;justify-content:center !important}
+  body.printing-etiqueta #etiqueta-print-area{position:relative !important;top:0 !important;left:0 !important;transform:none !important;width:190mm !important;height:auto !important;min-height:0 !important;margin:10mm auto !important;padding:12mm !important;box-shadow:none !important;border:none !important}
   @page{size:A4;margin:0}
 }
 </style><script>
@@ -3690,6 +3693,10 @@ function actualizarPreviewEtiqueta(){
 }
 
 function onEtiqNombreInput(){
+  var inp = document.getElementById('etiq-nombre');
+  var pos = inp.selectionStart;
+  inp.value = inp.value.toUpperCase();
+  inp.setSelectionRange(pos, pos);
   actualizarPreviewEtiqueta();
   chequearNombreSimilar();
 }
