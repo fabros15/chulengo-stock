@@ -88,6 +88,9 @@ document.addEventListener('DOMContentLoaded', function(){
       var cardEtiq = document.getElementById('card-etiquetas');
       if(cardEtiq) cardEtiq.style.display = isAdmin() ? '' : 'none';
       if(!isAdmin() && document.getElementById('herramienta-etiquetas').style.display!=='none'){ cerrarHerramienta(); }
+      var cardRemito = document.getElementById('card-remito');
+      if(cardRemito) cardRemito.style.display = isAdmin() ? '' : 'none';
+      if(!isAdmin() && document.getElementById('herramienta-remito').style.display!=='none'){ cerrarHerramienta(); }
     } else {
       if(btnSalir) btnSalir.style.display='none';
       if(btnEntrar) btnEntrar.style.display='flex';
@@ -96,6 +99,9 @@ document.addEventListener('DOMContentLoaded', function(){
       var cardEtiq = document.getElementById('card-etiquetas');
       if(cardEtiq) cardEtiq.style.display = 'none';
       if(document.getElementById('herramienta-etiquetas').style.display!=='none'){ cerrarHerramienta(); }
+      var cardRemito = document.getElementById('card-remito');
+      if(cardRemito) cardRemito.style.display = 'none';
+      if(document.getElementById('herramienta-remito').style.display!=='none'){ cerrarHerramienta(); }
       
       if(document.getElementById('page-cuenta').classList.contains('active')){
         document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
@@ -1067,6 +1073,9 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
   body.printing-etiqueta #app{display:none !important}
   body.printing-etiqueta #etiqueta-imprimir-area{display:flex !important;justify-content:center;width:100%}
   #etiqueta-imprimir-area .etiq-print-clon{width:420px;height:594px;margin:15mm auto 0;transform:scale(1.62);transform-origin:top center;box-shadow:none !important;border:none !important}
+  body.printing-remito #app{display:none !important}
+  body.printing-remito #remito-imprimir-area{display:flex !important;justify-content:center;width:100%}
+  #remito-imprimir-area .remito-print-clon{width:600px;margin:12mm auto 0;box-shadow:none !important;border:none !important}
   @page{size:A4;margin:0}
 }
 </style><script>
@@ -1089,6 +1098,10 @@ function abrirHerramienta(id){
   if(id === 'etiquetas'){
     if(!isAdmin()){ cerrarHerramienta(); return; }
     cargarHistorialEtiquetas();
+  }
+  if(id === 'remito'){
+    if(!isAdmin()){ cerrarHerramienta(); return; }
+    if(!remitoRenglones.length){ inicializarRemito(); }
   }
 }
 
@@ -1479,6 +1492,17 @@ function cerrarHerramienta(){
         </div>
       </div>
 
+      <!-- Remito de entrega (solo admin) -->
+      <div id="card-remito" style="display:none;background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('remito')" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+        <div style="background:linear-gradient(135deg,#0F766E 0%,#1A1814 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">🧾</div>
+        <div style="padding:1.25rem">
+          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:5px">Remito de entrega</div>
+          <div style="font-size:0.82rem;color:#8A8479;font-family:"Inter",sans-serif;line-height:1.5">Generá e imprimí un remito con los productos entregados y sus precios.</div>
+          <div style="margin-top:1rem;display:flex;gap:6px;flex-wrap:wrap">
+            <span style="background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Solo vos</span>
+          </div>
+        </div>
+      </div>
       <!-- Más herramientas próximamente -->
       <div style="background:#F5F2ED;border:1.5px dashed #D4CFC8;border-radius:14px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;text-align:center">
         <div style="font-size:2rem;margin-bottom:0.75rem;opacity:0.4"></div>
@@ -1834,6 +1858,88 @@ function cerrarHerramienta(){
         <div id="etiq-historial-contenido">
           <div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center">
             <div style="font-size:0.875rem;color:#8A8479;font-family:'Inter',sans-serif">Cargando historial...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REMITO DE ENTREGA (solo admin) -->
+    <div id="herramienta-remito" style="display:none">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem">
+        <button onclick="cerrarHerramienta()" style="background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;padding:7px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#1A1814;display:flex;align-items:center;gap:6px">← Volver</button>
+        <div>
+          <div style="font-size:1.1rem;font-weight:800;color:#1A1814;font-family:'Inter',sans-serif">Remito de entrega</div>
+          <div style="font-size:0.78rem;color:#8A8479;font-family:'Inter',sans-serif">Generá e imprimí el remito con los productos entregados</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+        <!-- Formulario -->
+        <div>
+          <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem;margin-bottom:1rem">
+            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:1rem">Entrega a</div>
+            <div style="margin-bottom:0.875rem">
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Nombre y apellido</label>
+              <input type="text" id="remito-nombre" placeholder="Ej: Elías Mauricio Caullan" oninput="onRemitoNombreInput()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+            </div>
+            <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Fecha</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:10px">
+              <input type="number" id="remito-dia" min="1" max="31" placeholder="Día" oninput="actualizarPreviewRemito()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+              <input type="number" id="remito-mes" min="1" max="12" placeholder="Mes" oninput="actualizarPreviewRemito()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+              <input type="number" id="remito-anio" placeholder="Año" oninput="actualizarPreviewRemito()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem;margin-bottom:1rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+              <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif">Productos</div>
+              <div style="font-size:0.72rem;color:#8A8479;font-family:'Inter',sans-serif;display:flex;gap:8px">
+                <span style="flex:1">Producto</span><span>Precio</span>
+              </div>
+            </div>
+            <div id="remito-filas-form"></div>
+            <button onclick="agregarRenglonRemito()" style="width:100%;margin-top:6px;padding:9px;background:#F5F2ED;border:1.5px dashed #D4CFC8;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#1A1814">+ Agregar renglón</button>
+          </div>
+
+          <button onclick="dispararImpresionRemito()" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Imprimir remito</button>
+        </div>
+
+        <!-- Vista previa -->
+        <div>
+          <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Vista previa</div>
+          <div style="background:#EDEAE4;border-radius:12px;padding:1.25rem;display:flex;justify-content:center;overflow-x:auto">
+            <div id="remito-print-area" style="width:600px;min-width:600px;background:#fff;border:1px solid #ccc;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:34px;box-sizing:border-box;font-family:'Inter',sans-serif;color:#1A1814">
+
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+                <div style="text-align:center">
+                  <img src="img/CHULENGO_LOGOO.png" style="width:60px;height:60px;border-radius:10px;object-fit:cover;display:block">
+                  <div style="font-size:0.6rem;color:#1A1814;margin-top:2px;font-weight:600">@chulengoestudio</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-size:2.1rem;font-weight:800;letter-spacing:0.02em">REMITO</div>
+                  <div style="font-size:0.85rem;font-weight:600;margin-top:2px">Fecha: <span id="prev-remito-fecha">—</span></div>
+                </div>
+              </div>
+
+              <div style="border:1.5px solid #1A1814;border-radius:4px;padding:10px 12px;margin-bottom:16px">
+                <div style="font-size:0.7rem;font-weight:700;margin-bottom:6px">ENTREGA A</div>
+                <div style="font-size:1.2rem;font-weight:700;text-align:center;word-break:break-word" id="prev-remito-nombre">—</div>
+              </div>
+
+              <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
+                <thead>
+                  <tr style="border-bottom:2px solid #1A1814">
+                    <th style="text-align:left;font-size:0.78rem;padding:6px 4px">PRODUCTO</th>
+                    <th style="text-align:right;font-size:0.78rem;padding:6px 4px;width:110px">PRECIO</th>
+                  </tr>
+                </thead>
+                <tbody id="prev-remito-filas"></tbody>
+              </table>
+
+              <div style="border-top:2px solid #1A1814;padding-top:8px;display:flex;justify-content:flex-end;gap:10px;font-size:1rem;font-weight:800">
+                <span>TOTAL</span><span id="prev-remito-total">$ 0</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -3873,6 +3979,127 @@ document.addEventListener('click', function(e){
   }
 });
 
+// ══════════════════════════════════════════════
+// HERRAMIENTAS - REMITO DE ENTREGA (solo admin)
+// ══════════════════════════════════════════════
+
+var remitoRenglones = [];
+
+function inicializarRemito(){
+  var hoy = new Date();
+  document.getElementById('remito-dia').value = hoy.getDate();
+  document.getElementById('remito-mes').value = hoy.getMonth()+1;
+  document.getElementById('remito-anio').value = hoy.getFullYear();
+  remitoRenglones = [];
+  for(var i=0;i<8;i++){ remitoRenglones.push({producto:'',precio:''}); }
+  renderRemitoForm();
+  actualizarPreviewRemito();
+}
+
+function renderRemitoForm(){
+  var cont = document.getElementById('remito-filas-form');
+  cont.innerHTML = '';
+  remitoRenglones.forEach(function(r, idx){
+    var fila = document.createElement('div');
+    fila.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center';
+    fila.innerHTML =
+      '<input type="text" value="'+(r.producto||'').replace(/"/g,'&quot;')+'" placeholder="Ej: Llavero personalizado" data-idx="'+idx+'" data-campo="producto" style="flex:1;padding:8px 10px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:\'Inter\',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">'+
+      '<input type="text" value="'+(r.precio||'').replace(/"/g,'&quot;')+'" placeholder="0" data-idx="'+idx+'" data-campo="precio" style="width:100px;padding:8px 10px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:\'Inter\',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">'+
+      (remitoRenglones.length>1 ? '<button data-idx="'+idx+'" class="btn-quitar-renglon" style="padding:7px 9px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.75rem;cursor:pointer">×</button>' : '<span style="width:33px"></span>');
+    cont.appendChild(fila);
+  });
+
+  cont.querySelectorAll('input[data-idx]').forEach(function(inp){
+    inp.addEventListener('input', function(){
+      var idx = parseInt(this.dataset.idx,10);
+      var campo = this.dataset.campo;
+      remitoRenglones[idx][campo] = this.value;
+      actualizarPreviewRemito();
+    });
+  });
+  cont.querySelectorAll('.btn-quitar-renglon').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var idx = parseInt(this.dataset.idx,10);
+      remitoRenglones.splice(idx,1);
+      renderRemitoForm();
+      actualizarPreviewRemito();
+    });
+  });
+}
+
+function agregarRenglonRemito(){
+  remitoRenglones.push({producto:'',precio:''});
+  renderRemitoForm();
+  actualizarPreviewRemito();
+}
+
+function onRemitoNombreInput(){
+  var inp = document.getElementById('remito-nombre');
+  var pos = inp.selectionStart;
+  inp.value = inp.value.toUpperCase();
+  inp.setSelectionRange(pos, pos);
+  actualizarPreviewRemito();
+}
+
+function formatearMoneda(n){
+  return '$ '+n.toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+
+function actualizarPreviewRemito(){
+  var nombre = document.getElementById('remito-nombre').value.trim();
+  var dia = document.getElementById('remito-dia').value;
+  var mes = document.getElementById('remito-mes').value;
+  var anio = document.getElementById('remito-anio').value;
+
+  document.getElementById('prev-remito-nombre').textContent = nombre || '—';
+  var fechaTxt = (dia?String(dia).padStart(2,'0'):'--')+'/'+(mes?String(mes).padStart(2,'0'):'--')+'/'+(anio||'----');
+  document.getElementById('prev-remito-fecha').textContent = fechaTxt;
+
+  var tbody = document.getElementById('prev-remito-filas');
+  tbody.innerHTML = '';
+  var total = 0;
+  var filasConDatos = remitoRenglones.filter(function(r){ return (r.producto||'').trim() || (r.precio||'').trim(); });
+
+  if(!filasConDatos.length){
+    tbody.innerHTML = '<tr><td colspan="2" style="padding:14px 4px;color:#8A8479;font-size:0.85rem;text-align:center">Sin productos cargados</td></tr>';
+  } else {
+    filasConDatos.forEach(function(r){
+      var precioNum = parseFloat(String(r.precio||'0').replace(/\./g,'').replace(',','.'))||0;
+      total += precioNum;
+      var tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid #E2DDD6';
+      tr.innerHTML =
+        '<td style="padding:7px 4px;font-size:0.9rem">'+(r.producto||'—')+'</td>'+
+        '<td style="padding:7px 4px;font-size:0.9rem;text-align:right">'+(r.precio? formatearMoneda(precioNum) : '—')+'</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  document.getElementById('prev-remito-total').textContent = formatearMoneda(total);
+}
+
+function dispararImpresionRemito(){
+  var original = document.getElementById('remito-print-area');
+  var clone = original.cloneNode(true);
+  clone.removeAttribute('id');
+  clone.classList.add('remito-print-clon');
+  clone.style.boxShadow = 'none';
+  clone.style.border = 'none';
+
+  var destino = document.getElementById('remito-imprimir-area');
+  destino.innerHTML = '';
+  destino.appendChild(clone);
+
+  document.body.classList.add('printing-remito');
+  setTimeout(function(){
+    window.print();
+  }, 50);
+}
+window.addEventListener('afterprint', function(){
+  document.body.classList.remove('printing-remito');
+  var destino = document.getElementById('remito-imprimir-area');
+  if(destino) destino.innerHTML = '';
+});
+
 </script>
 
 <!-- FICHA PAGE -->
@@ -4044,6 +4271,7 @@ document.addEventListener('click', function(e){
 
 </div><!-- fin app -->
 <div id="etiqueta-imprimir-area" style="display:none"></div>
+<div id="remito-imprimir-area" style="display:none"></div>
 <script>
 // El input de archivo y el botón "Convertir a SVG" ya están cableados
 // directamente en el HTML (onchange / onclick), no se necesita wiring extra acá.
