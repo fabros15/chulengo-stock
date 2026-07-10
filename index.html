@@ -1075,7 +1075,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
   #etiqueta-imprimir-area .etiq-print-clon{width:420px;height:594px;margin:15mm auto 0;transform:scale(1.62);transform-origin:top center;box-shadow:none !important;border:none !important}
   body.printing-remito #app{display:none !important}
   body.printing-remito #remito-imprimir-area{display:flex !important;justify-content:center;width:100%}
-  #remito-imprimir-area .remito-print-clon{width:600px;margin:12mm auto 0;box-shadow:none !important;border:none !important}
+  #remito-imprimir-area .remito-print-clon{width:700px;margin:14mm auto 0;box-shadow:none !important;border:none !important}
   @page{size:A4;margin:0}
 }
 </style><script>
@@ -1891,12 +1891,7 @@ function cerrarHerramienta(){
           </div>
 
           <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem;margin-bottom:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-              <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif">Productos</div>
-              <div style="font-size:0.72rem;color:#8A8479;font-family:'Inter',sans-serif;display:flex;gap:8px">
-                <span style="flex:1">Producto</span><span>Precio</span>
-              </div>
-            </div>
+            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:1rem">Productos</div>
             <div id="remito-filas-form"></div>
             <button onclick="agregarRenglonRemito()" style="width:100%;margin-top:6px;padding:9px;background:#F5F2ED;border:1.5px dashed #D4CFC8;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#1A1814">+ Agregar renglón</button>
           </div>
@@ -1908,7 +1903,7 @@ function cerrarHerramienta(){
         <div>
           <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Vista previa</div>
           <div style="background:#EDEAE4;border-radius:12px;padding:1.25rem;display:flex;justify-content:center;overflow-x:auto">
-            <div id="remito-print-area" style="width:600px;min-width:600px;background:#fff;border:1px solid #ccc;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:34px;box-sizing:border-box;font-family:'Inter',sans-serif;color:#1A1814">
+            <div id="remito-print-area" style="width:700px;min-width:700px;background:#fff;border:1px solid #ccc;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:30px;box-sizing:border-box;font-family:'Inter',sans-serif;color:#1A1814">
 
               <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
                 <div style="text-align:center">
@@ -1926,11 +1921,16 @@ function cerrarHerramienta(){
                 <div style="font-size:1.2rem;font-weight:700;text-align:center;word-break:break-word" id="prev-remito-nombre">—</div>
               </div>
 
-              <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
+              <table style="width:100%;border-collapse:collapse;margin-bottom:10px;table-layout:fixed">
                 <thead>
                   <tr style="border-bottom:2px solid #1A1814">
-                    <th style="text-align:left;font-size:0.78rem;padding:6px 4px">PRODUCTO</th>
-                    <th style="text-align:right;font-size:0.78rem;padding:6px 4px;width:110px">PRECIO</th>
+                    <th style="text-align:left;font-size:0.68rem;padding:6px 3px">PRODUCTO</th>
+                    <th style="text-align:center;font-size:0.68rem;padding:6px 3px;width:38px">CANT.</th>
+                    <th style="text-align:center;font-size:0.68rem;padding:6px 3px;width:50px">U.MED.</th>
+                    <th style="text-align:right;font-size:0.68rem;padding:6px 3px;width:70px">PRECIO UNIT.</th>
+                    <th style="text-align:center;font-size:0.68rem;padding:6px 3px;width:48px">%BONIF.</th>
+                    <th style="text-align:right;font-size:0.68rem;padding:6px 3px;width:70px">IMP.BONIF.</th>
+                    <th style="text-align:right;font-size:0.68rem;padding:6px 3px;width:75px">SUBTOTAL</th>
                   </tr>
                 </thead>
                 <tbody id="prev-remito-filas"></tbody>
@@ -3991,7 +3991,7 @@ function inicializarRemito(){
   document.getElementById('remito-mes').value = hoy.getMonth()+1;
   document.getElementById('remito-anio').value = hoy.getFullYear();
   remitoRenglones = [];
-  for(var i=0;i<8;i++){ remitoRenglones.push({producto:'',precio:''}); }
+  for(var i=0;i<8;i++){ remitoRenglones.push({producto:'',cantidad:'',unidad:'',precio:'',bonif:''}); }
   renderRemitoForm();
   actualizarPreviewRemito();
 }
@@ -3999,18 +3999,29 @@ function inicializarRemito(){
 function renderRemitoForm(){
   var cont = document.getElementById('remito-filas-form');
   cont.innerHTML = '';
+  var lbl = 'display:block;font-size:0.65rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:3px';
+  var inp = 'width:100%;padding:7px 8px;border:1.5px solid #E2DDD6;border-radius:7px;font-size:0.82rem;font-family:\'Inter\',sans-serif;color:#1A1814;outline:none;box-sizing:border-box';
+
   remitoRenglones.forEach(function(r, idx){
     var fila = document.createElement('div');
-    fila.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center';
+    fila.style.cssText = 'border:1px solid #E2DDD6;border-radius:9px;padding:10px;margin-bottom:10px;position:relative;background:#FDFCFA';
     fila.innerHTML =
-      '<input type="text" value="'+(r.producto||'').replace(/"/g,'&quot;')+'" placeholder="Ej: Llavero personalizado" data-idx="'+idx+'" data-campo="producto" style="flex:1;padding:8px 10px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:\'Inter\',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">'+
-      '<input type="text" value="'+(r.precio||'').replace(/"/g,'&quot;')+'" placeholder="0" data-idx="'+idx+'" data-campo="precio" style="width:100px;padding:8px 10px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:\'Inter\',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">'+
-      (remitoRenglones.length>1 ? '<button data-idx="'+idx+'" class="btn-quitar-renglon" style="padding:7px 9px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.75rem;cursor:pointer">×</button>' : '<span style="width:33px"></span>');
+      (remitoRenglones.length>1 ? '<button data-idx="'+idx+'" class="btn-quitar-renglon" style="position:absolute;top:8px;right:8px;padding:3px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.72rem;cursor:pointer">×</button>' : '') +
+      '<div style="margin-bottom:8px;padding-right:30px">'+
+        '<label style="'+lbl+'">Producto</label>'+
+        '<input type="text" value="'+(r.producto||'').replace(/"/g,'&quot;')+'" placeholder="Ej: Llavero personalizado" data-idx="'+idx+'" data-campo="producto" style="'+inp+'">'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">'+
+        '<div><label style="'+lbl+'">Cant.</label><input type="text" value="'+(r.cantidad||'').replace(/"/g,'&quot;')+'" placeholder="1" data-idx="'+idx+'" data-campo="cantidad" style="'+inp+';text-align:center"></div>'+
+        '<div><label style="'+lbl+'">U. Medida</label><input type="text" value="'+(r.unidad||'').replace(/"/g,'&quot;')+'" placeholder="unid." data-idx="'+idx+'" data-campo="unidad" style="'+inp+';text-align:center"></div>'+
+        '<div><label style="'+lbl+'">Precio unit.</label><input type="text" value="'+(r.precio||'').replace(/"/g,'&quot;')+'" placeholder="0" data-idx="'+idx+'" data-campo="precio" style="'+inp+'"></div>'+
+        '<div><label style="'+lbl+'">% Bonif.</label><input type="text" value="'+(r.bonif||'').replace(/"/g,'&quot;')+'" placeholder="0" data-idx="'+idx+'" data-campo="bonif" style="'+inp+';text-align:center"></div>'+
+      '</div>';
     cont.appendChild(fila);
   });
 
-  cont.querySelectorAll('input[data-idx]').forEach(function(inp){
-    inp.addEventListener('input', function(){
+  cont.querySelectorAll('input[data-idx]').forEach(function(inpEl){
+    inpEl.addEventListener('input', function(){
       var idx = parseInt(this.dataset.idx,10);
       var campo = this.dataset.campo;
       remitoRenglones[idx][campo] = this.value;
@@ -4028,7 +4039,7 @@ function renderRemitoForm(){
 }
 
 function agregarRenglonRemito(){
-  remitoRenglones.push({producto:'',precio:''});
+  remitoRenglones.push({producto:'',cantidad:'',unidad:'',precio:'',bonif:''});
   renderRemitoForm();
   actualizarPreviewRemito();
 }
@@ -4045,6 +4056,10 @@ function formatearMoneda(n){
   return '$ '+n.toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:2});
 }
 
+function parseNumeroRemito(v){
+  return parseFloat(String(v||'0').replace(/\./g,'').replace(',','.'))||0;
+}
+
 function actualizarPreviewRemito(){
   var nombre = document.getElementById('remito-nombre').value.trim();
   var dia = document.getElementById('remito-dia').value;
@@ -4058,19 +4073,31 @@ function actualizarPreviewRemito(){
   var tbody = document.getElementById('prev-remito-filas');
   tbody.innerHTML = '';
   var total = 0;
-  var filasConDatos = remitoRenglones.filter(function(r){ return (r.producto||'').trim() || (r.precio||'').trim(); });
+  var filasConDatos = remitoRenglones.filter(function(r){
+    return (r.producto||'').trim() || (r.cantidad||'').trim() || (r.precio||'').trim();
+  });
 
   if(!filasConDatos.length){
-    tbody.innerHTML = '<tr><td colspan="2" style="padding:14px 4px;color:#8A8479;font-size:0.85rem;text-align:center">Sin productos cargados</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="padding:14px 4px;color:#8A8479;font-size:0.85rem;text-align:center">Sin productos cargados</td></tr>';
   } else {
     filasConDatos.forEach(function(r){
-      var precioNum = parseFloat(String(r.precio||'0').replace(/\./g,'').replace(',','.'))||0;
-      total += precioNum;
+      var cantNum = r.cantidad ? parseNumeroRemito(r.cantidad) : 1;
+      var precioNum = parseNumeroRemito(r.precio);
+      var bonifPct = parseNumeroRemito(r.bonif);
+      var bruto = cantNum * precioNum;
+      var impBonif = bruto * (bonifPct/100);
+      var subtotal = bruto - impBonif;
+      total += subtotal;
       var tr = document.createElement('tr');
       tr.style.borderBottom = '1px solid #E2DDD6';
       tr.innerHTML =
-        '<td style="padding:7px 4px;font-size:0.9rem">'+(r.producto||'—')+'</td>'+
-        '<td style="padding:7px 4px;font-size:0.9rem;text-align:right">'+(r.precio? formatearMoneda(precioNum) : '—')+'</td>';
+        '<td style="padding:6px 3px;font-size:0.78rem;word-break:break-word">'+(r.producto||'—')+'</td>'+
+        '<td style="padding:6px 3px;font-size:0.78rem;text-align:center">'+(r.cantidad||'1')+'</td>'+
+        '<td style="padding:6px 3px;font-size:0.78rem;text-align:center">'+(r.unidad||'—')+'</td>'+
+        '<td style="padding:6px 3px;font-size:0.78rem;text-align:right">'+(r.precio? formatearMoneda(precioNum) : '—')+'</td>'+
+        '<td style="padding:6px 3px;font-size:0.78rem;text-align:center">'+(bonifPct? bonifPct+'%' : '—')+'</td>'+
+        '<td style="padding:6px 3px;font-size:0.78rem;text-align:right">'+(bonifPct? formatearMoneda(impBonif) : '—')+'</td>'+
+        '<td style="padding:6px 3px;font-size:0.78rem;text-align:right;font-weight:600">'+(r.precio? formatearMoneda(subtotal) : '—')+'</td>';
       tbody.appendChild(tr);
     });
   }
@@ -4082,6 +4109,7 @@ function dispararImpresionRemito(){
   var clone = original.cloneNode(true);
   clone.removeAttribute('id');
   clone.classList.add('remito-print-clon');
+  clone.style.margin = '14mm auto 0';
   clone.style.boxShadow = 'none';
   clone.style.border = 'none';
 
