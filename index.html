@@ -1764,6 +1764,11 @@ function cerrarHerramienta(){
             <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:1rem">Destinatario</div>
 
             <div style="margin-bottom:0.875rem">
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Pegar datos (autocompleta nombre, DNI y celular)</label>
+              <textarea id="etiq-pegar-texto" rows="3" placeholder="Pegá acá el bloque, ej:&#10;Edna Antonella Ojeda&#10;37550633&#10;2804820894" oninput="onEtiqPegarInput()" style="width:100%;padding:9px 12px;border:1.5px dashed #D4CFC8;border-radius:8px;font-size:0.85rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box;resize:vertical;background:#FDFCFA"></textarea>
+            </div>
+
+            <div style="margin-bottom:0.875rem">
               <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Nombre y apellido</label>
               <input type="text" id="etiq-nombre" placeholder="Ej: Elías Mauricio Caullan" oninput="onEtiqNombreInput()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
             </div>
@@ -3799,6 +3804,47 @@ function onEtiqNombreInput(){
   var pos = inp.selectionStart;
   inp.value = inp.value.toUpperCase();
   inp.setSelectionRange(pos, pos);
+  actualizarPreviewEtiqueta();
+  chequearNombreSimilar();
+}
+
+function parsearBloqueDatosEtiqueta(texto){
+  var lineas = texto.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(function(l){ return l.length>0; });
+  var numericos = [];
+  var textoLineas = [];
+
+  lineas.forEach(function(linea){
+    var soloDigitos = linea.replace(/[^\d]/g,'');
+    var esNumerica = /^[\d\s.\-()]+$/.test(linea) && soloDigitos.length >= 6;
+    if(esNumerica){
+      numericos.push(soloDigitos);
+    } else {
+      textoLineas.push(linea);
+    }
+  });
+
+  numericos.sort(function(a,b){ return a.length - b.length; });
+
+  var dni = '', tel = '';
+  if(numericos.length === 1){
+    if(numericos[0].length <= 8) dni = numericos[0]; else tel = numericos[0];
+  } else if(numericos.length >= 2){
+    dni = numericos[0];
+    tel = numericos[numericos.length-1];
+  }
+
+  return { nombre: textoLineas.join(' ').trim(), dni: dni, tel: tel };
+}
+
+function onEtiqPegarInput(){
+  var texto = document.getElementById('etiq-pegar-texto').value;
+  if(!texto.trim()) return;
+  var datos = parsearBloqueDatosEtiqueta(texto);
+
+  if(datos.nombre) document.getElementById('etiq-nombre').value = datos.nombre.toUpperCase();
+  if(datos.dni) document.getElementById('etiq-dni').value = datos.dni;
+  if(datos.tel) document.getElementById('etiq-tel').value = datos.tel;
+
   actualizarPreviewEtiqueta();
   chequearNombreSimilar();
 }
