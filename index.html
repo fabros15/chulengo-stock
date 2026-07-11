@@ -4053,56 +4053,87 @@ function inicializarRemito(){
   document.getElementById('remito-mes').value = hoy.getMonth()+1;
   document.getElementById('remito-anio').value = hoy.getFullYear();
   remitoRenglones = [];
-  for(var i=0;i<8;i++){ remitoRenglones.push({producto:'',cantidad:'',unidad:'',precio:'',bonif:''}); }
+  for(var i=0;i<2;i++){ remitoRenglones.push({producto:'',cantidad:'',unidad:'',precio:'',bonif:''}); }
   renderRemitoForm();
   actualizarPreviewRemito();
+}
+
+function crearFilaRemitoDOM(r, idx){
+  var lbl = 'display:block;font-size:0.65rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:3px';
+  var inp = 'width:100%;padding:7px 8px;border:1.5px solid #E2DDD6;border-radius:7px;font-size:0.82rem;font-family:\'Inter\',sans-serif;color:#1A1814;outline:none;box-sizing:border-box';
+
+  var fila = document.createElement('div');
+  fila.style.cssText = 'border:1px solid #E2DDD6;border-radius:9px;padding:10px;margin-bottom:10px;position:relative;background:#FDFCFA';
+  fila.innerHTML =
+    (remitoRenglones.length>1 ? '<button data-idx="'+idx+'" class="btn-quitar-renglon" style="position:absolute;top:8px;right:8px;padding:3px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.72rem;cursor:pointer">×</button>' : '') +
+    '<div style="margin-bottom:8px;padding-right:30px">'+
+      '<label style="'+lbl+'">Producto</label>'+
+      '<input type="text" value="'+(r.producto||'').replace(/"/g,'&quot;')+'" placeholder="Ej: Llavero personalizado" data-idx="'+idx+'" data-campo="producto" style="'+inp+'">'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">'+
+      '<div><label style="'+lbl+'">Cant.</label><input type="text" value="'+(r.cantidad||'').replace(/"/g,'&quot;')+'" placeholder="1" data-idx="'+idx+'" data-campo="cantidad" style="'+inp+';text-align:center"></div>'+
+      '<div><label style="'+lbl+'">U. Medida</label><input type="text" value="'+(r.unidad||'').replace(/"/g,'&quot;')+'" placeholder="unid." data-idx="'+idx+'" data-campo="unidad" style="'+inp+';text-align:center"></div>'+
+      '<div><label style="'+lbl+'">Precio unit.</label><input type="text" value="'+(r.precio||'').replace(/"/g,'&quot;')+'" placeholder="0" data-idx="'+idx+'" data-campo="precio" style="'+inp+'"></div>'+
+      '<div><label style="'+lbl+'">% Bonif.</label><input type="text" value="'+(r.bonif||'').replace(/"/g,'&quot;')+'" placeholder="0" data-idx="'+idx+'" data-campo="bonif" style="'+inp+';text-align:center"></div>'+
+    '</div>';
+
+  fila.querySelectorAll('input[data-idx]').forEach(function(inpEl){
+    inpEl.addEventListener('input', function(){
+      var iidx = parseInt(this.dataset.idx,10);
+      var campo = this.dataset.campo;
+      remitoRenglones[iidx][campo] = this.value;
+      actualizarPreviewRemito();
+      considerarAgregarFilaAutomatica(iidx);
+    });
+  });
+  var btnQuitar = fila.querySelector('.btn-quitar-renglon');
+  if(btnQuitar){
+    btnQuitar.addEventListener('click', function(){
+      var iidx = parseInt(btnQuitar.dataset.idx,10);
+      remitoRenglones.splice(iidx,1);
+      renderRemitoForm();
+      actualizarPreviewRemito();
+    });
+  }
+  return fila;
 }
 
 function renderRemitoForm(){
   var cont = document.getElementById('remito-filas-form');
   cont.innerHTML = '';
-  var lbl = 'display:block;font-size:0.65rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:3px';
-  var inp = 'width:100%;padding:7px 8px;border:1.5px solid #E2DDD6;border-radius:7px;font-size:0.82rem;font-family:\'Inter\',sans-serif;color:#1A1814;outline:none;box-sizing:border-box';
-
   remitoRenglones.forEach(function(r, idx){
-    var fila = document.createElement('div');
-    fila.style.cssText = 'border:1px solid #E2DDD6;border-radius:9px;padding:10px;margin-bottom:10px;position:relative;background:#FDFCFA';
-    fila.innerHTML =
-      (remitoRenglones.length>1 ? '<button data-idx="'+idx+'" class="btn-quitar-renglon" style="position:absolute;top:8px;right:8px;padding:3px 8px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.72rem;cursor:pointer">×</button>' : '') +
-      '<div style="margin-bottom:8px;padding-right:30px">'+
-        '<label style="'+lbl+'">Producto</label>'+
-        '<input type="text" value="'+(r.producto||'').replace(/"/g,'&quot;')+'" placeholder="Ej: Llavero personalizado" data-idx="'+idx+'" data-campo="producto" style="'+inp+'">'+
-      '</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">'+
-        '<div><label style="'+lbl+'">Cant.</label><input type="text" value="'+(r.cantidad||'').replace(/"/g,'&quot;')+'" placeholder="1" data-idx="'+idx+'" data-campo="cantidad" style="'+inp+';text-align:center"></div>'+
-        '<div><label style="'+lbl+'">U. Medida</label><input type="text" value="'+(r.unidad||'').replace(/"/g,'&quot;')+'" placeholder="unid." data-idx="'+idx+'" data-campo="unidad" style="'+inp+';text-align:center"></div>'+
-        '<div><label style="'+lbl+'">Precio unit.</label><input type="text" value="'+(r.precio||'').replace(/"/g,'&quot;')+'" placeholder="0" data-idx="'+idx+'" data-campo="precio" style="'+inp+'"></div>'+
-        '<div><label style="'+lbl+'">% Bonif.</label><input type="text" value="'+(r.bonif||'').replace(/"/g,'&quot;')+'" placeholder="0" data-idx="'+idx+'" data-campo="bonif" style="'+inp+';text-align:center"></div>'+
-      '</div>';
-    cont.appendChild(fila);
-  });
-
-  cont.querySelectorAll('input[data-idx]').forEach(function(inpEl){
-    inpEl.addEventListener('input', function(){
-      var idx = parseInt(this.dataset.idx,10);
-      var campo = this.dataset.campo;
-      remitoRenglones[idx][campo] = this.value;
-      actualizarPreviewRemito();
-    });
-  });
-  cont.querySelectorAll('.btn-quitar-renglon').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var idx = parseInt(this.dataset.idx,10);
-      remitoRenglones.splice(idx,1);
-      renderRemitoForm();
-      actualizarPreviewRemito();
-    });
+    cont.appendChild(crearFilaRemitoDOM(r, idx));
   });
 }
 
+function considerarAgregarFilaAutomatica(idx){
+  // Solo dispara si se está completando la última fila disponible
+  if(idx !== remitoRenglones.length - 1) return;
+  var r = remitoRenglones[idx];
+  var tieneDatos = (r.producto||'').trim() || (r.cantidad||'').trim() || (r.unidad||'').trim() || (r.precio||'').trim() || (r.bonif||'').trim();
+  if(!tieneDatos) return;
+
+  var nuevaFila = {producto:'',cantidad:'',unidad:'',precio:'',bonif:''};
+  remitoRenglones.push(nuevaFila);
+
+  // Si recién pasamos de 1 a 2 filas, hay que mostrar el botón de quitar en la primera: mejor rehacer todo el form.
+  if(remitoRenglones.length === 2){
+    renderRemitoForm();
+  } else {
+    var cont = document.getElementById('remito-filas-form');
+    cont.appendChild(crearFilaRemitoDOM(nuevaFila, remitoRenglones.length-1));
+  }
+}
+
 function agregarRenglonRemito(){
-  remitoRenglones.push({producto:'',cantidad:'',unidad:'',precio:'',bonif:''});
-  renderRemitoForm();
+  var nuevaFila = {producto:'',cantidad:'',unidad:'',precio:'',bonif:''};
+  remitoRenglones.push(nuevaFila);
+  if(remitoRenglones.length === 2){
+    renderRemitoForm();
+  } else {
+    var cont = document.getElementById('remito-filas-form');
+    cont.appendChild(crearFilaRemitoDOM(nuevaFila, remitoRenglones.length-1));
+  }
   actualizarPreviewRemito();
 }
 
