@@ -1102,6 +1102,7 @@ function abrirHerramienta(id){
   if(id === 'remito'){
     if(!isAdmin()){ cerrarHerramienta(); return; }
     if(!remitoRenglones.length){ inicializarRemito(); }
+    cargarHistorialRemitos();
   }
 }
 
@@ -1901,7 +1902,7 @@ function cerrarHerramienta(){
             <button onclick="agregarRenglonRemito()" style="width:100%;margin-top:6px;padding:9px;background:#F5F2ED;border:1.5px dashed #D4CFC8;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#1A1814">+ Agregar renglón</button>
           </div>
 
-          <button onclick="dispararImpresionRemito()" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Imprimir remito</button>
+          <button onclick="guardarEImprimirRemito()" id="btn-guardar-imprimir-remito" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Guardar e imprimir remito</button>
         </div>
 
         <!-- Vista previa -->
@@ -1945,6 +1946,21 @@ function cerrarHerramienta(){
                 <span>TOTAL</span><span id="prev-remito-total">$ 0</span>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORIAL DE REMITOS POR CLIENTE -->
+      <div style="margin-top:2.5rem">
+        <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:1rem">Historial de remitos por cliente</div>
+
+        <div id="remito-resumen-global" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem"></div>
+
+        <input id="remito-historial-search" type="text" placeholder="Buscar cliente..." oninput="renderHistorialRemitos()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;margin-bottom:1rem">
+
+        <div id="remito-historial-clientes">
+          <div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center">
+            <div style="font-size:0.875rem;color:#8A8479;font-family:'Inter',sans-serif">Cargando historial...</div>
           </div>
         </div>
       </div>
@@ -4150,7 +4166,67 @@ function actualizarPreviewRemito(){
   document.getElementById('prev-remito-total').textContent = formatearMoneda(total);
 }
 
-function dispararImpresionRemito(){
+function obtenerRenglonesCalculadosRemito(){
+  var filasConDatos = remitoRenglones.filter(function(r){
+    return (r.producto||'').trim() || (r.cantidad||'').trim() || (r.precio||'').trim();
+  });
+  return filasConDatos.map(function(r){
+    var cantNum = r.cantidad ? parseNumeroRemito(r.cantidad) : 1;
+    var precioNum = parseNumeroRemito(r.precio);
+    var bonifPct = parseNumeroRemito(r.bonif);
+    var bruto = cantNum * precioNum;
+    var impBonif = bruto * (bonifPct/100);
+    var subtotal = bruto - impBonif;
+    return {
+      producto: r.producto || '',
+      cantidad: r.cantidad || '1',
+      unidad: r.unidad || '',
+      precio: precioNum,
+      bonif: bonifPct,
+      subtotal: subtotal,
+      pagado: false
+    };
+  });
+}
+
+function guardarEImprimirRemito(){
+  var nombre = document.getElementById('remito-nombre').value.trim();
+  if(!nombre){ alert('Cargá al menos el nombre de quien recibe.'); return; }
+  var renglonesCalc = obtenerRenglonesCalculadosRemito();
+  if(!renglonesCalc.length){ alert('Cargá al menos un producto.'); return; }
+  if(!window.currentUser || !isAdmin()) return;
+
+  var dia = document.getElementById('remito-dia').value;
+  var mes = document.getElementById('remito-mes').value;
+  var anio = document.getElementById('remito-anio').value;
+  var fechaEntrega = (dia?String(dia).padStart(2,'0'):'--')+'/'+(mes?String(mes).padStart(2,'0'):'--')+'/'+(anio||'----');
+  var total = renglonesCalc.reduce(function(acc,r){ return acc + r.subtotal; }, 0);
+
+  var data = {
+    uid: window.currentUser.uid,
+    fecha: firebase.firestore.FieldValue.serverTimestamp(),
+    fechaEntrega: fechaEntrega,
+    cliente: nombre.toUpperCase(),
+    renglones: renglonesCalc,
+    total: total
+  };
+
+  var btn = document.getElementById('btn-guardar-imprimir-remito');
+  if(btn){ btn.textContent = 'Guardando...'; btn.disabled = true; }
+
+  firebase.firestore().collection('remitos_historial').add(data)
+    .then(function(){
+      if(btn){ btn.textContent = 'Guardar e imprimir remito'; btn.disabled = false; }
+      cargarHistorialRemitos();
+      imprimirRemitoActual();
+    })
+    .catch(function(e){
+      if(btn){ btn.textContent = 'Guardar e imprimir remito'; btn.disabled = false; }
+      alert('Error guardando: '+e.message);
+    });
+}
+
+function imprimirRemitoActual(){
   var original = document.getElementById('remito-print-area');
   var clone = original.cloneNode(true);
   clone.removeAttribute('id');
@@ -4172,6 +4248,193 @@ window.addEventListener('afterprint', function(){
   document.body.classList.remove('printing-remito');
   var destino = document.getElementById('remito-imprimir-area');
   if(destino) destino.innerHTML = '';
+});
+
+// ══════════════════════════════════════════════
+// HISTORIAL DE REMITOS POR CLIENTE (solo admin)
+// ══════════════════════════════════════════════
+
+var remitosHistorialCache = [];
+var remitoClienteExpandido = null;
+
+function cargarHistorialRemitos(){
+  if(!window.currentUser || !isAdmin()) return;
+  firebase.firestore().collection('remitos_historial')
+    .where('uid','==',window.currentUser.uid)
+    .orderBy('fecha','desc')
+    .limit(500)
+    .get()
+    .then(function(snap){
+      remitosHistorialCache = [];
+      snap.forEach(function(doc){
+        var d = doc.data();
+        d.id = doc.id;
+        remitosHistorialCache.push(d);
+      });
+      renderHistorialRemitos();
+    })
+    .catch(function(e){
+      var cont = document.getElementById('remito-historial-clientes');
+      if(cont) cont.innerHTML = '<div style="color:#B91C1C;padding:1rem;font-size:0.85rem;font-family:\'Inter\',sans-serif">Error: '+e.message+'</div>';
+    });
+}
+
+function agruparRemitosPorCliente(){
+  var mapa = {};
+  remitosHistorialCache.forEach(function(rem){
+    var key = (rem.cliente || 'SIN NOMBRE').trim().toUpperCase();
+    if(!mapa[key]) mapa[key] = { cliente: key, remitos: [] };
+    mapa[key].remitos.push(rem);
+  });
+  var lista = Object.keys(mapa).map(function(key){
+    var g = mapa[key];
+    var totalVendido = 0, totalPagado = 0;
+    g.remitos.forEach(function(rem){
+      (rem.renglones||[]).forEach(function(r){
+        totalVendido += (r.subtotal||0);
+        if(r.pagado) totalPagado += (r.subtotal||0);
+      });
+    });
+    g.totalVendido = totalVendido;
+    g.totalPagado = totalPagado;
+    g.totalPendiente = totalVendido - totalPagado;
+    g.remitos.sort(function(a,b){
+      var ta = a.fecha ? a.fecha.toMillis() : 0;
+      var tb = b.fecha ? b.fecha.toMillis() : 0;
+      return tb - ta;
+    });
+    return g;
+  });
+  lista.sort(function(a,b){ return b.totalPendiente - a.totalPendiente || a.cliente.localeCompare(b.cliente); });
+  return lista;
+}
+
+function escaparAttr(str){
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+}
+
+function escaparHtml(str){
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderHistorialRemitos(){
+  var grupos = agruparRemitosPorCliente();
+
+  var totalVendidoGlobal = 0, totalPagadoGlobal = 0;
+  grupos.forEach(function(g){ totalVendidoGlobal += g.totalVendido; totalPagadoGlobal += g.totalPagado; });
+  var totalPendienteGlobal = totalVendidoGlobal - totalPagadoGlobal;
+
+  var resumen = document.getElementById('remito-resumen-global');
+  if(resumen){
+    resumen.innerHTML =
+      '<div style="background:#fff;border:1px solid #E2DDD6;border-radius:10px;padding:14px">'+
+        '<div style="font-size:0.7rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:4px;font-weight:600">TOTAL VENDIDO</div>'+
+        '<div style="font-size:1.25rem;font-weight:800;color:#1A1814;font-family:\'Inter\',sans-serif">'+formatearMoneda(totalVendidoGlobal)+'</div>'+
+      '</div>'+
+      '<div style="background:#fff;border:1px solid #E2DDD6;border-radius:10px;padding:14px">'+
+        '<div style="font-size:0.7rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:4px;font-weight:600">COBRADO</div>'+
+        '<div style="font-size:1.25rem;font-weight:800;color:#2D6A4F;font-family:\'Inter\',sans-serif">'+formatearMoneda(totalPagadoGlobal)+'</div>'+
+      '</div>'+
+      '<div style="background:#fff;border:1px solid #E2DDD6;border-radius:10px;padding:14px">'+
+        '<div style="font-size:0.7rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:4px;font-weight:600">PENDIENTE DE COBRO</div>'+
+        '<div style="font-size:1.25rem;font-weight:800;color:#B45309;font-family:\'Inter\',sans-serif">'+formatearMoneda(totalPendienteGlobal)+'</div>'+
+      '</div>';
+  }
+
+  var cont = document.getElementById('remito-historial-clientes');
+  if(!cont) return;
+
+  if(!remitosHistorialCache.length){
+    cont.innerHTML = '<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:\'Inter\',sans-serif">Todavía no generaste ningún remito.</div></div>';
+    return;
+  }
+
+  var q = (document.getElementById('remito-historial-search').value||'').trim().toUpperCase();
+  var filtrados = grupos.filter(function(g){ return !q || g.cliente.indexOf(q) !== -1; });
+
+  if(!filtrados.length){
+    cont.innerHTML = '<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:\'Inter\',sans-serif">Sin resultados para esa búsqueda.</div></div>';
+    return;
+  }
+
+  var html = '';
+  filtrados.forEach(function(g){
+    var expandido = (remitoClienteExpandido === g.cliente);
+    html += '<div style="background:#fff;border:1px solid #E2DDD6;border-radius:10px;margin-bottom:10px;overflow:hidden">';
+    html += '<div class="remito-cliente-header" data-cliente="'+escaparAttr(g.cliente)+'" style="padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px">'+
+      '<div>'+
+        '<div style="font-weight:700;font-size:0.92rem;font-family:\'Inter\',sans-serif;color:#1A1814">'+escaparHtml(g.cliente)+'</div>'+
+        '<div style="font-size:0.72rem;color:#8A8479;font-family:\'Inter\',sans-serif">'+g.remitos.length+' remito'+(g.remitos.length!==1?'s':'')+'</div>'+
+      '</div>'+
+      '<div style="text-align:right;display:flex;align-items:center;gap:14px">'+
+        '<div>'+
+          '<div style="font-size:0.68rem;color:#8A8479;font-family:\'Inter\',sans-serif">Pendiente</div>'+
+          '<div style="font-weight:800;font-size:0.92rem;font-family:\'Inter\',sans-serif;color:'+(g.totalPendiente>0?'#B45309':'#2D6A4F')+'">'+formatearMoneda(g.totalPendiente)+'</div>'+
+        '</div>'+
+        '<div style="font-size:1.1rem;color:#8A8479">'+(expandido?'▲':'▼')+'</div>'+
+      '</div>'+
+    '</div>';
+
+    if(expandido){
+      html += '<div style="border-top:1px solid #E2DDD6;padding:12px 14px;background:#FDFCFA">';
+      g.remitos.forEach(function(rem){
+        var totalRem = (rem.renglones||[]).reduce(function(a,r){ return a+(r.subtotal||0); },0);
+        html += '<div style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px dashed #D4CFC8">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:0.8rem;font-weight:700;font-family:\'Inter\',sans-serif;margin-bottom:8px">'+
+          '<span>Remito del '+(rem.fechaEntrega||'—')+'</span>'+
+          '<span style="display:flex;align-items:center;gap:8px">Total: '+formatearMoneda(totalRem)+
+            ' <button data-remid="'+rem.id+'" class="btn-del-remito" style="padding:3px 7px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.68rem;cursor:pointer">🗑</button></span>'+
+        '</div>';
+        (rem.renglones||[]).forEach(function(r, idx){
+          html += '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:0.8rem;font-family:\'Inter\',sans-serif;border-bottom:1px solid #F0EDE7;cursor:pointer">'+
+            '<input type="checkbox" class="chk-renglon-pagado" data-remid="'+rem.id+'" data-idx="'+idx+'" '+(r.pagado?'checked':'')+'>'+
+            '<span style="flex:1;'+(r.pagado?'text-decoration:line-through;color:#8A8479;':'')+'">'+escaparHtml(r.producto||'—')+' ('+(r.cantidad||'1')+(r.unidad?' '+escaparHtml(r.unidad):'')+' x '+formatearMoneda(r.precio||0)+')</span>'+
+            '<span style="font-weight:600;min-width:80px;text-align:right">'+formatearMoneda(r.subtotal||0)+'</span>'+
+          '</label>';
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
+  });
+  cont.innerHTML = html;
+}
+
+function toggleRenglonPagado(remId, idx){
+  var rem = remitosHistorialCache.find(function(r){ return r.id === remId; });
+  if(!rem || !rem.renglones || !rem.renglones[idx]) return;
+  rem.renglones[idx].pagado = !rem.renglones[idx].pagado;
+  renderHistorialRemitos();
+  firebase.firestore().collection('remitos_historial').doc(remId).update({ renglones: rem.renglones })
+    .catch(function(e){
+      rem.renglones[idx].pagado = !rem.renglones[idx].pagado;
+      renderHistorialRemitos();
+      alert('Error actualizando el pago: '+e.message);
+    });
+}
+
+document.addEventListener('click', function(e){
+  var header = e.target.closest('.remito-cliente-header');
+  var delRem = e.target.closest('.btn-del-remito');
+  var chk = e.target.closest('.chk-renglon-pagado');
+
+  if(chk){
+    toggleRenglonPagado(chk.dataset.remid, parseInt(chk.dataset.idx,10));
+    return;
+  }
+  if(delRem){
+    if(!confirm('¿Eliminar este remito del historial? Esta acción no se puede deshacer.')) return;
+    firebase.firestore().collection('remitos_historial').doc(delRem.dataset.remid).delete()
+      .then(cargarHistorialRemitos);
+    return;
+  }
+  if(header){
+    var cliente = header.dataset.cliente;
+    remitoClienteExpandido = (remitoClienteExpandido === cliente) ? null : cliente;
+    renderHistorialRemitos();
+  }
 });
 
 </script>
