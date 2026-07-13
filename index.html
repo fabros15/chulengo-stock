@@ -89,8 +89,7 @@ document.addEventListener('DOMContentLoaded', function(){
       if(cardEtiq) cardEtiq.style.display = isAdmin() ? '' : 'none';
       if(!isAdmin() && document.getElementById('herramienta-etiquetas').style.display!=='none'){ cerrarHerramienta(); }
       var cardRemito = document.getElementById('card-remito');
-      if(cardRemito) cardRemito.style.display = isAdmin() ? '' : 'none';
-      if(!isAdmin() && document.getElementById('herramienta-remito').style.display!=='none'){ cerrarHerramienta(); }
+      if(cardRemito) cardRemito.style.display = '';
     } else {
       if(btnSalir) btnSalir.style.display='none';
       if(btnEntrar) btnEntrar.style.display='flex';
@@ -1100,9 +1099,10 @@ function abrirHerramienta(id){
     cargarHistorialEtiquetas();
   }
   if(id === 'remito'){
-    if(!isAdmin()){ cerrarHerramienta(); return; }
+    if(!window.currentUser){ cerrarHerramienta(); return; }
     if(!remitoRenglones.length){ inicializarRemito(); }
     cargarHistorialRemitos();
+    cargarMarcaRemito();
   }
 }
 
@@ -1498,9 +1498,9 @@ function cerrarHerramienta(){
         <div style="background:linear-gradient(135deg,#0F766E 0%,#1A1814 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">🧾</div>
         <div style="padding:1.25rem">
           <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:5px">Remito de entrega</div>
-          <div style="font-size:0.82rem;color:#8A8479;font-family:"Inter",sans-serif;line-height:1.5">Generá e imprimí un remito con los productos entregados y sus precios.</div>
+          <div style="font-size:0.82rem;color:#8A8479;font-family:"Inter",sans-serif;line-height:1.5">Generá e imprimí un remito con los productos entregados y sus precios, con tu propia marca.</div>
           <div style="margin-top:1rem;display:flex;gap:6px;flex-wrap:wrap">
-            <span style="background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Solo vos</span>
+            <span style="background:#EFF6F1;color:#2D6A4F;border:1px solid #CBE3D3;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Personalizable</span>
           </div>
         </div>
       </div>
@@ -1883,6 +1883,23 @@ function cerrarHerramienta(){
         <!-- Formulario -->
         <div>
           <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem;margin-bottom:1rem">
+            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:1rem">Tu marca en el remito</div>
+            <div style="margin-bottom:0.875rem">
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Nombre del negocio</label>
+              <input type="text" id="remito-marca-nombre" placeholder="Ej: Mi Emprendimiento" oninput="onMarcaRemitoInput()" onchange="guardarMarcaRemito()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+            </div>
+            <div style="margin-bottom:0.875rem">
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Logo (link a una imagen, opcional)</label>
+              <input type="text" id="remito-marca-logo-url" placeholder="https://..." oninput="onMarcaRemitoInput()" onchange="guardarMarcaRemito()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+              <div style="font-size:0.7rem;color:#8A8479;font-family:'Inter',sans-serif;margin-top:4px">Si lo dejás vacío, se usa un logo simple con la inicial del negocio.</div>
+            </div>
+            <div>
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Instagram / usuario (opcional)</label>
+              <input type="text" id="remito-marca-instagram" placeholder="@tunegocio" oninput="onMarcaRemitoInput()" onchange="guardarMarcaRemito()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem;margin-bottom:1rem">
             <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:1rem">Entrega a</div>
             <div style="margin-bottom:0.875rem">
               <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Nombre y apellido</label>
@@ -1912,9 +1929,11 @@ function cerrarHerramienta(){
             <div id="remito-print-area" style="width:700px;min-width:700px;background:#fff;border:1px solid #ccc;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:30px;box-sizing:border-box;font-family:'Inter',sans-serif;color:#1A1814">
 
               <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
-                <div style="text-align:center">
-                  <img src="img/CHULENGO_LOGOO.png" style="width:60px;height:60px;border-radius:10px;object-fit:cover;display:block">
-                  <div style="font-size:0.6rem;color:#1A1814;margin-top:2px;font-weight:600">@chulengoestudio</div>
+                <div style="text-align:center;min-width:60px">
+                  <img id="prev-remito-marca-logo" src="" style="width:60px;height:60px;border-radius:10px;object-fit:cover;display:none">
+                  <div id="prev-remito-marca-inicial" style="width:60px;height:60px;border-radius:10px;background:#1A1814;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;font-family:'Inter',sans-serif">?</div>
+                  <div id="prev-remito-marca-nombre" style="font-size:0.68rem;color:#1A1814;margin-top:3px;font-weight:700;max-width:80px">Tu negocio</div>
+                  <div id="prev-remito-marca-ig" style="font-size:0.58rem;color:#8A8479;font-weight:600"></div>
                 </div>
                 <div style="text-align:right">
                   <div style="font-size:2.1rem;font-weight:800;letter-spacing:0.02em">REMITO</div>
@@ -4058,6 +4077,57 @@ function inicializarRemito(){
   actualizarPreviewRemito();
 }
 
+function cargarMarcaRemito(){
+  if(!window.currentUser) return;
+  firebase.firestore().collection('usuarios').doc(window.currentUser.uid).get()
+    .then(function(doc){
+      var marca = (doc.exists && doc.data().marcaRemito) ? doc.data().marcaRemito : {};
+      document.getElementById('remito-marca-nombre').value = marca.nombre || window.currentUser.displayName || '';
+      document.getElementById('remito-marca-logo-url').value = marca.logoUrl || '';
+      document.getElementById('remito-marca-instagram').value = marca.instagram || '';
+      aplicarMarcaRemitoAPreview();
+    })
+    .catch(function(){
+      document.getElementById('remito-marca-nombre').value = window.currentUser.displayName || '';
+      aplicarMarcaRemitoAPreview();
+    });
+}
+
+function aplicarMarcaRemitoAPreview(){
+  var nombre = document.getElementById('remito-marca-nombre').value.trim();
+  var logoUrl = document.getElementById('remito-marca-logo-url').value.trim();
+  var ig = document.getElementById('remito-marca-instagram').value.trim();
+
+  document.getElementById('prev-remito-marca-nombre').textContent = nombre || 'Tu negocio';
+  document.getElementById('prev-remito-marca-ig').textContent = ig;
+
+  var img = document.getElementById('prev-remito-marca-logo');
+  var inicialDiv = document.getElementById('prev-remito-marca-inicial');
+  if(logoUrl){
+    img.src = logoUrl;
+    img.style.display = 'block';
+    inicialDiv.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    inicialDiv.style.display = 'flex';
+    inicialDiv.textContent = nombre ? nombre.trim().charAt(0).toUpperCase() : '?';
+  }
+}
+
+function onMarcaRemitoInput(){
+  aplicarMarcaRemitoAPreview();
+}
+
+function guardarMarcaRemito(){
+  if(!window.currentUser) return;
+  var marca = {
+    nombre: document.getElementById('remito-marca-nombre').value.trim(),
+    logoUrl: document.getElementById('remito-marca-logo-url').value.trim(),
+    instagram: document.getElementById('remito-marca-instagram').value.trim()
+  };
+  firebase.firestore().collection('usuarios').doc(window.currentUser.uid).set({ marcaRemito: marca }, {merge:true}).catch(function(){});
+}
+
 function crearFilaRemitoDOM(r, idx){
   var lbl = 'display:block;font-size:0.65rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:3px';
   var inp = 'width:100%;padding:7px 8px;border:1.5px solid #E2DDD6;border-radius:7px;font-size:0.82rem;font-family:\'Inter\',sans-serif;color:#1A1814;outline:none;box-sizing:border-box';
@@ -4242,7 +4312,7 @@ function guardarEImprimirRemito(){
   if(!nombre){ alert('Cargá al menos el nombre de quien recibe.'); return; }
   var renglonesCalc = obtenerRenglonesCalculadosRemito();
   if(!renglonesCalc.length){ alert('Cargá al menos un producto.'); return; }
-  if(!window.currentUser || !isAdmin()) return;
+  if(!window.currentUser) return;
 
   var dia = document.getElementById('remito-dia').value;
   var mes = document.getElementById('remito-mes').value;
@@ -4306,7 +4376,7 @@ var remitosHistorialCache = [];
 var remitoClienteExpandido = null;
 
 function cargarHistorialRemitos(){
-  if(!window.currentUser || !isAdmin()) return;
+  if(!window.currentUser) return;
   firebase.firestore().collection('remitos_historial')
     .where('uid','==',window.currentUser.uid)
     .orderBy('fecha','desc')
