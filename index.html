@@ -1901,6 +1901,7 @@ function cerrarHerramienta(){
                 <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Instagram / usuario (opcional)</label>
                 <input type="text" id="remito-marca-instagram" placeholder="@tunegocio" oninput="onMarcaRemitoInput()" onchange="guardarMarcaRemito()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
               </div>
+              <button onclick="restablecerMarcaChulengo()" style="margin-top:10px;background:none;border:none;color:#8A8479;font-size:0.75rem;font-family:'Inter',sans-serif;cursor:pointer;text-decoration:underline;padding:0">Restablecer al modelo de Chulengo Estudio</button>
             </div>
           </div>
 
@@ -1937,7 +1938,7 @@ function cerrarHerramienta(){
                 <div style="text-align:center;min-width:60px">
                   <img id="prev-remito-marca-logo" src="" style="width:60px;height:60px;border-radius:10px;object-fit:cover;display:none">
                   <div id="prev-remito-marca-inicial" style="width:60px;height:60px;border-radius:10px;background:#1A1814;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;font-family:'Inter',sans-serif">?</div>
-                  <div id="prev-remito-marca-nombre" style="font-size:0.68rem;color:#1A1814;margin-top:3px;font-weight:700;max-width:80px">Tu negocio</div>
+                  <div id="prev-remito-marca-nombre" style="font-size:0.68rem;color:#1A1814;margin-top:3px;font-weight:700;max-width:110px;line-height:1.2">Tu negocio</div>
                   <div id="prev-remito-marca-ig" style="font-size:0.58rem;color:#8A8479;font-weight:600"></div>
                 </div>
                 <div style="text-align:right">
@@ -4095,10 +4096,10 @@ function cargarMarcaRemito(){
   var DEFAULT_MARCA = { nombre: 'Chulengo Estudio', logoUrl: 'img/CHULENGO_LOGOO.png', instagram: '@chulengoestudio' };
   firebase.firestore().collection('usuarios').doc(window.currentUser.uid).get()
     .then(function(doc){
-      var marca = (doc.exists && doc.data().marcaRemito) ? doc.data().marcaRemito : DEFAULT_MARCA;
-      document.getElementById('remito-marca-nombre').value = marca.nombre || '';
-      document.getElementById('remito-marca-logo-url').value = marca.logoUrl || '';
-      document.getElementById('remito-marca-instagram').value = marca.instagram || '';
+      var marca = (doc.exists && doc.data().marcaRemito) ? doc.data().marcaRemito : {};
+      document.getElementById('remito-marca-nombre').value = marca.nombre || DEFAULT_MARCA.nombre;
+      document.getElementById('remito-marca-logo-url').value = marca.logoUrl || DEFAULT_MARCA.logoUrl;
+      document.getElementById('remito-marca-instagram').value = marca.instagram || DEFAULT_MARCA.instagram;
       aplicarMarcaRemitoAPreview();
     })
     .catch(function(){
@@ -4142,6 +4143,14 @@ function guardarMarcaRemito(){
     instagram: document.getElementById('remito-marca-instagram').value.trim()
   };
   firebase.firestore().collection('usuarios').doc(window.currentUser.uid).set({ marcaRemito: marca }, {merge:true}).catch(function(){});
+}
+
+function restablecerMarcaChulengo(){
+  document.getElementById('remito-marca-nombre').value = 'Chulengo Estudio';
+  document.getElementById('remito-marca-logo-url').value = 'img/CHULENGO_LOGOO.png';
+  document.getElementById('remito-marca-instagram').value = '@chulengoestudio';
+  aplicarMarcaRemitoAPreview();
+  guardarMarcaRemito();
 }
 
 function crearFilaRemitoDOM(r, idx){
