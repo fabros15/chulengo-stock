@@ -1883,19 +1883,24 @@ function cerrarHerramienta(){
         <!-- Formulario -->
         <div>
           <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem;margin-bottom:1rem">
-            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:1rem">Tu marca en el remito</div>
-            <div style="margin-bottom:0.875rem">
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Nombre del negocio</label>
-              <input type="text" id="remito-marca-nombre" placeholder="Ej: Mi Emprendimiento" oninput="onMarcaRemitoInput()" onchange="guardarMarcaRemito()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+            <div onclick="toggleMarcaRemitoForm()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+              <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif">Tu marca en el remito</div>
+              <div id="btn-toggle-marca-remito" style="font-size:0.8rem;font-weight:600;color:#2D6A4F;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:4px">Personalizar modelo <span id="chevron-marca-remito">▾</span></div>
             </div>
-            <div style="margin-bottom:0.875rem">
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Logo (link a una imagen, opcional)</label>
-              <input type="text" id="remito-marca-logo-url" placeholder="https://..." oninput="onMarcaRemitoInput()" onchange="guardarMarcaRemito()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
-              <div style="font-size:0.7rem;color:#8A8479;font-family:'Inter',sans-serif;margin-top:4px">Si lo dejás vacío, se usa un logo simple con la inicial del negocio.</div>
-            </div>
-            <div>
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Instagram / usuario (opcional)</label>
-              <input type="text" id="remito-marca-instagram" placeholder="@tunegocio" oninput="onMarcaRemitoInput()" onchange="guardarMarcaRemito()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+            <div id="remito-marca-campos" style="display:none;margin-top:1rem">
+              <div style="margin-bottom:0.875rem">
+                <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Nombre del negocio</label>
+                <input type="text" id="remito-marca-nombre" placeholder="Ej: Mi Emprendimiento" oninput="onMarcaRemitoInput()" onchange="guardarMarcaRemito()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+              </div>
+              <div style="margin-bottom:0.875rem">
+                <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Logo (link a una imagen, opcional)</label>
+                <input type="text" id="remito-marca-logo-url" placeholder="https://..." oninput="onMarcaRemitoInput()" onchange="guardarMarcaRemito()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+                <div style="font-size:0.7rem;color:#8A8479;font-family:'Inter',sans-serif;margin-top:4px">Si lo dejás vacío, se usa un logo simple con la inicial del negocio.</div>
+              </div>
+              <div>
+                <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Instagram / usuario (opcional)</label>
+                <input type="text" id="remito-marca-instagram" placeholder="@tunegocio" oninput="onMarcaRemitoInput()" onchange="guardarMarcaRemito()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+              </div>
             </div>
           </div>
 
@@ -4077,18 +4082,29 @@ function inicializarRemito(){
   actualizarPreviewRemito();
 }
 
+function toggleMarcaRemitoForm(){
+  var campos = document.getElementById('remito-marca-campos');
+  var chevron = document.getElementById('chevron-marca-remito');
+  var abierto = campos.style.display !== 'none';
+  campos.style.display = abierto ? 'none' : 'block';
+  chevron.textContent = abierto ? '▾' : '▴';
+}
+
 function cargarMarcaRemito(){
   if(!window.currentUser) return;
+  var DEFAULT_MARCA = { nombre: 'Chulengo Estudio', logoUrl: 'img/CHULENGO_LOGOO.png', instagram: '@chulengoestudio' };
   firebase.firestore().collection('usuarios').doc(window.currentUser.uid).get()
     .then(function(doc){
-      var marca = (doc.exists && doc.data().marcaRemito) ? doc.data().marcaRemito : {};
-      document.getElementById('remito-marca-nombre').value = marca.nombre || window.currentUser.displayName || '';
+      var marca = (doc.exists && doc.data().marcaRemito) ? doc.data().marcaRemito : DEFAULT_MARCA;
+      document.getElementById('remito-marca-nombre').value = marca.nombre || '';
       document.getElementById('remito-marca-logo-url').value = marca.logoUrl || '';
       document.getElementById('remito-marca-instagram').value = marca.instagram || '';
       aplicarMarcaRemitoAPreview();
     })
     .catch(function(){
-      document.getElementById('remito-marca-nombre').value = window.currentUser.displayName || '';
+      document.getElementById('remito-marca-nombre').value = DEFAULT_MARCA.nombre;
+      document.getElementById('remito-marca-logo-url').value = DEFAULT_MARCA.logoUrl;
+      document.getElementById('remito-marca-instagram').value = DEFAULT_MARCA.instagram;
       aplicarMarcaRemitoAPreview();
     });
 }
