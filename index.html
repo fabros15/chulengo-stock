@@ -1801,6 +1801,10 @@ function cerrarHerramienta(){
               <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Destino</label>
               <input type="text" id="etiq-destino" value="TRELEW" oninput="actualizarPreviewEtiqueta()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box;text-transform:uppercase">
             </div>
+            <div style="margin-top:0.875rem">
+              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">¿Qué se lleva? <span style="font-weight:400;color:#8A8479;font-size:0.72rem">(para saber qué preparar)</span></label>
+              <textarea id="etiq-contenido" rows="3" placeholder="Ej: 3 vasos Toy Story, 2 llaveros..." oninput="actualizarPreviewEtiqueta()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box;resize:vertical"></textarea>
+            </div>
           </div>
 
           <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem;margin-bottom:1rem">
@@ -1850,6 +1854,11 @@ function cerrarHerramienta(){
                     <span>TEL:&nbsp;<span id="prev-tel">—</span></span>
                     <span>DNI:&nbsp;<span id="prev-dni">—</span></span>
                   </div>
+                </div>
+
+                <div id="prev-contenido-box" style="display:none;border:1.5px solid #1A1814;border-radius:4px;padding:10px 12px;margin-bottom:14px">
+                  <div style="font-size:0.7rem;font-weight:700;margin-bottom:6px">CONTENIDO</div>
+                  <div style="font-size:0.85rem;font-weight:600;white-space:pre-wrap;word-break:break-word" id="prev-contenido">—</div>
                 </div>
 
                 <div style="border:1.5px solid #1A1814;border-radius:4px;padding:10px 12px;margin-bottom:18px">
@@ -3842,6 +3851,7 @@ function actualizarPreviewEtiqueta(){
   var tel = document.getElementById('etiq-tel').value.trim();
   var dni = document.getElementById('etiq-dni').value.trim();
   var destino = document.getElementById('etiq-destino').value.trim() || 'TRELEW';
+  var contenido = document.getElementById('etiq-contenido').value.trim();
   var remNombre = document.getElementById('etiq-rem-nombre').value.trim() || 'FABRIZIO JARA';
   var remTel = document.getElementById('etiq-rem-tel').value.trim();
   var remDni = document.getElementById('etiq-rem-dni').value.trim();
@@ -3853,6 +3863,14 @@ function actualizarPreviewEtiqueta(){
   document.getElementById('prev-rem-nombre').textContent = remNombre.toUpperCase();
   document.getElementById('prev-rem-tel').textContent = remTel || '—';
   document.getElementById('prev-rem-dni').textContent = remDni || '—';
+
+  var cajaContenido = document.getElementById('prev-contenido-box');
+  if(contenido){
+    document.getElementById('prev-contenido').textContent = contenido;
+    cajaContenido.style.display = 'block';
+  } else {
+    cajaContenido.style.display = 'none';
+  }
 }
 
 function onEtiqNombreInput(){
@@ -3966,6 +3984,7 @@ function guardarEImprimirEtiqueta(){
     tel: document.getElementById('etiq-tel').value.trim(),
     dni: document.getElementById('etiq-dni').value.trim(),
     destino: (document.getElementById('etiq-destino').value.trim()||'TRELEW').toUpperCase(),
+    contenido: document.getElementById('etiq-contenido').value.trim(),
     remNombre: (document.getElementById('etiq-rem-nombre').value.trim()||'FABRIZIO JARA').toUpperCase(),
     remTel: document.getElementById('etiq-rem-tel').value.trim(),
     remDni: document.getElementById('etiq-rem-dni').value.trim()
@@ -4039,9 +4058,10 @@ function renderHistorialEtiquetas(){
     var card = document.createElement('div');
     card.style.cssText = 'background:#fff;border:1px solid #E2DDD6;border-radius:10px;padding:12px 14px';
     card.innerHTML =
-      '<div style="font-size:0.88rem;font-weight:700;color:#1A1814;font-family:\'Inter\',sans-serif;margin-bottom:2px">'+d.nombre+'</div>'+
+      '<div style="font-size:0.88rem;font-weight:700;color:#1A1814;font-family:\'Inter\',sans-serif;margin-bottom:2px">'+escaparHtml(d.nombre)+'</div>'+
       '<div style="font-size:0.75rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:2px">DNI: '+(d.dni||'—')+' · Tel: '+(d.tel||'—')+'</div>'+
-      '<div style="font-size:0.72rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:10px">Destino: '+(d.destino||'TRELEW')+' · '+fecha+'</div>'+
+      '<div style="font-size:0.72rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:'+(d.contenido?'4px':'10px')+'">Destino: '+(d.destino||'TRELEW')+' · '+fecha+'</div>'+
+      (d.contenido ? '<div style="font-size:0.72rem;color:#4B4640;font-family:\'Inter\',sans-serif;margin-bottom:10px;background:#F5F2ED;border-radius:6px;padding:6px 8px;white-space:pre-wrap">'+escaparHtml(d.contenido)+'</div>' : '')+
       '<div style="display:flex;gap:6px">'+
         '<button data-etid="'+d.id+'" class="btn-reimprimir-etiq" style="flex:1;padding:7px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Reimprimir</button>'+
         '<button data-etid="'+d.id+'" class="btn-del-etiq" style="padding:7px 9px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.75rem;cursor:pointer">🗑</button>'+
@@ -4058,6 +4078,7 @@ function usarEtiquetaHistorial(id, imprimirDeUna){
   document.getElementById('etiq-tel').value = d.tel||'';
   document.getElementById('etiq-dni').value = d.dni||'';
   document.getElementById('etiq-destino').value = d.destino||'TRELEW';
+  document.getElementById('etiq-contenido').value = d.contenido||'';
   document.getElementById('etiq-rem-nombre').value = d.remNombre||'FABRIZIO JARA';
   document.getElementById('etiq-rem-tel').value = d.remTel||'2804585359';
   document.getElementById('etiq-rem-dni').value = d.remDni||'46405539';
