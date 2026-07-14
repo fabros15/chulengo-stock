@@ -1833,7 +1833,7 @@ function cerrarHerramienta(){
           <div style="font-size:0.78rem;font-weight:600;color:#8A8479;font-family:'Inter',sans-serif;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Vista previa</div>
           <div style="background:#EDEAE4;border-radius:12px;padding:1.25rem;display:flex;justify-content:center;overflow-x:auto">
             <div id="etiqueta-preview-wrap" style="width:380px;min-width:380px;height:537px;overflow:hidden;position:relative">
-              <div id="etiqueta-print-area" style="transform:scale(0.905);transform-origin:top left;width:420px;height:594px;background:#fff;border:1px solid #ccc;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:26px;box-sizing:border-box;font-family:'Inter',sans-serif;color:#1A1814">
+              <div id="etiqueta-print-area" style="transform:scale(0.905);transform-origin:top left;width:420px;height:594px;background:#fff;border:1px solid #ccc;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:26px;box-sizing:border-box;font-family:'Inter',sans-serif;color:#1A1814;position:relative">
 
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
                   <div style="text-align:center">
@@ -1856,11 +1856,6 @@ function cerrarHerramienta(){
                   </div>
                 </div>
 
-                <div id="prev-contenido-box" style="display:none;border:1.5px solid #1A1814;border-radius:4px;padding:10px 12px;margin-bottom:14px">
-                  <div style="font-size:0.7rem;font-weight:700;margin-bottom:6px">CONTENIDO</div>
-                  <div style="font-size:0.85rem;font-weight:600;white-space:pre-wrap;word-break:break-word" id="prev-contenido">—</div>
-                </div>
-
                 <div style="border:1.5px solid #1A1814;border-radius:4px;padding:10px 12px;margin-bottom:18px">
                   <div style="font-size:0.7rem;font-weight:700;margin-bottom:8px">REMITENTE</div>
                   <div style="font-size:1.1rem;font-weight:700;text-align:center;margin-bottom:10px;word-break:break-word" id="prev-rem-nombre">FABRIZIO JARA</div>
@@ -1871,6 +1866,11 @@ function cerrarHerramienta(){
                 </div>
 
                 <div style="text-align:center;font-size:1.7rem;font-weight:800;letter-spacing:0.05em">FRAGIL</div>
+
+                <div id="prev-contenido-box" style="display:none;position:absolute;left:26px;right:26px;bottom:24px;border:1.5px solid #1A1814;border-radius:4px;padding:10px 12px">
+                  <div style="font-size:0.7rem;font-weight:700;margin-bottom:6px">CONTENIDO</div>
+                  <div style="font-size:0.85rem;font-weight:600;white-space:pre-wrap;word-break:break-word" id="prev-contenido">—</div>
+                </div>
               </div>
             </div>
           </div>
