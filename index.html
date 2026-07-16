@@ -724,7 +724,7 @@ body{font-family:"Inter",sans-serif;background:#F5F2ED;color:#1A1814;min-height:
 #btn-entrar:hover{background:#1B4332!important}
 .nav-tabs{display:flex;gap:0;flex:1;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .nav-tabs::-webkit-scrollbar{display:none}
-.nav-tab{padding:10px 18px;font-size:0.83rem;font-weight:500;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,0.55);transition:all 0.15s;font-family:"Inter",sans-serif;border-bottom:3px solid transparent;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.nav-tab{padding:10px 18px;font-size:0.83rem;font-weight:500;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,0.55);transition:all 0.15s;font-family:"Inter",sans-serif;border-bottom:3px solid transparent;display:flex;align-items:center;gap:5px;white-space:nowrap;text-decoration:none}
 .nav-tab.active{color:#fff;border-bottom-color:#2D6A4F;font-weight:600}
 .nav-tab:hover:not(.active){color:#fff;background:rgba(255,255,255,0.06)}
 .nav-tab-badge{font-size:0.6rem;background:#E53935;color:#fff;border-radius:3px;padding:1px 4px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em}
@@ -1181,11 +1181,11 @@ function cerrarHerramienta(){
   </div>
   <div class="header-row2">
     <div class="nav-tabs">
-      <button class="nav-tab active" onclick="showPage('stock',this)">Productos</button>
-      <button class="nav-tab" onclick="showPage('ofertas',this)">Ofertas</button>
-      <button class="nav-tab" onclick="showPage('cupones',this)">Cupones</button>
-      <button class="nav-tab" onclick="showPage('calc',this)">Calculadora de costos</button>
-      <button class="nav-tab" onclick="showPage('herramientas',this)">Herramientas</button>
+      <a class="nav-tab active" href="#stock" onclick="showPage('stock',this);return false;">Productos</a>
+      <a class="nav-tab" href="#ofertas" onclick="showPage('ofertas',this);return false;">Ofertas</a>
+      <a class="nav-tab" href="#cupones" onclick="showPage('cupones',this);return false;">Cupones</a>
+      <a class="nav-tab" href="#calc" onclick="showPage('calc',this);return false;">Calculadora de costos</a>
+      <a class="nav-tab" href="#herramientas" onclick="showPage('herramientas',this);return false;">Herramientas</a>
     </div>
     <div class="nav-row2-right">
       
@@ -2156,6 +2156,16 @@ window.addEventListener('popstate', function(e){
     document.querySelector('footer').style.display=''; window.scrollTo(0,0);
   }
 });
+
+(function(){
+  var pagesValidas = ['stock','ofertas','cupones','calc','herramientas'];
+  var hash = (window.location.hash||'').replace('#','');
+  if(pagesValidas.indexOf(hash) !== -1 && hash !== 'stock'){
+    var tabs = document.querySelectorAll('.nav-tab');
+    var idx = pagesValidas.indexOf(hash);
+    showPage(hash, tabs[idx]);
+  }
+})();
 
 function calcularEstadisticas(docs){
   if(!docs||docs.length===0){ document.getElementById('stats-box').style.display='none'; return; }
