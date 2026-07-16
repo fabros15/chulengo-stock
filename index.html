@@ -1085,7 +1085,7 @@ body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
 @media print{
   body.printing-etiqueta #app{display:none !important}
   body.printing-etiqueta #etiqueta-imprimir-area{display:flex !important;justify-content:center;width:100%}
-  #etiqueta-imprimir-area .etiq-print-clon{width:420px;height:594px;margin:15mm auto 0;transform:scale(1.62);transform-origin:top center;box-shadow:none !important;border:none !important}
+  #etiqueta-imprimir-area .etiq-print-clon{width:420px;height:594px;margin:8mm auto 0;transform:scale(1.8);transform-origin:top center;box-shadow:none !important;border:none !important}
   body.printing-remito #app{display:none !important}
   body.printing-remito #remito-imprimir-area{display:flex !important;justify-content:center;width:100%}
   #remito-imprimir-area .remito-print-clon{width:700px;margin:14mm auto 0;box-shadow:none !important;border:none !important}
@@ -3938,7 +3938,7 @@ function chequearNombreSimilar(){
     aviso.innerHTML =
       '¿Ya hiciste una etiqueta para <b>'+d.nombre+'</b>'+(fecha?' el '+fecha:'')+'. ¿Querés reimprimirla en vez de crear una nueva?'+
       '<div style="margin-top:8px;display:flex;gap:8px">'+
-        '<button onclick="usarEtiquetaHistorial(\''+d.id+'\',true)" style="padding:6px 12px;background:#1A1814;color:#fff;border:none;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Sí, reimprimir esa</button>'+
+        '<button onclick="usarEtiquetaHistorial(\''+d.id+'\')" style="padding:6px 12px;background:#1A1814;color:#fff;border:none;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Sí, usar esos datos</button>'+
         '<button onclick="document.getElementById(\'etiq-similar-aviso\').style.display=\'none\'" style="padding:6px 12px;background:transparent;color:#9A3412;border:1px solid #FED7AA;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">No, es otra persona</button>'+
       '</div>';
     aviso.style.display='block';
@@ -3973,9 +3973,9 @@ function dispararImpresionEtiqueta(){
   var clone = original.cloneNode(true);
   clone.removeAttribute('id');
   clone.classList.add('etiq-print-clon');
-  clone.style.transform = 'scale(1.62)';
+  clone.style.transform = 'scale(1.8)';
   clone.style.transformOrigin = 'top center';
-  clone.style.margin = '15mm auto 0';
+  clone.style.margin = '8mm auto 0';
   clone.style.boxShadow = 'none';
   clone.style.border = 'none';
   var destino = document.getElementById('etiqueta-imprimir-area');
@@ -4084,7 +4084,7 @@ function renderHistorialEtiquetas(){
       '<div style="font-size:0.72rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:'+(d.contenido?'4px':'10px')+'">Destino: '+(d.destino||'TRELEW')+' · '+fecha+'</div>'+
       (d.contenido ? '<div style="font-size:0.72rem;color:#4B4640;font-family:\'Inter\',sans-serif;margin-bottom:10px;background:#F5F2ED;border-radius:6px;padding:6px 8px;white-space:pre-wrap">'+escaparHtml(d.contenido)+'</div>' : '')+
       '<div style="display:flex;gap:6px">'+
-        '<button data-etid="'+d.id+'" class="btn-reimprimir-etiq" style="flex:1;padding:7px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Reimprimir</button>'+
+        '<button data-etid="'+d.id+'" class="btn-reimprimir-etiq" style="flex:1;padding:7px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Editar y reimprimir</button>'+
         '<button data-etid="'+d.id+'" class="btn-del-etiq" style="padding:7px 9px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.75rem;cursor:pointer">🗑</button>'+
       '</div>';
     grid.appendChild(card);
@@ -4092,7 +4092,7 @@ function renderHistorialEtiquetas(){
   cont.appendChild(grid);
 }
 
-function usarEtiquetaHistorial(id, imprimirDeUna){
+function usarEtiquetaHistorial(id){
   var d = etiquetasHistorialCache.find(function(x){ return x.id === id; });
   if(!d) return;
   document.getElementById('etiq-nombre').value = d.nombre||'';
@@ -4106,7 +4106,10 @@ function usarEtiquetaHistorial(id, imprimirDeUna){
   actualizarPreviewEtiqueta();
   document.getElementById('etiq-similar-aviso').style.display='none';
   document.getElementById('etiq-grid-principal').scrollIntoView({behavior:'smooth',block:'start'});
-  if(imprimirDeUna) dispararImpresionEtiqueta();
+
+  var contenido = document.getElementById('etiq-contenido');
+  contenido.focus();
+  contenido.select();
 }
 
 document.addEventListener('click', function(e){
@@ -4114,7 +4117,7 @@ document.addEventListener('click', function(e){
   var del = e.target.closest('.btn-del-etiq');
 
   if(reimp){
-    usarEtiquetaHistorial(reimp.dataset.etid, true);
+    usarEtiquetaHistorial(reimp.dataset.etid);
   }
   if(del){
     if(!confirm('¿Eliminar esta etiqueta del historial?')) return;
