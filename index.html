@@ -3947,6 +3947,27 @@ function chequearNombreSimilar(){
   }
 }
 
+function esperarImagenesCargadas(el, callback){
+  var imgs = el.querySelectorAll('img');
+  if(!imgs.length){ callback(); return; }
+  var pendientes = imgs.length;
+  var terminado = false;
+  function listo(){
+    if(terminado) return;
+    pendientes--;
+    if(pendientes<=0){ terminado = true; callback(); }
+  }
+  imgs.forEach(function(img){
+    if(img.complete && img.naturalWidth > 0){
+      listo();
+    } else {
+      img.addEventListener('load', listo, {once:true});
+      img.addEventListener('error', listo, {once:true});
+    }
+  });
+  setTimeout(function(){ if(!terminado){ terminado = true; callback(); } }, 1500);
+}
+
 function dispararImpresionEtiqueta(){
   var original = document.getElementById('etiqueta-print-area');
   var clone = original.cloneNode(true);
@@ -3962,9 +3983,9 @@ function dispararImpresionEtiqueta(){
   destino.appendChild(clone);
 
   document.body.classList.add('printing-etiqueta');
-  setTimeout(function(){
+  esperarImagenesCargadas(clone, function(){
     window.print();
-  }, 50);
+  });
 }
 window.addEventListener('afterprint', function(){
   document.body.classList.remove('printing-etiqueta');
@@ -4419,9 +4440,9 @@ function imprimirRemitoActual(){
   destino.appendChild(clone);
 
   document.body.classList.add('printing-remito');
-  setTimeout(function(){
+  esperarImagenesCargadas(clone, function(){
     window.print();
-  }, 50);
+  });
 }
 window.addEventListener('afterprint', function(){
   document.body.classList.remove('printing-remito');
