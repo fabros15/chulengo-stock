@@ -4459,6 +4459,7 @@ window.addEventListener('afterprint', function(){
 
 var remitosHistorialCache = [];
 var remitoClienteExpandido = null;
+var remitosExpandidosIds = [];
 
 function cargarHistorialRemitos(){
   if(!window.currentUser) return;
@@ -4583,31 +4584,37 @@ function renderHistorialRemitos(){
       html += '<div style="border-top:1px solid #E2DDD6;padding:12px 14px;background:#FDFCFA">';
       g.remitos.forEach(function(rem){
         var totalRem = (rem.renglones||[]).reduce(function(a,r){ return a+(r.subtotal||0); },0);
-        html += '<div style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px dashed #D4CFC8">';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:0.8rem;font-weight:700;font-family:\'Inter\',sans-serif;margin-bottom:8px">'+
-          '<span>Remito del '+(rem.fechaEntrega||'—')+'</span>'+
-          '<span style="display:flex;align-items:center;gap:8px">Total: '+formatearMoneda(totalRem)+
+        var remExpandido = remitosExpandidosIds.indexOf(rem.id) !== -1;
+        html += '<div style="margin-bottom:10px;border:1px solid #E2DDD6;border-radius:8px;overflow:hidden;background:#fff">';
+        html += '<div class="remito-fecha-header" data-remid="'+rem.id+'" style="padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">'+
+          '<span style="font-size:0.8rem;font-weight:700;font-family:\'Inter\',sans-serif;display:flex;align-items:center;gap:6px"><span style="color:#8A8479">'+(remExpandido?'▾':'▸')+'</span> Remito del '+(rem.fechaEntrega||'—')+'</span>'+
+          '<span style="display:flex;align-items:center;gap:8px;font-size:0.8rem;font-family:\'Inter\',sans-serif;font-weight:700">Total: '+formatearMoneda(totalRem)+
             ' <button data-remid="'+rem.id+'" class="btn-del-remito" style="padding:3px 7px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.68rem;cursor:pointer">🗑</button></span>'+
         '</div>';
-        (rem.renglones||[]).forEach(function(r, idx){
-          var pago = calcularPagoRenglon(r);
-          var completo = pago.cantTotal>0 && pago.cantPagada >= pago.cantTotal;
-          html += '<div style="padding:7px 0;border-bottom:1px solid #F0EDE7">'+
-            '<div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;font-family:\'Inter\',sans-serif;margin-bottom:5px">'+
-              '<span style="flex:1;'+(completo?'text-decoration:line-through;color:#8A8479;':'')+'">'+escaparHtml(r.producto||'—')+' ('+(r.cantidad||'1')+(r.unidad?' '+escaparHtml(r.unidad):'')+' x '+formatearMoneda(r.precio||0)+')</span>'+
-              '<span style="font-weight:600;min-width:75px;text-align:right">'+formatearMoneda(r.subtotal||0)+'</span>'+
-            '</div>'+
-            '<div style="display:flex;align-items:center;gap:8px;font-size:0.74rem;color:#8A8479;font-family:\'Inter\',sans-serif;padding-left:2px;flex-wrap:wrap">'+
-              '<span>Pagado:</span>'+
-              '<input type="number" min="0" max="'+pago.cantTotal+'" step="any" value="'+pago.cantPagada+'" class="inp-cant-pagada" data-remid="'+rem.id+'" data-idx="'+idx+'" data-canttotal="'+pago.cantTotal+'" style="width:55px;padding:3px 5px;border:1px solid #E2DDD6;border-radius:6px;text-align:center;font-size:0.78rem;font-family:\'Inter\',sans-serif">'+
-              '<span>/ '+pago.cantTotal+'</span>'+
-              (!completo ? '<button class="btn-pagado-todo" data-remid="'+rem.id+'" data-idx="'+idx+'" data-canttotal="'+pago.cantTotal+'" style="padding:2px 8px;background:#EFF6F1;color:#2D6A4F;border:1px solid #CBE3D3;border-radius:6px;font-size:0.7rem;cursor:pointer">Todo pagado</button>' : '')+
-              '<span style="margin-left:auto;text-align:right">'+
-                (pago.montoPendiente>0.5 ? '<span style="color:#B45309;font-weight:600">'+formatearMoneda(pago.montoPendiente)+' pend.</span>' : '<span style="color:#2D6A4F;font-weight:600">Pagado completo</span>')+
-              '</span>'+
-            '</div>'+
-          '</div>';
-        });
+
+        if(remExpandido){
+          html += '<div style="padding:0 12px 10px;border-top:1px solid #F0EDE7">';
+          (rem.renglones||[]).forEach(function(r, idx){
+            var pago = calcularPagoRenglon(r);
+            var completo = pago.cantTotal>0 && pago.cantPagada >= pago.cantTotal;
+            html += '<div style="padding:7px 0;border-bottom:1px solid #F0EDE7">'+
+              '<div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;font-family:\'Inter\',sans-serif;margin-bottom:5px">'+
+                '<span style="flex:1;'+(completo?'text-decoration:line-through;color:#8A8479;':'')+'">'+escaparHtml(r.producto||'—')+' ('+(r.cantidad||'1')+(r.unidad?' '+escaparHtml(r.unidad):'')+' x '+formatearMoneda(r.precio||0)+')</span>'+
+                '<span style="font-weight:600;min-width:75px;text-align:right">'+formatearMoneda(r.subtotal||0)+'</span>'+
+              '</div>'+
+              '<div style="display:flex;align-items:center;gap:8px;font-size:0.74rem;color:#8A8479;font-family:\'Inter\',sans-serif;padding-left:2px;flex-wrap:wrap">'+
+                '<span>Pagado:</span>'+
+                '<input type="number" min="0" max="'+pago.cantTotal+'" step="any" value="'+pago.cantPagada+'" class="inp-cant-pagada" data-remid="'+rem.id+'" data-idx="'+idx+'" data-canttotal="'+pago.cantTotal+'" style="width:55px;padding:3px 5px;border:1px solid #E2DDD6;border-radius:6px;text-align:center;font-size:0.78rem;font-family:\'Inter\',sans-serif">'+
+                '<span>/ '+pago.cantTotal+'</span>'+
+                (!completo ? '<button class="btn-pagado-todo" data-remid="'+rem.id+'" data-idx="'+idx+'" data-canttotal="'+pago.cantTotal+'" style="padding:2px 8px;background:#EFF6F1;color:#2D6A4F;border:1px solid #CBE3D3;border-radius:6px;font-size:0.7rem;cursor:pointer">Todo pagado</button>' : '')+
+                '<span style="margin-left:auto;text-align:right">'+
+                  (pago.montoPendiente>0.5 ? '<span style="color:#B45309;font-weight:600">'+formatearMoneda(pago.montoPendiente)+' pend.</span>' : '<span style="color:#2D6A4F;font-weight:600">Pagado completo</span>')+
+                '</span>'+
+              '</div>'+
+            '</div>';
+          });
+          html += '</div>';
+        }
         html += '</div>';
       });
       html += '</div>';
@@ -4638,6 +4645,7 @@ function setCantidadPagadaRenglon(remId, idx, nuevaCantidad){
 
 document.addEventListener('click', function(e){
   var header = e.target.closest('.remito-cliente-header');
+  var fechaHeader = e.target.closest('.remito-fecha-header');
   var delRem = e.target.closest('.btn-del-remito');
   var btnTodo = e.target.closest('.btn-pagado-todo');
 
@@ -4649,6 +4657,14 @@ document.addEventListener('click', function(e){
     if(!confirm('¿Eliminar este remito del historial? Esta acción no se puede deshacer.')) return;
     firebase.firestore().collection('remitos_historial').doc(delRem.dataset.remid).delete()
       .then(cargarHistorialRemitos);
+    return;
+  }
+  if(fechaHeader){
+    var remId = fechaHeader.dataset.remid;
+    var pos = remitosExpandidosIds.indexOf(remId);
+    if(pos === -1) remitosExpandidosIds.push(remId);
+    else remitosExpandidosIds.splice(pos,1);
+    renderHistorialRemitos();
     return;
   }
   if(header){
