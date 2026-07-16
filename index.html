@@ -86,10 +86,10 @@ document.addEventListener('DOMContentLoaded', function(){
       }
       cargarFavoritosEnSelect();
       var cardEtiq = document.getElementById('card-etiquetas');
-      if(cardEtiq) cardEtiq.style.display = isAdmin() ? '' : 'none';
+      if(cardEtiq) cardEtiq.style.display = isAdmin() ? 'block' : 'none';
       if(!isAdmin() && document.getElementById('herramienta-etiquetas').style.display!=='none'){ cerrarHerramienta(); }
       var cardRemito = document.getElementById('card-remito');
-      if(cardRemito) cardRemito.style.display = '';
+      if(cardRemito) cardRemito.style.display = 'block';
     } else {
       if(btnSalir) btnSalir.style.display='none';
       if(btnEntrar) btnEntrar.style.display='flex';
@@ -107,6 +107,17 @@ document.addEventListener('DOMContentLoaded', function(){
         document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
         document.getElementById('page-stock').classList.add('active');
         document.querySelector('.nav-tab').classList.add('active');
+      }
+    }
+
+    if(!window._handledInitialToolHash){
+      window._handledInitialToolHash = true;
+      var herramientasValidas = ['etiquetas','remito','svg-converter','qr-generator'];
+      var hashActual = (window.location.hash||'').replace('#','');
+      if(herramientasValidas.indexOf(hashActual) !== -1){
+        var tabsNav = document.querySelectorAll('.nav-tab');
+        showPage('herramientas', tabsNav[4]);
+        setTimeout(function(){ abrirHerramienta(hashActual); }, 0);
       }
     }
   });
@@ -1105,6 +1116,7 @@ function abrirHerramienta(id){
   if(tool) tool.style.display = 'block';
 
   window.scrollTo(0,0);
+  history.replaceState({page:'herramientas', tool:id}, '', '#'+id);
 
   if(id === 'svg-converter') cargarHistorialSVG();
   if(id === 'qr-generator') cargarHistorialQR();
@@ -1129,6 +1141,9 @@ function cerrarHerramienta(){
   var header = document.getElementById('herramientas-main-header');
   if(header) header.style.display = 'block';
   window.scrollTo(0,0);
+  if((window.location.hash||'') !== '#herramientas'){
+    history.replaceState({page:'herramientas'}, '', '#herramientas');
+  }
 }
 </script>
 </head>
@@ -1469,7 +1484,7 @@ function cerrarHerramienta(){
     <div id="herramientas-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;margin-bottom:2.5rem">
 
       <!-- Conversor IMG → SVG -->
-      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('svg-converter')" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+      <a href="#svg-converter" style="display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('svg-converter');return false;" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
         <div style="background:linear-gradient(135deg,#1A1814 0%,#2D6A4F 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem"></div>
         <div style="padding:1.25rem">
           <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:5px">Imagen a SVG</div>
@@ -1480,10 +1495,10 @@ function cerrarHerramienta(){
             <span style="background:#FFF7ED;color:#9A3412;border:1px solid #FED7AA;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Historial con cuenta</span>
           </div>
         </div>
-      </div>
+      </a>
 
       <!-- Generador QR -->
-      <div style="background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('qr-generator')" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+      <a href="#qr-generator" style="display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('qr-generator');return false;" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
         <div style="background:linear-gradient(135deg,#1D4ED8 0%,#1A1814 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">QR</div>
         <div style="padding:1.25rem">
           <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:5px">Generador de QR</div>
@@ -1493,10 +1508,10 @@ function cerrarHerramienta(){
             <span style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Sin registro</span>
           </div>
         </div>
-      </div>
+      </a>
 
       <!-- Etiquetas de envío (solo admin) -->
-      <div id="card-etiquetas" style="display:none;background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('etiquetas')" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+      <a id="card-etiquetas" href="#etiquetas" style="display:none;text-decoration:none;color:inherit;background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('etiquetas');return false;" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
         <div style="background:linear-gradient(135deg,#7C3AED 0%,#1A1814 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">📦</div>
         <div style="padding:1.25rem">
           <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:5px">Etiquetas de envío</div>
@@ -1505,10 +1520,10 @@ function cerrarHerramienta(){
             <span style="background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Solo vos</span>
           </div>
         </div>
-      </div>
+      </a>
 
       <!-- Remito de entrega (solo admin) -->
-      <div id="card-remito" style="display:none;background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('remito')" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+      <a id="card-remito" href="#remito" style="display:none;text-decoration:none;color:inherit;background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('remito');return false;" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
         <div style="background:linear-gradient(135deg,#0F766E 0%,#1A1814 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">🧾</div>
         <div style="padding:1.25rem">
           <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:"Inter",sans-serif;margin-bottom:5px">Remito de entrega</div>
@@ -1517,7 +1532,7 @@ function cerrarHerramienta(){
             <span style="background:#EFF6F1;color:#2D6A4F;border:1px solid #CBE3D3;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Personalizable</span>
           </div>
         </div>
-      </div>
+      </a>
       <!-- Más herramientas próximamente -->
       <div style="background:#F5F2ED;border:1.5px dashed #D4CFC8;border-radius:14px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;text-align:center">
         <div style="font-size:2rem;margin-bottom:0.75rem;opacity:0.4"></div>
