@@ -1093,6 +1093,8 @@ body.dark footer{border-top-color:#2A2520;color:#8A8479}
 body.dark .pres-filtro{background:#1C1C1C;border-color:#2A2520;color:#8A8479}
 body.dark .pres-filtro.active,.pres-filtro:hover{background:#FAFAFA;color:#1A1814}
 body.dark #pres-search{background:#2A2520;border-color:#3A3530;color:#FAFAFA}
+.info-cliente-campo:hover{border-color:#E2DDD6 !important}
+.info-cliente-campo:focus{border-color:#2D6A4F !important;background:#fff !important}
 @media print{
   body.printing-etiqueta #app{display:none !important}
   body.printing-etiqueta #etiqueta-imprimir-area{display:flex !important;justify-content:center;width:100%}
@@ -1128,6 +1130,7 @@ function abrirHerramienta(id){
     if(!window.currentUser){ cerrarHerramienta(); return; }
     if(!remitoRenglones.length){ inicializarRemito(); }
     cargarHistorialRemitos();
+    cargarInfoClientesRemito();
     cargarMarcaRemito();
   }
 }
@@ -4523,6 +4526,43 @@ window.addEventListener('afterprint', function(){
 var remitosHistorialCache = [];
 var remitoClienteExpandido = null;
 var remitosExpandidosIds = [];
+var clientesInfoCache = {};
+
+function cargarInfoClientesRemito(){
+  if(!window.currentUser) return;
+  firebase.firestore().collection('clientes_remito_info')
+    .where('uid','==',window.currentUser.uid)
+    .get()
+    .then(function(snap){
+      clientesInfoCache = {};
+      snap.forEach(function(doc){
+        var d = doc.data();
+        d.id = doc.id;
+        clientesInfoCache[(d.cliente||'').trim().toUpperCase()] = d;
+      });
+      renderHistorialRemitos();
+    })
+    .catch(function(){});
+}
+
+function guardarInfoCliente(cliente, campo, valor){
+  if(!window.currentUser) return;
+  var clienteKey = (cliente||'').trim().toUpperCase();
+  var existente = clientesInfoCache[clienteKey];
+
+  if(existente && existente.id){
+    existente[campo] = valor;
+    firebase.firestore().collection('clientes_remito_info').doc(existente.id).update({ [campo]: valor }).catch(function(){});
+  } else {
+    var nuevo = { uid: window.currentUser.uid, cliente: clienteKey, telefono:'', domicilio:'', observaciones:'' };
+    nuevo[campo] = valor;
+    clientesInfoCache[clienteKey] = nuevo;
+    firebase.firestore().collection('clientes_remito_info').add(nuevo).then(function(ref){
+      nuevo.id = ref.id;
+    }).catch(function(){});
+  }
+}
+
 
 function cargarHistorialRemitos(){
   if(!window.currentUser) return;
@@ -4691,7 +4731,18 @@ function renderHistorialRemitos(){
     return;
   }
 
-  var html = '';
+  var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-family:\'Inter\',sans-serif;font-size:0.82rem;white-space:nowrap">'+
+    '<thead><tr style="border-bottom:2px solid #1A1814;text-align:left">'+
+      '<th style="padding:8px 10px"></th>'+
+      '<th style="padding:8px 10px">Nombre</th>'+
+      '<th style="padding:8px 10px;text-align:right">Total compras</th>'+
+      '<th style="padding:8px 10px;text-align:right">Pendiente</th>'+
+      '<th style="padding:8px 10px;text-align:right">Compras realizadas</th>'+
+      '<th style="padding:8px 10px">Teléfono</th>'+
+      '<th style="padding:8px 10px">Domicilio</th>'+
+      '<th style="padding:8px 10px;min-width:200px">Observaciones</th>'+
+    '</tr></thead><tbody>';
+
   filtrados.forEach(function(g){
     var matchPorProducto = q && g.cliente.indexOf(q) === -1;
     var expandido = (remitoClienteExpandido === g.cliente) || matchPorProducto;
@@ -4705,25 +4756,29 @@ function renderHistorialRemitos(){
         });
       });
     }
-    html += '<div style="background:#fff;border:1px solid #E2DDD6;border-radius:10px;margin-bottom:10px;overflow:hidden">';
-    html += '<div class="remito-cliente-header" data-cliente="'+escaparAttr(g.cliente)+'" style="padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px">'+
-      '<div>'+
-        '<div style="font-weight:700;font-size:0.92rem;font-family:\'Inter\',sans-serif;color:#1A1814">'+escaparHtml(g.cliente)+'</div>'+
-        '<div style="font-size:0.72rem;color:#8A8479;font-family:\'Inter\',sans-serif">'+g.remitos.length+' remito'+(g.remitos.length!==1?'s':'')+
-          (productosCoincidentes.length ? ' · coincide en: '+escaparHtml(productosCoincidentes.join(', ')) : '')+
-        '</div>'+
-      '</div>'+
-      '<div style="text-align:right;display:flex;align-items:center;gap:14px">'+
-        '<div>'+
-          '<div style="font-size:0.68rem;color:#8A8479;font-family:\'Inter\',sans-serif">Pendiente</div>'+
-          '<div style="font-weight:800;font-size:0.92rem;font-family:\'Inter\',sans-serif;color:'+(g.totalPendiente>0?'#B45309':'#2D6A4F')+'">'+formatearMoneda(g.totalPendiente)+'</div>'+
-        '</div>'+
-        '<div style="font-size:1.1rem;color:#8A8479">'+(expandido?'▲':'▼')+'</div>'+
-      '</div>'+
-    '</div>';
+
+    var info = clientesInfoCache[g.cliente] || {};
+    var camposInfo = ['telefono','domicilio','observaciones'];
+    var inputsInfo = camposInfo.map(function(campo){
+      return '<td style="padding:4px 6px;border-bottom:1px solid #F0EDE7">'+
+        '<input class="info-cliente-campo" data-cliente="'+escaparAttr(g.cliente)+'" data-campo="'+campo+'" value="'+escaparAttr(info[campo]||'')+'" placeholder="—" style="width:100%;min-width:110px;padding:5px 6px;border:1px solid transparent;border-radius:6px;font-size:0.8rem;font-family:\'Inter\',sans-serif;color:#1A1814;outline:none;background:transparent;box-sizing:border-box">'+
+      '</td>';
+    }).join('');
+
+    html += '<tr class="fila-cliente-tabla" data-cliente="'+escaparAttr(g.cliente)+'" style="border-bottom:1px solid #F0EDE7;cursor:pointer">'+
+      '<td style="padding:8px 10px;color:#8A8479">'+(expandido?'▾':'▸')+'</td>'+
+      '<td style="padding:8px 10px;font-weight:700;color:#1A1814">'+escaparHtml(g.cliente)+
+        (productosCoincidentes.length ? '<div style="font-weight:400;font-size:0.7rem;color:#8A8479;white-space:normal">coincide en: '+escaparHtml(productosCoincidentes.join(', '))+'</div>' : '')+
+      '</td>'+
+      '<td style="padding:8px 10px;text-align:right;font-weight:600">'+formatearMoneda(g.totalVendido)+'</td>'+
+      '<td style="padding:8px 10px;text-align:right;font-weight:700;color:'+(g.totalPendiente>0?'#B45309':'#2D6A4F')+'">'+formatearMoneda(g.totalPendiente)+'</td>'+
+      '<td style="padding:8px 10px;text-align:right">'+g.remitos.length+'</td>'+
+      inputsInfo+
+    '</tr>';
 
     if(expandido){
-      html += '<div style="border-top:1px solid #E2DDD6;padding:12px 14px;background:#FDFCFA">';
+      html += '<tr><td colspan="8" style="padding:0;border-bottom:1px solid #F0EDE7">'+
+        '<div style="padding:12px 14px;background:#FDFCFA;white-space:normal">';
       g.remitos.forEach(function(rem){
         var totalRem = (rem.renglones||[]).reduce(function(a,r){ return a+(r.subtotal||0); },0);
         var remTieneProductoBuscado = matchPorProducto && (rem.renglones||[]).some(function(r){ return (r.producto||'').toUpperCase().indexOf(q) !== -1; });
@@ -4761,11 +4816,10 @@ function renderHistorialRemitos(){
         }
         html += '</div>';
       });
-      html += '</div>';
+      html += '</div></td></tr>';
     }
-
-    html += '</div>';
   });
+  html += '</tbody></table></div>';
   cont.innerHTML = html;
 
   var contEstadisticas = document.getElementById('remito-estadisticas-mensuales');
@@ -4793,11 +4847,13 @@ function setCantidadPagadaRenglon(remId, idx, nuevaCantidad){
 }
 
 document.addEventListener('click', function(e){
-  var header = e.target.closest('.remito-cliente-header');
+  var header = e.target.closest('.fila-cliente-tabla');
   var fechaHeader = e.target.closest('.remito-fecha-header');
   var delRem = e.target.closest('.btn-del-remito');
   var reimpRem = e.target.closest('.btn-reimprimir-remito');
   var btnTodo = e.target.closest('.btn-pagado-todo');
+
+  if(e.target.closest('.info-cliente-campo')) return;
 
   if(btnTodo){
     setCantidadPagadaRenglon(btnTodo.dataset.remid, parseInt(btnTodo.dataset.idx,10), parseFloat(btnTodo.dataset.canttotal));
@@ -4832,6 +4888,11 @@ document.addEventListener('change', function(e){
   var inp = e.target.closest('.inp-cant-pagada');
   if(inp){
     setCantidadPagadaRenglon(inp.dataset.remid, parseInt(inp.dataset.idx,10), parseFloat(inp.value));
+    return;
+  }
+  var infoInp = e.target.closest('.info-cliente-campo');
+  if(infoInp){
+    guardarInfoCliente(infoInp.dataset.cliente, infoInp.dataset.campo, infoInp.value.trim());
   }
 });
 
