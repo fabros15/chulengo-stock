@@ -2019,7 +2019,15 @@ function cerrarHerramienta(){
 
         <div id="remito-resumen-global" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem"></div>
 
-        <input id="remito-historial-search" type="text" placeholder="Buscar cliente..." oninput="renderHistorialRemitos()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;margin-bottom:1rem">
+        <div style="background:#fff;border:1px solid #E2DDD6;border-radius:12px;margin-bottom:1.25rem;overflow:hidden">
+          <div onclick="toggleEstadisticasMensuales()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem">
+            <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif">Estadísticas mensuales</div>
+            <div id="chevron-estadisticas-mensuales" style="font-size:0.8rem;font-weight:600;color:#2D6A4F;font-family:'Inter',sans-serif">Ver ▾</div>
+          </div>
+          <div id="remito-estadisticas-mensuales" style="display:none;padding:0 1.25rem 1.25rem"></div>
+        </div>
+
+        <input id="remito-historial-search" type="text" placeholder="Buscar por cliente o por producto..." oninput="renderHistorialRemitos()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;margin-bottom:1rem">
 
         <div id="remito-historial-clientes">
           <div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center">
@@ -4168,6 +4176,36 @@ function inicializarRemito(){
   actualizarPreviewRemito();
 }
 
+function usarRemitoHistorial(remId){
+  var rem = remitosHistorialCache.find(function(r){ return r.id === remId; });
+  if(!rem) return;
+
+  document.getElementById('remito-nombre').value = (rem.cliente||'').toUpperCase();
+
+  var partesFecha = (rem.fechaEntrega||'').split('/');
+  if(partesFecha.length === 3){
+    document.getElementById('remito-dia').value = parseInt(partesFecha[0],10) || '';
+    document.getElementById('remito-mes').value = parseInt(partesFecha[1],10) || '';
+    document.getElementById('remito-anio').value = parseInt(partesFecha[2],10) || '';
+  }
+
+  remitoRenglones = (rem.renglones||[]).map(function(r){
+    return {
+      producto: r.producto || '',
+      cantidad: String(r.cantidad || ''),
+      unidad: r.unidad || '',
+      precio: (r.precio || r.precio===0) ? String(r.precio) : '',
+      bonif: (r.bonif || r.bonif===0) ? String(r.bonif) : ''
+    };
+  });
+  if(!remitoRenglones.length){ remitoRenglones.push({producto:'',cantidad:'',unidad:'',precio:'',bonif:''}); }
+  remitoRenglones.push({producto:'',cantidad:'',unidad:'',precio:'',bonif:''});
+
+  renderRemitoForm();
+  actualizarPreviewRemito();
+  document.getElementById('remito-grid-principal').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
 function toggleMarcaRemitoForm(){
   var campos = document.getElementById('remito-marca-campos');
   var chevron = document.getElementById('chevron-marca-remito');
@@ -4508,6 +4546,64 @@ function cargarHistorialRemitos(){
     });
 }
 
+function toggleEstadisticasMensuales(){
+  var cont = document.getElementById('remito-estadisticas-mensuales');
+  var chevron = document.getElementById('chevron-estadisticas-mensuales');
+  var abierto = cont.style.display !== 'none';
+  cont.style.display = abierto ? 'none' : 'block';
+  chevron.textContent = abierto ? 'Ver ▾' : 'Ocultar ▴';
+  if(!abierto) renderEstadisticasMensuales();
+}
+
+function renderEstadisticasMensuales(){
+  var cont = document.getElementById('remito-estadisticas-mensuales');
+  if(!cont) return;
+
+  var meses = {};
+  remitosHistorialCache.forEach(function(rem){
+    if(!rem.fecha) return;
+    var fecha = rem.fecha.toDate ? rem.fecha.toDate() : new Date(rem.fecha);
+    var key = fecha.getFullYear()+'-'+String(fecha.getMonth()+1).padStart(2,'0');
+    if(!meses[key]){
+      meses[key] = { key:key, fecha:fecha, vendido:0, cobrado:0, remitos:0 };
+    }
+    meses[key].remitos++;
+    (rem.renglones||[]).forEach(function(r){
+      var pago = calcularPagoRenglon(r);
+      meses[key].vendido += (r.subtotal||0);
+      meses[key].cobrado += pago.montoPagado;
+    });
+  });
+
+  var lista = Object.values(meses).sort(function(a,b){ return b.key.localeCompare(a.key); });
+
+  if(!lista.length){
+    cont.innerHTML = '<div style="font-size:0.85rem;color:#8A8479;font-family:\'Inter\',sans-serif;text-align:center;padding:1rem 0">Todavía no hay datos suficientes.</div>';
+    return;
+  }
+
+  var maxVendido = Math.max.apply(null, lista.map(function(m){ return m.vendido; }));
+
+  var html = '<div style="display:flex;flex-direction:column;gap:14px;margin-top:0.5rem">';
+  lista.forEach(function(m){
+    var nombreMes = m.fecha.toLocaleDateString('es-AR',{month:'long',year:'numeric'});
+    nombreMes = nombreMes.charAt(0).toUpperCase()+nombreMes.slice(1);
+    var pct = maxVendido>0 ? Math.round((m.vendido/maxVendido)*100) : 0;
+    html +=
+      '<div>'+
+        '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:0.82rem;font-family:\'Inter\',sans-serif;margin-bottom:5px">'+
+          '<span style="font-weight:700;color:#1A1814">'+nombreMes+'</span>'+
+          '<span style="color:#8A8479">'+m.remitos+' remito'+(m.remitos!==1?'s':'')+' · <b style="color:#1A1814">'+formatearMoneda(m.vendido)+'</b> vendido · <span style="color:#2D6A4F">'+formatearMoneda(m.cobrado)+'</span> cobrado</span>'+
+        '</div>'+
+        '<div style="background:#F0EDE7;border-radius:6px;height:8px;overflow:hidden">'+
+          '<div style="background:#2D6A4F;height:100%;width:'+pct+'%"></div>'+
+        '</div>'+
+      '</div>';
+  });
+  html += '</div>';
+  cont.innerHTML = html;
+}
+
 function agruparRemitosPorCliente(){
   var mapa = {};
   remitosHistorialCache.forEach(function(rem){
@@ -4580,7 +4676,15 @@ function renderHistorialRemitos(){
   }
 
   var q = (document.getElementById('remito-historial-search').value||'').trim().toUpperCase();
-  var filtrados = grupos.filter(function(g){ return !q || g.cliente.indexOf(q) !== -1; });
+  var filtrados = grupos.filter(function(g){
+    if(!q) return true;
+    if(g.cliente.indexOf(q) !== -1) return true;
+    return g.remitos.some(function(rem){
+      return (rem.renglones||[]).some(function(r){
+        return (r.producto||'').toUpperCase().indexOf(q) !== -1;
+      });
+    });
+  });
 
   if(!filtrados.length){
     cont.innerHTML = '<div style="background:#F5F2ED;border-radius:10px;padding:2rem;text-align:center"><div style="font-size:0.875rem;color:#8A8479;font-family:\'Inter\',sans-serif">Sin resultados para esa búsqueda.</div></div>';
@@ -4589,12 +4693,25 @@ function renderHistorialRemitos(){
 
   var html = '';
   filtrados.forEach(function(g){
-    var expandido = (remitoClienteExpandido === g.cliente);
+    var matchPorProducto = q && g.cliente.indexOf(q) === -1;
+    var expandido = (remitoClienteExpandido === g.cliente) || matchPorProducto;
+    var productosCoincidentes = [];
+    if(matchPorProducto){
+      g.remitos.forEach(function(rem){
+        (rem.renglones||[]).forEach(function(r){
+          if((r.producto||'').toUpperCase().indexOf(q) !== -1 && productosCoincidentes.indexOf(r.producto) === -1){
+            productosCoincidentes.push(r.producto);
+          }
+        });
+      });
+    }
     html += '<div style="background:#fff;border:1px solid #E2DDD6;border-radius:10px;margin-bottom:10px;overflow:hidden">';
     html += '<div class="remito-cliente-header" data-cliente="'+escaparAttr(g.cliente)+'" style="padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px">'+
       '<div>'+
         '<div style="font-weight:700;font-size:0.92rem;font-family:\'Inter\',sans-serif;color:#1A1814">'+escaparHtml(g.cliente)+'</div>'+
-        '<div style="font-size:0.72rem;color:#8A8479;font-family:\'Inter\',sans-serif">'+g.remitos.length+' remito'+(g.remitos.length!==1?'s':'')+'</div>'+
+        '<div style="font-size:0.72rem;color:#8A8479;font-family:\'Inter\',sans-serif">'+g.remitos.length+' remito'+(g.remitos.length!==1?'s':'')+
+          (productosCoincidentes.length ? ' · coincide en: '+escaparHtml(productosCoincidentes.join(', ')) : '')+
+        '</div>'+
       '</div>'+
       '<div style="text-align:right;display:flex;align-items:center;gap:14px">'+
         '<div>'+
@@ -4609,11 +4726,13 @@ function renderHistorialRemitos(){
       html += '<div style="border-top:1px solid #E2DDD6;padding:12px 14px;background:#FDFCFA">';
       g.remitos.forEach(function(rem){
         var totalRem = (rem.renglones||[]).reduce(function(a,r){ return a+(r.subtotal||0); },0);
-        var remExpandido = remitosExpandidosIds.indexOf(rem.id) !== -1;
+        var remTieneProductoBuscado = matchPorProducto && (rem.renglones||[]).some(function(r){ return (r.producto||'').toUpperCase().indexOf(q) !== -1; });
+        var remExpandido = remitosExpandidosIds.indexOf(rem.id) !== -1 || remTieneProductoBuscado;
         html += '<div style="margin-bottom:10px;border:1px solid #E2DDD6;border-radius:8px;overflow:hidden;background:#fff">';
         html += '<div class="remito-fecha-header" data-remid="'+rem.id+'" style="padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">'+
           '<span style="font-size:0.8rem;font-weight:700;font-family:\'Inter\',sans-serif;display:flex;align-items:center;gap:6px"><span style="color:#8A8479">'+(remExpandido?'▾':'▸')+'</span> Remito del '+(rem.fechaEntrega||'—')+'</span>'+
           '<span style="display:flex;align-items:center;gap:8px;font-size:0.8rem;font-family:\'Inter\',sans-serif;font-weight:700">Total: '+formatearMoneda(totalRem)+
+            ' <button data-remid="'+rem.id+'" class="btn-reimprimir-remito" style="padding:3px 9px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.68rem;font-weight:600;cursor:pointer">Reimprimir</button>'+
             ' <button data-remid="'+rem.id+'" class="btn-del-remito" style="padding:3px 7px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;font-size:0.68rem;cursor:pointer">🗑</button></span>'+
         '</div>';
 
@@ -4648,6 +4767,11 @@ function renderHistorialRemitos(){
     html += '</div>';
   });
   cont.innerHTML = html;
+
+  var contEstadisticas = document.getElementById('remito-estadisticas-mensuales');
+  if(contEstadisticas && contEstadisticas.style.display !== 'none'){
+    renderEstadisticasMensuales();
+  }
 }
 
 function setCantidadPagadaRenglon(remId, idx, nuevaCantidad){
@@ -4672,10 +4796,15 @@ document.addEventListener('click', function(e){
   var header = e.target.closest('.remito-cliente-header');
   var fechaHeader = e.target.closest('.remito-fecha-header');
   var delRem = e.target.closest('.btn-del-remito');
+  var reimpRem = e.target.closest('.btn-reimprimir-remito');
   var btnTodo = e.target.closest('.btn-pagado-todo');
 
   if(btnTodo){
     setCantidadPagadaRenglon(btnTodo.dataset.remid, parseInt(btnTodo.dataset.idx,10), parseFloat(btnTodo.dataset.canttotal));
+    return;
+  }
+  if(reimpRem){
+    usarRemitoHistorial(reimpRem.dataset.remid);
     return;
   }
   if(delRem){
