@@ -168,7 +168,15 @@ function handleSVGDrop(e){
   if(f&&f.type.startsWith('image/')) cargarImagenSVG(f);
 }
 
+function elegirParteSVG(usarFondo, sinConvertir){
+  var chk=document.getElementById('svg-invertir'); if(chk) chk.checked=!!usarFondo;
+  var bd=document.getElementById('svg-parte-dibujo'), bf=document.getElementById('svg-parte-fondo');
+  if(bd) bd.classList.toggle('activo',!usarFondo);
+  if(bf) bf.classList.toggle('activo',!!usarFondo);
+  if(!sinConvertir && window._svgDataURL) convertirASVG();
+}
 function onCambioModoSVG(){
+  return;
   var modo=document.getElementById('svg-modo').value;
   var wrapUmbral=document.getElementById('svg-umbral-wrap');
   var wrapColores=document.getElementById('svg-colores-wrap');
@@ -189,6 +197,8 @@ function cargarImagenSVG(file){
     ['svg-resultado-wrap','svg-guardado-msg'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display='none';});
     var ph=document.getElementById('svg-resultado-placeholder');if(ph)ph.style.display='flex';
     svgActual=null;
+    elegirParteSVG(false, true);
+    setTimeout(convertirASVG, 50);
   };
   reader.readAsDataURL(file);
 }
@@ -241,6 +251,80 @@ function limpiarFondoSVG(svgStr){
   }
 }
 
+// Separa automáticamente el DIBUJO del FONDO, sin que el usuario toque nada.
+// 1) Si la imagen ya tiene fondo transparente, el dibujo es lo que no es transparente.
+// 2) Si no, agrupa los colores de la imagen (k-means) y toma como "fondo" los
+//    grupos de colores que aparecen en los bordes de la imagen. Así un fondo
+//    en degradé, de color o con textura queda vacío entero, y el dibujo es todo
+//    lo que tiene colores distintos al borde (aunque esté encerrado por líneas).
+// Devuelve un Uint8Array con 1 = dibujo, 0 = fondo.
+function detectarDibujo(d,w,h){
+  var N=w*h, mask=new Uint8Array(N), i, p;
+  var borde=[];
+  var paso=Math.max(1,Math.floor((w+h)/400));
+  for(var x=0;x<w;x+=paso){ borde.push(x); borde.push((h-1)*w+x); }
+  for(var y=0;y<h;y+=paso){ borde.push(y*w); borde.push(y*w+w-1); }
+
+  // 1) Transparencia
+  var transpBorde=0; for(i=0;i<borde.length;i++) if(d[borde[i]*4+3]<128) transpBorde++;
+  if(transpBorde>borde.length*0.5){
+    for(p=0;p<N;p++) mask[p]=d[p*4+3]>=128?1:0;
+    return suavizarMascara(mask,null,w,h);
+  }
+
+  // 2) Agrupar colores (sobre fondo blanco para píxeles semitransparentes)
+  function col(p){ var a=d[p*4+3]/255; return [d[p*4]*a+255*(1-a), d[p*4+1]*a+255*(1-a), d[p*4+2]*a+255*(1-a)]; }
+  var muestras=[], salto=Math.max(1,Math.floor(N/25000));
+  for(p=0;p<N;p+=salto) muestras.push(col(p));
+  for(i=0;i<borde.length;i++) muestras.push(col(borde[i]));
+  var K=6, cent=[muestras[0]];
+  function d2(a,b){ var r=a[0]-b[0],g=a[1]-b[1],bb=a[2]-b[2]; return r*r+g*g+bb*bb; }
+  while(cent.length<K){ // el siguiente centro = la muestra más lejana a los existentes
+    var mejor=-1,mejorD=-1;
+    for(i=0;i<muestras.length;i+=3){ var md=Infinity; for(var c=0;c<cent.length;c++) md=Math.min(md,d2(muestras[i],cent[c])); if(md>mejorD){mejorD=md;mejor=i;} }
+    if(mejorD<1) break; cent.push(muestras[mejor].slice());
+  }
+  K=cent.length;
+  for(var it=0;it<12;it++){
+    var suma=cent.map(function(){return [0,0,0,0];});
+    for(i=0;i<muestras.length;i++){ var m=muestras[i], bi=0, bd=Infinity; for(var c=0;c<K;c++){ var dd=d2(m,cent[c]); if(dd<bd){bd=dd;bi=c;} } suma[bi][0]+=m[0];suma[bi][1]+=m[1];suma[bi][2]+=m[2];suma[bi][3]++; }
+    for(var c=0;c<K;c++) if(suma[c][3]) cent[c]=[suma[c][0]/suma[c][3],suma[c][1]/suma[c][3],suma[c][2]/suma[c][3]];
+  }
+  function cercano(m){ var bi=0,bd=Infinity; for(var c=0;c<K;c++){ var dd=d2(m,cent[c]); if(dd<bd){bd=dd;bi=c;} } return bi; }
+  var enBorde=new Array(K).fill(0);
+  for(i=0;i<borde.length;i++) enBorde[cercano(col(borde[i]))]++;
+  var esFondo=enBorde.map(function(n){ return n>borde.length*0.03; });
+  // Un grupo muy parecido a un color de fondo también es fondo (degradés)
+  for(var c=0;c<K;c++) if(!esFondo[c]) for(var f=0;f<K;f++) if(esFondo[f] && d2(cent[c],cent[f])<35*35) esFondo[c]=true;
+  if(esFondo.every(Boolean)) { // no hay nada distinto al borde: tomar el grupo menos presente en el borde
+    var menor=0; for(var c=1;c<K;c++) if(enBorde[c]<enBorde[menor]) menor=c; esFondo[menor]=false;
+  }
+  var cf=cent.filter(function(_,c){return esFondo[c];}), cd=cent.filter(function(_,c){return !esFondo[c];});
+  // Valor suave 0..1 (cuán "dibujo" es cada píxel) para bordes prolijos
+  var suave=new Float32Array(N);
+  for(p=0;p<N;p++){
+    var m=col(p), df=Infinity, dd2=Infinity;
+    for(i=0;i<cf.length;i++) df=Math.min(df,d2(m,cf[i]));
+    for(i=0;i<cd.length;i++) dd2=Math.min(dd2,d2(m,cd[i]));
+    df=Math.sqrt(df); dd2=Math.sqrt(dd2);
+    suave[p]=(df+dd2)>0 ? df/(df+dd2) : 0;
+  }
+  return suavizarMascara(null,suave,w,h);
+}
+
+// Desenfoque 3x3 y corte en 0.5: saca el serrucho de los bordes sin perder forma
+function suavizarMascara(mask,suave,w,h){
+  var N=w*h, v=suave||new Float32Array(N), out=new Uint8Array(N);
+  if(!suave) for(var p=0;p<N;p++) v[p]=mask[p];
+  for(var y=0;y<h;y++) for(var x=0;x<w;x++){
+    var s=0,n=0;
+    for(var dy=-1;dy<=1;dy++){ var yy=y+dy; if(yy<0||yy>=h) continue;
+      for(var dx=-1;dx<=1;dx++){ var xx=x+dx; if(xx<0||xx>=w) continue; s+=v[yy*w+xx]; n++; } }
+    out[y*w+x]= (s/n)>0.5 ? 1 : 0;
+  }
+  return out;
+}
+
 function convertirASVG(){
   var dataURL=window._svgDataURL;
   if(!dataURL){alert('Primero seleccioná una imagen.');return;}
@@ -250,27 +334,26 @@ function convertirASVG(){
 
   var img=new Image();
   img.onload=function(){
-    // Limitamos el tamaño de trabajo para que el trazado sea rápido y prolijo
-    var maxPx=900, scale=Math.min(maxPx/img.width,maxPx/img.height,1);
-    var w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+    // Tamaño de trabajo ~1000 px (agranda imágenes chicas para bordes más suaves)
+    var objetivo=1000, scale=Math.min(objetivo/img.width,objetivo/img.height,4);
+    var w=Math.max(1,Math.round(img.width*scale)), h=Math.max(1,Math.round(img.height*scale));
     var canvas=document.createElement('canvas');
     canvas.width=w; canvas.height=h;
     var ctx=canvas.getContext('2d');
-    ctx.fillStyle='#ffffff';
-    ctx.fillRect(0,0,w,h);
+    ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
     ctx.drawImage(img,0,0,w,h);
 
     var modo=(document.getElementById('svg-modo')||{value:'bn'}).value;
     var detalleKey=(document.getElementById('svg-detalle')||{value:'medio'}).value;
     var detalle=SVG_DETALLE_PRESETS[detalleKey]||SVG_DETALLE_PRESETS.medio;
     var invertir=(document.getElementById('svg-invertir')||{checked:false}).checked;
-    var suavizadoNivel=parseInt((document.getElementById('svg-suavizado')||{value:3}).value)||0;
+    var suavizadoNivel=parseInt((document.getElementById('svg-suavizado')||{value:6}).value)||0;
     var tres=suavizadoATresholds(suavizadoNivel);
 
     var options={
       ltres: tres,
       qtres: tres,
-      pathomit: detalle.pathomit,
+      pathomit: Math.round(detalle.pathomit*2),
       rightangleenhance: false,
       scale: 1,
       strokewidth: 0,
@@ -282,24 +365,20 @@ function convertirASVG(){
 
     try{
       if(modo==='bn'){
-        // Blanco y negro: convertimos a escala de grises con alpha graduado según el
-        // umbral (no binarizamos 100% duro), así el blurradius de ImageTracer tiene
-        // gradientes reales para suavizar y generar curvas en vez de escalones.
-        var umbral=parseInt((document.getElementById('svg-umbral')||{value:128}).value)||128;
+        // Detecta solo qué es fondo y qué es dibujo (ver detectarDibujo)
         var id=ctx.getImageData(0,0,w,h), d=id.data;
-        for(var i=0;i<d.length;i+=4){
-          var bright=(d[i]+d[i+1]+d[i+2])/3;
-          var esOscuro = bright<umbral;
-          if(invertir) esOscuro = !esOscuro;
-          d[i]=0; d[i+1]=0; d[i+2]=0; d[i+3]=esOscuro?255:0;
+        var mascara=detectarDibujo(d,w,h);
+        for(var i=0,px=0;i<d.length;i+=4,px++){
+          var esDibujo = mascara[px]===1;
+          if(invertir) esDibujo = !esDibujo;
+          d[i]=0; d[i+1]=0; d[i+2]=0; d[i+3]=esDibujo?255:0;
         }
         ctx.putImageData(id,0,0);
         options.pal=[{r:0,g:0,b:0,a:0},{r:0,g:0,b:0,a:255}];
         options.numberofcolors=2;
         options.colorsampling=0;
       } else {
-        // A color: quitamos el fondo blanco (o casi blanco) volviéndolo transparente
-        // antes de vectorizar, así no queda como un color más de la paleta.
+        ctx.globalCompositeOperation='destination-over'; ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h);
         var numColores=parseInt((document.getElementById('svg-colores')||{value:8}).value)||8;
         options.numberofcolors=numColores;
         options.colorsampling=2;
@@ -347,7 +426,7 @@ function mostrarResultadoSVG(svgStr,w,h){
     preview.appendChild(div);
   }
   var info=document.getElementById('svg-info');
-  if(info) info.innerHTML='<b>Tamaño:</b> '+kb+' KB<br><b>Dimensiones:</b> '+w+' x '+h+' px<br><b>Archivo:</b> '+svgNombreArchivo+'.svg<br><b>Fondo:</b> transparente';
+  if(info) info.innerHTML='<b>Tamaño:</b> '+kb+' KB<br><b>Dimensiones:</b> '+w+' x '+h+' px<br><b>Archivo:</b> '+svgNombreArchivo+'.svg<br><b>Fondo:</b> vacío (listo para el slicer)';
   var show=function(id,v){var e=document.getElementById(id);if(e)e.style.display=v;};
   show('svg-resultado-wrap','block');
   show('svg-resultado-placeholder','none');
@@ -806,6 +885,11 @@ body.dark .home-help{background:#1A1A1A;border:1px solid #2A2A2A}
   .home-card{min-height:0}
   .home-help{flex-direction:column;align-items:stretch;text-align:center}
 }
+.svg-seg{display:flex;background:#F5F2ED;border:1px solid #E2DDD6;border-radius:10px;padding:3px;gap:3px}
+.svg-seg-btn{flex:1;padding:9px 10px;border:none;background:transparent;border-radius:8px;font-size:0.85rem;font-weight:600;color:#6B655C;cursor:pointer;font-family:Inter,sans-serif}
+.svg-seg-btn.activo{background:#fff;color:#1A1814;box-shadow:0 1px 3px rgba(0,0,0,0.12)}
+body.dark .svg-seg{background:#1A1A1A;border-color:#2A2A2A}
+body.dark .svg-seg-btn.activo{background:#2A2A2A;color:#FAFAFA}
 .page{display:none}
 .page.active{display:block}
 .filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.75rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
@@ -1788,7 +1872,7 @@ function cerrarHerramienta(){
         <button onclick="cerrarHerramienta()" style="background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;padding:7px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;color:#1A1814;display:flex;align-items:center;gap:6px">← Volver</button>
         <div>
           <div style="font-size:1.1rem;font-weight:800;color:#1A1814;font-family:Inter,sans-serif">Imagen a SVG</div>
-          <div style="font-size:0.78rem;color:#8A8479;font-family:Inter,sans-serif">Convertí PNG, JPG o GIF a vectores SVG para grabado láser o corte</div>
+          <div style="font-size:0.78rem;color:#8A8479;font-family:Inter,sans-serif">Subí un logo o dibujo y bajalo en SVG listo para el slicer, láser o corte</div>
         </div>
       </div>
 
@@ -1815,46 +1899,23 @@ function cerrarHerramienta(){
           <div id="svg-opciones" style="display:none;background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.25rem">
             <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:Inter,sans-serif;margin-bottom:1rem">Opciones de conversión</div>
 
-            <div style="margin-bottom:0.875rem">
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Inter,sans-serif;display:block;margin-bottom:5px">Modo</label>
-              <select id="svg-modo" onchange="onCambioModoSVG()" style="width:100%;padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:Inter,sans-serif;background:#F9F9F9;color:#1A1814;outline:none">
-                <option value="bn" selected>Blanco y negro (logo / láser / corte)</option>
-                <option value="color">A color (varios colores)</option>
-              </select>
+            <div style="font-size:0.82rem;color:#6B655C;font-family:Inter,sans-serif;line-height:1.5;margin-bottom:0.875rem">Detectamos solos el fondo y lo dejamos vacío. Si salió al revés, tocá <b>Usar el fondo</b>.</div>
+
+            <div style="margin-bottom:1rem">
+              <div style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Inter,sans-serif;margin-bottom:6px">¿Qué parte querés convertir?</div>
+              <div class="svg-seg" role="radiogroup">
+                <button type="button" id="svg-parte-dibujo" class="svg-seg-btn activo" onclick="elegirParteSVG(false)">El dibujo</button>
+                <button type="button" id="svg-parte-fondo" class="svg-seg-btn" onclick="elegirParteSVG(true)">Usar el fondo</button>
+              </div>
+              <input type="checkbox" id="svg-invertir" style="display:none">
             </div>
 
-            <div id="svg-umbral-wrap" style="margin-bottom:0.875rem">
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Inter,sans-serif;display:block;margin-bottom:5px">Umbral blanco/negro <span id="svg-umbral-val" style="color:#2D6A4F">128</span> / 255</label>
-              <input type="range" id="svg-umbral" min="10" max="245" value="128" oninput="document.getElementById('svg-umbral-val').textContent=this.value" style="width:100%;accent-color:#2D6A4F;margin-bottom:4px">
-              <div style="font-size:0.7rem;color:#8A8479;font-family:Inter,sans-serif">Subí el valor para que quede más negro, bajalo para que quede más blanco.</div>
-            </div>
+            <!-- Valores fijos (antes eran opciones; se dejan ocultos para no complicar) -->
+            <select id="svg-modo" style="display:none"><option value="bn" selected>bn</option><option value="color">color</option></select>
+            <select id="svg-detalle" style="display:none"><option value="medio" selected>medio</option></select>
+            <input type="range" id="svg-suavizado" min="0" max="10" value="6" style="display:none">
 
-            <div id="svg-colores-wrap" style="margin-bottom:0.875rem;display:none">
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Inter,sans-serif;display:block;margin-bottom:5px">Número de colores <span id="svg-colores-val" style="color:#2D6A4F">8</span></label>
-              <input type="range" id="svg-colores" min="2" max="24" value="8" oninput="document.getElementById('svg-colores-val').textContent=this.value" style="width:100%;accent-color:#2D6A4F">
-            </div>
-
-            <div style="margin-bottom:0.875rem">
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Inter,sans-serif;display:block;margin-bottom:5px">Nivel de detalle</label>
-              <select id="svg-detalle" style="width:100%;padding:8px 12px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.85rem;font-family:Inter,sans-serif;background:#F9F9F9;color:#1A1814;outline:none">
-                <option value="bajo">Bajo (trazos simples, ideal para láser)</option>
-                <option value="medio" selected>Medio (recomendado)</option>
-                <option value="alto">Alto (más fiel al original, más nodos)</option>
-              </select>
-            </div>
-
-            <div style="margin-bottom:0.875rem">
-              <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Inter,sans-serif;display:block;margin-bottom:5px">Suavizado de bordes <span id="svg-suavizado-val" style="color:#2D6A4F">6</span> / 10</label>
-              <input type="range" id="svg-suavizado" min="0" max="10" value="6" oninput="document.getElementById('svg-suavizado-val').textContent=this.value" style="width:100%;accent-color:#2D6A4F;margin-bottom:4px">
-              <div style="font-size:0.7rem;color:#8A8479;font-family:Inter,sans-serif">0 = sigue el píxel tal cual (bordes "serrucho"). Subí el valor para curvas más redondeadas y suaves.</div>
-            </div>
-
-            <div style="margin-bottom:1rem;display:flex;align-items:center;gap:8px">
-              <input type="checkbox" id="svg-invertir" style="width:16px;height:16px;accent-color:#2D6A4F">
-              <label for="svg-invertir" style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:Inter,sans-serif;cursor:pointer">Invertir (negro ↔ blanco)</label>
-            </div>
-
-            <button id="btn-convertir" onclick="convertirASVG()" style="width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
+            <button id="btn-convertir" onclick="convertirASVG()" style="display:none !important;width:100%;padding:12px;background:#2D6A4F;color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
               Convertir a SVG
             </button>
           </div>
