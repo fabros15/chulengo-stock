@@ -2004,7 +2004,7 @@ function cerrarHerramienta(){
                   <div style="font-size:0.7rem;font-weight:700;margin-bottom:8px">REMITENTE</div>
                   <div style="font-size:1.1rem;font-weight:700;text-align:center;margin-bottom:10px;word-break:break-word" id="prev-rem-nombre">FABRIZIO JARA</div>
                   <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-weight:600">
-                    <span>TEL:&nbsp;<span id="prev-rem-tel">2804585359</span></span>
+                    <span>TEL:&nbsp;<span id="prev-rem-tel">2805064128</span></span>
                     <span>DNI:&nbsp;<span id="prev-rem-dni">46405539</span></span>
                   </div>
                 </div>
@@ -2794,7 +2794,7 @@ function renderItemsPresupuesto(){
 function limpiarPresupuesto(){ if(itemsPresupuesto.length > 0 && !confirm('¿Limpiar todos los ítems?')) return; itemsPresupuesto = []; renderItemsPresupuesto(); }
 
 var DATA=[], FILTERED=[], FUSE=null;
-var WA='5492804585359';
+var WA='5492805064128';
 var IMG_PLACEHOLDER='data:image/svg+xml;charset=utf-8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect width=%22200%22 height=%22200%22 fill=%22%23F4F4F5%22/><text x=%22100%22 y=%22108%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2213%22 fill=%22%23A1A1AA%22>Sin foto</text></svg>';
 var COLORS={'amarillo':'#FFD600','azul':'#1E88E5','blanco':'#E0E0E0','negro':'#212121','verde':'#43A047','rojo':'#E53935','naranja':'#FB8C00','rosa':'#E91E63','marron':'#6D4C41','violeta':'#8E24AA','gris':'#9E9E9E','plateado':'#B0BEC5','dorado':'#FFA000','celeste':'#4FC3F7','multicolor':'#CCCCCC','transparente':'#E3F2FD','surtido':'#CCCCCC'};
 
@@ -3669,9 +3669,9 @@ function setQRTipo(btn, tipo){
   var hint = document.getElementById('qr-input-hint');
   var configs = {
     'url':    { label:'URL o link', placeholder:'https://...', hint:'Cualquier dirección web' },
-    'wa':     { label:'Número de WhatsApp', placeholder:'+54 9 280 4585359', hint:'Con código de país. El QR abrirá un chat directo en WhatsApp.' },
+    'wa':     { label:'Número de WhatsApp', placeholder:'+54 9 280 5064128', hint:'Con código de país. El QR abrirá un chat directo en WhatsApp.' },
     'ig':     { label:'Usuario de Instagram', placeholder:'@chulengoestudio', hint:'Solo el usuario, sin el link completo.' },
-    'tel':    { label:'Número de teléfono', placeholder:'+54 9 280 4585359', hint:'Con código de país' },
+    'tel':    { label:'Número de teléfono', placeholder:'+54 9 280 5064128', hint:'Con código de país' },
     'texto':  { label:'Texto libre', placeholder:'Hola! Somos Chulengo Estudio...', hint:'Cualquier texto que quieras codificar' },
   };
   var c = configs[tipo];
@@ -3998,7 +3998,7 @@ document.addEventListener('click', function(e){
 function aplicarPresetQR(tipo){
   var input = document.getElementById('qr-input');
   var presets = {
-    'wa':  'https://wa.me/5492804585359',
+    'wa':  'https://wa.me/5492805064128',
     'web': 'https://fabros15.github.io/chulengo-stock/'
   };
   // Set to URL mode
@@ -4272,7 +4272,7 @@ function usarEtiquetaHistorial(id){
   document.getElementById('etiq-destino').value = d.destino||'TRELEW';
   document.getElementById('etiq-contenido').value = d.contenido||'';
   document.getElementById('etiq-rem-nombre').value = d.remNombre||'FABRIZIO JARA';
-  document.getElementById('etiq-rem-tel').value = d.remTel||'2804585359';
+  document.getElementById('etiq-rem-tel').value = d.remTel||'2805064128';
   document.getElementById('etiq-rem-dni').value = d.remDni||'46405539';
   actualizarPreviewEtiqueta();
   document.getElementById('etiq-similar-aviso').style.display='none';
