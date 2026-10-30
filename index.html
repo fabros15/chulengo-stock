@@ -890,6 +890,21 @@ body.dark .home-help{background:#1A1A1A;border:1px solid #2A2A2A}
 .svg-seg-btn.activo{background:#fff;color:#1A1814;box-shadow:0 1px 3px rgba(0,0,0,0.12)}
 body.dark .svg-seg{background:#1A1A1A;border-color:#2A2A2A}
 body.dark .svg-seg-btn.activo{background:#2A2A2A;color:#FAFAFA}
+.uocra{display:flex;align-items:flex-start;justify-content:center;margin:0 auto 1.75rem;height:190px}
+.uocra-palo{width:8px;height:190px;background:linear-gradient(90deg,#8A8479,#D4CFC8,#8A8479);border-radius:4px;flex-shrink:0;position:relative;z-index:1}
+.uocra-palo:before{content:"";position:absolute;top:-8px;left:-4px;width:16px;height:16px;border-radius:50%;background:#B8B2A8}
+.uocra-bandera{width:300px;height:170px;margin-left:-2px;background:linear-gradient(100deg,#D9F21C 0%,#E8FF3A 30%,#C9E312 55%,#E4FB30 80%,#D2EC18 100%);background-size:200% 100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Inter,"Arial Black",sans-serif;color:#141414;
+  box-shadow:0 6px 18px rgba(0,0,0,0.18);transform-origin:left center;animation:uocraFlamea 3.2s ease-in-out infinite;
+  clip-path:polygon(0 0,100% 3%,98% 50%,100% 97%,0 100%)}
+.uocra-txt1{font-size:3.6rem;font-weight:900;letter-spacing:0.02em;line-height:1;transform:scaleY(1.15)}
+.uocra-txt2{font-size:1.85rem;font-weight:900;letter-spacing:0.04em;line-height:1;margin-top:12px;transform:scaleY(1.1)}
+@keyframes uocraFlamea{
+  0%,100%{transform:perspective(500px) rotateY(0deg) skewY(0deg);background-position:0% 0}
+  50%{transform:perspective(500px) rotateY(-12deg) skewY(-1.5deg);background-position:100% 0}
+}
+@media(prefers-reduced-motion:reduce){.uocra-bandera{animation:none}}
+@media(max-width:700px){.uocra{height:150px}.uocra-palo{height:150px}.uocra-bandera{width:230px;height:130px}.uocra-txt1{font-size:2.7rem}.uocra-txt2{font-size:1.4rem;margin-top:8px}}
 .page{display:none}
 .page.active{display:block}
 .filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.75rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
@@ -1439,7 +1454,13 @@ function cerrarHerramienta(){
 <!-- FILAMENTOS: EN CONSTRUCCIÓN -->
 <div class="page" id="page-filamentos">
   <div class="pronto-wrap">
-    <div class="pronto-icon">🚧</div>
+    <div class="uocra" aria-label="Bandera: UOCRA presente">
+      <div class="uocra-palo"></div>
+      <div class="uocra-bandera">
+        <div class="uocra-txt1">UOCRA</div>
+        <div class="uocra-txt2">PRESENTE</div>
+      </div>
+    </div>
     <h1>Filamentos: estamos en obra</h1>
     <p>Estamos actualizando el catálogo con precios y stock al día. Muy pronto lo vas a ver acá.</p>
     <p>Mientras tanto, si necesitás filamento, preguntanos por WhatsApp y te decimos qué hay.</p>
