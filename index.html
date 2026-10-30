@@ -23,6 +23,10 @@ firebase.initializeApp({
 });
 
 // Acceso exclusivo al generador de etiquetas de envío
+function actualizarTarjetasInicio(){
+  document.querySelectorAll('.solo-admin').forEach(function(el){ el.style.display = isAdmin() ? '' : 'none'; });
+  document.querySelectorAll('.solo-sin-sesion').forEach(function(el){ el.style.display = window.currentUser ? 'none' : ''; });
+}
 var ADMIN_EMAILS = ["fabriziomjara@gmail.com"];
 function isAdmin(){
   return !!(window.currentUser && window.currentUser.email && ADMIN_EMAILS.indexOf(window.currentUser.email.toLowerCase()) !== -1);
@@ -90,7 +94,9 @@ document.addEventListener('DOMContentLoaded', function(){
       if(!isAdmin() && document.getElementById('herramienta-etiquetas').style.display!=='none'){ cerrarHerramienta(); }
       var cardRemito = document.getElementById('card-remito');
       if(cardRemito) cardRemito.style.display = 'block';
+      actualizarTarjetasInicio();
     } else {
+      actualizarTarjetasInicio();
       if(btnSalir) btnSalir.style.display='none';
       if(btnEntrar) btnEntrar.style.display='flex';
       var chip=document.getElementById('user-chip');
@@ -115,8 +121,7 @@ document.addEventListener('DOMContentLoaded', function(){
       var herramientasValidas = ['etiquetas','remito','svg-converter','qr-generator'];
       var hashActual = (window.location.hash||'').replace('#','');
       if(herramientasValidas.indexOf(hashActual) !== -1){
-        var tabsNav = document.querySelectorAll('.nav-tab');
-        showPage('herramientas', tabsNav[4]);
+        showPage('herramientas');
         setTimeout(function(){ abrirHerramienta(hashActual); }, 0);
       }
     }
@@ -762,6 +767,45 @@ body{font-family:Inter,sans-serif;background:#F5F2ED;color:#1A1814;min-height:10
 }
 .promo-pill{display:inline-flex;align-items:center;gap:8px;background:#1D4ED8;color:#fff;font-size:0.78rem;font-weight:500;padding:5px 12px;border-radius:20px;border:1px solid #2563EB}
 .promo-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:#93C5FD;display:inline-block;flex-shrink:0}
+
+/* ===== Inicio amigable ===== */
+.home-wrap{max-width:1000px;margin:0 auto;padding:2rem 1.25rem 4rem}
+.home-hero{margin-bottom:1.5rem}
+.home-hero h1{font-size:1.6rem;font-weight:800;color:#1A1814;letter-spacing:-0.02em;margin-bottom:6px}
+.home-hero p{font-size:0.95rem;color:#6B655C;line-height:1.5}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.home-card{display:flex;flex-direction:column;gap:12px;background:#fff;border:1px solid #E2DDD6;border-radius:14px;padding:1.25rem;text-decoration:none;color:inherit;transition:border-color .15s,box-shadow .15s,transform .15s;min-height:170px}
+.home-card:hover{border-color:#2D6A4F;box-shadow:0 4px 16px rgba(26,24,20,0.08);transform:translateY(-1px)}
+.home-card:focus-visible{outline:3px solid #2D6A4F;outline-offset:2px}
+.home-card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;flex-shrink:0}
+.home-card-body{flex:1}
+.home-card-title{font-size:1.05rem;font-weight:700;color:#1A1814;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.home-card-desc{font-size:0.88rem;color:#6B655C;line-height:1.5}
+.home-card-note{margin-top:8px;font-size:0.75rem;font-weight:600;color:#9A3412;background:#FFF7ED;border:1px solid #FED7AA;border-radius:6px;padding:3px 8px;display:inline-block}
+.home-card-go{font-size:0.88rem;font-weight:700;color:#2D6A4F}
+.home-pill-pronto,.nav-badge-pronto{background:#B7791F !important;color:#fff;border-radius:5px;padding:2px 7px;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.03em}
+.home-card-pronto{background:#FFFDF7}
+.home-help{margin-top:1.5rem;background:#1A1814;color:#fff;border-radius:14px;padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.home-help-title{font-weight:700;font-size:1rem}
+.home-help-desc{font-size:0.85rem;color:rgba(255,255,255,0.7);margin-top:2px}
+.home-help-btn{display:inline-flex;align-items:center;justify-content:center;background:#25D366;color:#fff;text-decoration:none;font-weight:700;font-size:0.95rem;border-radius:10px;padding:12px 20px;min-height:44px}
+.home-help-btn:hover{background:#1EBE5A}
+.pronto-wrap{max-width:560px;margin:0 auto;padding:4rem 1.5rem;text-align:center}
+.pronto-icon{font-size:3rem;margin-bottom:1rem}
+.pronto-wrap h1{font-size:1.5rem;font-weight:800;color:#1A1814;margin-bottom:0.75rem}
+.pronto-wrap p{font-size:0.95rem;color:#6B655C;line-height:1.6;margin-bottom:0.5rem}
+.pronto-btns{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:1.5rem}
+.pronto-volver{color:#2D6A4F;font-weight:600;font-size:0.9rem;text-decoration:none;padding:8px}
+body.dark .home-hero h1,body.dark .home-card-title,body.dark .pronto-wrap h1{color:#FAFAFA}
+body.dark .home-card{background:#1A1A1A;border-color:#2A2A2A}
+body.dark .home-card-pronto{background:#1E1B14}
+body.dark .home-help{background:#1A1A1A;border:1px solid #2A2A2A}
+@media(max-width:700px){
+  .home-wrap{padding:1.25rem 0.9rem 3rem}
+  .home-hero h1{font-size:1.3rem}
+  .home-card{min-height:0}
+  .home-help{flex-direction:column;align-items:stretch;text-align:center}
+}
 .page{display:none}
 .page.active{display:block}
 .filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.75rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
@@ -1157,7 +1201,7 @@ function cerrarHerramienta(){
   <div class="header-row1">
     <img src="img/CHULENGO_LOGOO.png" alt="Logo" class="logo">
     <span class="site-title">Chulengo Estudio</span>
-    <div class="header-search">
+    <div class="header-search" style="display:none">
       <input type="text" id="search" placeholder="Buscar filamentos por nombre, color o marca..." onkeydown="if(event.key==='Enter')ejecutarBusqueda()">
       <button class="header-search-btn" onclick="ejecutarBusqueda()">
         <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -1182,12 +1226,6 @@ function cerrarHerramienta(){
           <button class="user-dropdown-item" onclick="closeDropdown();showPage('cuenta',{classList:{add:function(){},remove:function(){}}});cargarMisPresupuestos()">
             📄 Mis presupuestos
           </button>
-          <button class="user-dropdown-item" onclick="closeDropdown();showPage('ofertas',document.querySelector('.nav-tab:nth-child(2)'))">
-            Ofertas disponibles
-          </button>
-          <button class="user-dropdown-item" onclick="closeDropdown();showPage('cupones',document.querySelector('.nav-tab:nth-child(3)'))">
-            🎫 Mis cupones
-          </button>
           <div class="user-dropdown-sep"></div>
           <button class="user-dropdown-item danger" onclick="closeDropdown();doLogout()">
             🚪 Cerrar sesión
@@ -1199,10 +1237,9 @@ function cerrarHerramienta(){
   </div>
   <div class="header-row2">
     <div class="nav-tabs">
-      <a class="nav-tab active" href="#stock" onclick="showPage('stock',this);return false;">Productos</a>
-      <a class="nav-tab" href="#ofertas" onclick="showPage('ofertas',this);return false;">Ofertas</a>
-      <a class="nav-tab" href="#cupones" onclick="showPage('cupones',this);return false;">Cupones</a>
-      <a class="nav-tab" href="#calc" onclick="showPage('calc',this);return false;">Calculadora de costos</a>
+      <a class="nav-tab active" href="#stock" onclick="showPage('stock',this);return false;">Inicio</a>
+      <a class="nav-tab" href="#filamentos" onclick="showPage('filamentos',this);return false;">Filamentos <span class="nav-tab-badge nav-badge-pronto">Pronto</span></a>
+      <a class="nav-tab" href="#calc" onclick="showPage('calc',this);return false;">Calculadora</a>
       <a class="nav-tab" href="#herramientas" onclick="showPage('herramientas',this);return false;">Herramientas</a>
     </div>
     <div class="nav-row2-right">
@@ -1213,6 +1250,80 @@ function cerrarHerramienta(){
 
 <!-- STOCK PAGE -->
 <div class="page active" id="page-stock">
+<div class="home-wrap">
+  <div class="home-hero">
+    <h1>¡Hola! ¿Qué querés hacer hoy?</h1>
+    <p>Herramientas gratis para tu taller de impresión 3D. Elegí una opción y seguí los pasos.</p>
+  </div>
+
+  <div class="home-grid">
+    <a href="#calc" class="home-card" onclick="showPage('calc');return false;">
+      <div class="home-card-icon" style="background:#EFF6F1;color:#2D6A4F">$</div>
+      <div class="home-card-body">
+        <div class="home-card-title">Calcular cuánto cobrar</div>
+        <div class="home-card-desc">Cargá el peso y las horas de impresión y te da el precio. Después lo podés bajar como presupuesto en PDF.</div>
+      </div>
+      <span class="home-card-go">Empezar →</span>
+    </a>
+
+    <a href="#remito" class="home-card" onclick="irAHerramienta('remito',true);return false;">
+      <div class="home-card-icon" style="background:#E6F4F1;color:#0F766E">🧾</div>
+      <div class="home-card-body">
+        <div class="home-card-title">Hacer un remito</div>
+        <div class="home-card-desc">Anotá qué entregaste, a quién y a qué precio. Se guarda en tu historial y lo imprimís en un clic.</div>
+        <div class="home-card-note solo-sin-sesion">Necesitás iniciar sesión con Google</div>
+      </div>
+      <span class="home-card-go">Empezar →</span>
+    </a>
+
+    <a href="#qr-generator" class="home-card" onclick="irAHerramienta('qr-generator');return false;">
+      <div class="home-card-icon" style="background:#EFF6FF;color:#1D4ED8;font-weight:800;font-size:1.05rem">QR</div>
+      <div class="home-card-body">
+        <div class="home-card-title">Crear un código QR</div>
+        <div class="home-card-desc">Para tu WhatsApp, Instagram o cualquier link. Lo descargás listo para imprimir.</div>
+      </div>
+      <span class="home-card-go">Empezar →</span>
+    </a>
+
+    <a href="#svg-converter" class="home-card" onclick="irAHerramienta('svg-converter');return false;">
+      <div class="home-card-icon" style="background:#F3F0EA;color:#1A1814;font-weight:800;font-size:0.95rem">SVG</div>
+      <div class="home-card-body">
+        <div class="home-card-title">Pasar una imagen a vector</div>
+        <div class="home-card-desc">Subí un logo o dibujo y lo convertimos en SVG para usar en tus diseños 3D.</div>
+      </div>
+      <span class="home-card-go">Empezar →</span>
+    </a>
+
+    <a href="#etiquetas" class="home-card solo-admin" style="display:none" onclick="irAHerramienta('etiquetas',true);return false;">
+      <div class="home-card-icon" style="background:#F3EEFE;color:#7C3AED">📦</div>
+      <div class="home-card-body">
+        <div class="home-card-title">Etiqueta de envío</div>
+        <div class="home-card-desc">Generá e imprimí la etiqueta con los datos del cliente.</div>
+        <div class="home-card-note">Solo vos</div>
+      </div>
+      <span class="home-card-go">Empezar →</span>
+    </a>
+
+    <a href="#filamentos" class="home-card home-card-pronto" onclick="showPage('filamentos');return false;">
+      <div class="home-card-icon" style="background:#FDF6E3;color:#B7791F">🧵</div>
+      <div class="home-card-body">
+        <div class="home-card-title">Filamentos <span class="home-pill-pronto">Pronto</span></div>
+        <div class="home-card-desc">Estamos actualizando el catálogo. Mientras tanto, consultanos por WhatsApp.</div>
+      </div>
+      <span class="home-card-go">Ver más →</span>
+    </a>
+  </div>
+
+  <div class="home-help">
+    <div>
+      <div class="home-help-title">¿Tenés dudas o querés hacer un encargo?</div>
+      <div class="home-help-desc">Escribinos y te respondemos.</div>
+    </div>
+    <a class="home-help-btn" href="#" onclick="abrirWhatsAppConsulta('Hola! Quería hacer una consulta.');return false;">Escribir por WhatsApp</a>
+  </div>
+</div>
+
+<div id="filamentos-viejo" style="display:none">
   <div class="carousel-wrap" id="carousel-wrap">
     <div class="carousel-track" id="carousel-track"></div>
     <button class="carousel-btn carousel-prev" onclick="moverCarrusel(-1)">&#8249;</button>
@@ -1238,6 +1349,21 @@ function cerrarHerramienta(){
   </div>
   <div class="stats-bar" id="stats"><span>Cargando datos...</span></div>
   <div id="content"><div class="loading"><div class="spinner"></div>Cargando stock...</div></div>
+</div><!-- /filamentos-viejo -->
+</div>
+
+<!-- FILAMENTOS: EN CONSTRUCCIÓN -->
+<div class="page" id="page-filamentos">
+  <div class="pronto-wrap">
+    <div class="pronto-icon">🚧</div>
+    <h1>Filamentos: estamos en obra</h1>
+    <p>Estamos actualizando el catálogo con precios y stock al día. Muy pronto lo vas a ver acá.</p>
+    <p>Mientras tanto, si necesitás filamento, preguntanos por WhatsApp y te decimos qué hay.</p>
+    <div class="pronto-btns">
+      <a class="home-help-btn" href="#" onclick="abrirWhatsAppConsulta('Hola! Quería consultar por filamento.');return false;">Consultar por WhatsApp</a>
+      <a class="pronto-volver" href="#stock" onclick="showPage('stock');return false;">← Volver al inicio</a>
+    </div>
+  </div>
 </div>
 <!-- CALCULADORA PAGE -->
 <div class="page" id="page-calc">
@@ -2115,13 +2241,25 @@ function cerrarHerramienta(){
 
 <footer>Chulengo Estudio · Argentina · Chubut · Puerto Madryn · 2026</footer>
 <script>
+function marcarPestana(page){
+  var t=document.querySelector('.nav-tab[href="#'+page+'"]');
+  if(t) t.classList.add('active');
+}
+function irAHerramienta(id, requiereSesion){
+  if(requiereSesion && !window.currentUser){ mostrarLoginModal('default'); return; }
+  showPage('herramientas');
+  setTimeout(function(){ abrirHerramienta(id); }, 0);
+}
+function abrirWhatsAppConsulta(msg){
+  window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
+}
 function showPage(page, btn) {
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
   var pageEl = document.getElementById('page-'+page);
   if(!pageEl) return;
   pageEl.classList.add('active');
-  if(btn) btn.classList.add('active');
+  marcarPestana(page);
   document.querySelector('footer').style.display='';
   history.pushState({page:page}, '', '#'+page);
   window.scrollTo(0,0);
@@ -2177,19 +2315,16 @@ window.addEventListener('popstate', function(e){
     document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
     var pid = 'page-' + state.page;
     if(document.getElementById(pid)) document.getElementById(pid).classList.add('active');
-    if(state.page === 'stock') document.querySelectorAll('.nav-tab')[0].classList.add('active');
-    if(state.page === 'calc') document.querySelectorAll('.nav-tab')[1].classList.add('active');
+    marcarPestana(state.page);
     document.querySelector('footer').style.display=''; window.scrollTo(0,0);
   }
 });
 
 (function(){
-  var pagesValidas = ['stock','ofertas','cupones','calc','herramientas'];
+  var pagesValidas = ['stock','filamentos','ofertas','cupones','calc','herramientas'];
   var hash = (window.location.hash||'').replace('#','');
   if(pagesValidas.indexOf(hash) !== -1 && hash !== 'stock'){
-    var tabs = document.querySelectorAll('.nav-tab');
-    var idx = pagesValidas.indexOf(hash);
-    showPage(hash, tabs[idx]);
+    showPage(hash);
   }
 })();
 
