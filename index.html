@@ -3796,30 +3796,69 @@ function descargarQR(formato){
     var dark = document.getElementById('qr-color-dark').value || '#1A1814';
     var light = document.getElementById('qr-color-light').value || '#FFFFFF';
 
-    // Generate SVG using QRCode data from canvas
-    var canvas = container.querySelector('canvas');
-    if(canvas){
-      // Convert canvas to SVG by reading pixel data
-      var ctx = canvas.getContext('2d');
-      var imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      var cellSize = canvas.width / Math.round(Math.sqrt(canvas.width));
-      var svgCells = '';
-      var w = canvas.width, h = canvas.height;
-      var step = Math.max(1, Math.round(w / 40)); // approximate cell size
-
-      // Simple approach: embed canvas as image in SVG
-      var dataURL = canvas.toDataURL('image/png');
-      var svgStr = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+size+' '+size+'" width="'+size+'" height="'+size+'">'+
-        '<rect width="'+size+'" height="'+size+'" fill="'+light+'"/>'+
-        '<image href="'+dataURL+'" width="'+size+'" height="'+size+'"/>'+
-        '</svg>';
-      var blob = new Blob([svgStr], {type:'image/svg+xml'});
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url; a.download = nombre+'.svg'; a.click();
-      URL.revokeObjectURL(url);
-    }
+    // SVG vectorial real para impresión 3D: solo los módulos oscuros como una
+    // única forma sólida (contorno unido), sin fondo ni imagen incrustada.
+    // Así el slicer lo importa con la forma del QR y no como un bloque.
+    var modelo = qrInstance && qrInstance._oQRCode;
+    if(!modelo){ alert('Generá el QR primero.'); return; }
+    var svgStr = qrModeloASVG(modelo, dark);
+    var blob = new Blob([svgStr], {type:'image/svg+xml'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = nombre+'.svg'; a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
   }
+}
+
+// Convierte la matriz del QR en un único path con los contornos unidos de los
+// módulos oscuros (los huecos quedan como agujeros). 1 módulo = 1 mm.
+function qrModeloASVG(modelo, color){
+  var n = modelo.getModuleCount();
+  function oscuro(r,c){ return r>=0 && c>=0 && r<n && c<n && modelo.isDark(r,c); }
+  var salidas = {}; // "x,y" -> lista de bordes que salen de ese vértice
+  function agregar(x1,y1,x2,y2){
+    var k=x1+','+y1; (salidas[k]=salidas[k]||[]).push({x1:x1,y1:y1,x2:x2,y2:y2,usado:false});
+  }
+  for(var r=0;r<n;r++) for(var c=0;c<n;c++){
+    if(!oscuro(r,c)) continue;
+    if(!oscuro(r-1,c)) agregar(c,r,c+1,r);       // arriba  →
+    if(!oscuro(r,c+1)) agregar(c+1,r,c+1,r+1);   // derecha ↓
+    if(!oscuro(r+1,c)) agregar(c+1,r+1,c,r+1);   // abajo   ←
+    if(!oscuro(r,c-1)) agregar(c,r+1,c,r);       // izq.    ↑
+  }
+  var d = '';
+  Object.keys(salidas).forEach(function(k){
+    salidas[k].forEach(function(inicio){
+      if(inicio.usado) return;
+      var pts=[], e=inicio;
+      while(e && !e.usado){
+        e.usado=true; pts.push([e.x1,e.y1]);
+        var dx=e.x2-e.x1, dy=e.y2-e.y1;
+        var cands=(salidas[e.x2+','+e.y2]||[]).filter(function(f){return !f.usado;});
+        if(cands.length>1){
+          // En esquinas que se tocan en diagonal, girar a la derecha para no unir formas
+          var der=[-dy,dx];
+          cands.sort(function(a,b){
+            function pr(f){var fx=f.x2-f.x1, fy=f.y2-f.y1; return (fx===der[0]&&fy===der[1])?0:(fx===dx&&fy===dy)?1:2;}
+            return pr(a)-pr(b);
+          });
+        }
+        e=cands[0];
+      }
+      // Sacar puntos intermedios en línea recta
+      var lim=[];
+      for(var i=0;i<pts.length;i++){
+        var a=pts[(i-1+pts.length)%pts.length], b=pts[i], c2=pts[(i+1)%pts.length];
+        if((b[0]-a[0])*(c2[1]-b[1])-(b[1]-a[1])*(c2[0]-b[0])!==0) lim.push(b);
+      }
+      if(lim.length<3) return;
+      d+='M'+lim[0][0]+' '+lim[0][1];
+      for(var j=1;j<lim.length;j++) d+='L'+lim[j][0]+' '+lim[j][1];
+      d+='Z';
+    });
+  });
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+n+' '+n+'" width="'+n+'mm" height="'+n+'mm">'+
+    '<path fill="'+(color||'#000000')+'" fill-rule="nonzero" d="'+d+'"/></svg>';
 }
 
 function guardarQRHistorial(){
