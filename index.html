@@ -1107,6 +1107,40 @@ body.dark .colab-panel summary,body.dark .colab-fila{color:#FAFAFA}
   .rem-kpi-l{font-size:0.58rem}
   .rem-kpi-v{font-size:0.88rem}
 }
+.fac-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;display:none;align-items:flex-start;justify-content:center;padding:4vh 1rem;overflow-y:auto}
+.fac-overlay.open{display:flex}
+.fac-modal{background:#fff;border-radius:16px;width:100%;max-width:640px;padding:1.5rem;position:relative;font-family:Inter,sans-serif;color:#1A1814;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.fac-cerrar{position:absolute;top:12px;right:12px;background:#F5F2ED;border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;color:#8A8479;font-size:1rem}
+.fac-titulo{font-size:1.2rem;font-weight:800;margin-bottom:4px}
+.fac-sub{font-size:0.85rem;color:#6B655C;line-height:1.5;margin-bottom:1.25rem;padding-right:30px}
+.fac-drop{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px dashed #D4CFC8;border-radius:12px;padding:2rem 1rem;text-align:center;cursor:pointer;background:#FDFCFA;font-size:0.9rem}
+.fac-drop.sobre,.fac-drop:hover{border-color:#2D6A4F;background:#F4FAF6}
+.fac-drop-icon{font-size:2rem;margin-bottom:4px}
+.fac-o{text-align:center;color:#8A8479;font-size:0.8rem;margin:10px 0}
+.fac-link{display:block;margin:0 auto;background:none;border:none;color:#2D6A4F;font-weight:700;font-size:0.88rem;cursor:pointer;text-decoration:underline}
+.fac-estado{margin-top:12px;text-align:center;font-size:0.85rem;color:#6B655C}
+.fac-chipline{display:flex;flex-wrap:wrap;gap:6px}
+.fac-chipline span{background:#F5F2ED;border-radius:6px;padding:4px 8px;font-size:0.8rem}
+.fac-campos{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:10px;margin:14px 0}
+.fac-campos label{display:flex;flex-direction:column;gap:4px;font-size:0.75rem;font-weight:600;color:#6B655C}
+.fac-campos select,.fac-campos input{padding:9px 10px !important;border:1.5px solid #E2DDD6 !important;border-radius:8px !important;font-size:0.88rem !important;font-family:Inter,sans-serif;background:#fff !important;color:#1A1814 !important;width:100%;box-sizing:border-box}
+.fac-aviso{background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;border-radius:10px;padding:10px 12px;font-size:0.82rem;line-height:1.5;margin-bottom:10px}
+.fac-sec{font-size:0.75rem;font-weight:700;color:#8A8479;text-transform:uppercase;letter-spacing:0.05em;margin:6px 0 8px}
+.fac-tabla{border:1px solid #E2DDD6;border-radius:10px;overflow:hidden}
+.fac-fila{display:grid;grid-template-columns:1fr auto 110px;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid #F0ECE6;font-size:0.84rem}
+.fac-fila:last-child{border-bottom:none}
+.fac-q{text-align:right;white-space:nowrap}
+.fac-v{text-align:right;font-weight:700}
+.fac-total{background:#F5F2ED;font-weight:800}
+.fac-total div:last-child{text-align:right}
+.fac-resumen{margin-top:10px;font-size:0.85rem;background:#EFF6F1;color:#1B4332;border-radius:10px;padding:10px 12px}
+.fac-nota{margin-top:8px;font-size:0.8rem;color:#6B655C;line-height:1.5}
+.fac-botones{display:flex;justify-content:space-between;gap:10px;margin-top:1.25rem}
+.fac-volver{background:#F5F2ED;border:1px solid #E2DDD6;border-radius:10px;padding:11px 14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif}
+.fac-aplicar{background:#2D6A4F;color:#fff;border:none;border-radius:10px;padding:11px 20px;font-weight:700;font-size:0.95rem;cursor:pointer;font-family:Inter,sans-serif}
+.fac-aplicar:disabled{opacity:0.5;cursor:not-allowed}
+@media(max-width:600px){.fac-campos{grid-template-columns:1fr}.fac-fila{grid-template-columns:1fr auto;}.fac-v{grid-column:2}}
+body.dark .fac-modal{background:#1A1A1A;color:#FAFAFA}
 .page{display:none}
 .page.active{display:block}
 .filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.75rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
@@ -2449,7 +2483,7 @@ function cerrarHerramienta(){
       <div style="margin-top:2.5rem" id="remito-historial-wrap">
         <div class="rem-hist-head">
           <div class="rem-hist-title">Historial de remitos</div>
-          <button type="button" class="rem-btn-factura" id="btn-cargar-factura" style="display:none" onclick="abrirModalFactura()">📄 Cargar factura</button>
+          <button type="button" class="rem-btn-factura" id="btn-cargar-factura" onclick="abrirModalFactura()">📄 Cargar factura</button>
         </div>
 
         <div id="remito-resumen-global" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1rem"></div>
@@ -5550,6 +5584,261 @@ document.addEventListener('click', function(e){
   }
 });
 
+// ══════════════════════════════════════════════
+// FACTURAS: descontar automáticamente lo pagado en los remitos
+// ══════════════════════════════════════════════
+var facturaLeida = null;   // {nro, fecha, receptor, total, items:[{desc,cant,unit,subtotal}]}
+var facturaPlan = null;
+
+function abrirModalFactura(){
+  if(!window.currentUser){ mostrarLoginModal('default'); return; }
+  if(!remitosHistorialCache.length){ alert('Todavía no tenés remitos para descontar.'); return; }
+  mostrarPasoFactura(1);
+  document.getElementById('fac-estado').textContent='';
+  document.getElementById('fac-overlay').classList.add('open');
+}
+function cerrarModalFactura(){ document.getElementById('fac-overlay').classList.remove('open'); }
+function mostrarPasoFactura(n){
+  document.getElementById('fac-paso1').style.display = n===1?'block':'none';
+  document.getElementById('fac-paso2').style.display = n===2?'block':'none';
+}
+
+function cargarPdfJs(){
+  if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  return new Promise(function(ok, mal){
+    var sc=document.createElement('script');
+    sc.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    sc.onload=function(){ window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; ok(window.pdfjsLib); };
+    sc.onerror=function(){ mal(new Error('No se pudo cargar el lector de PDF. Revisá tu conexión.')); };
+    document.head.appendChild(sc);
+  });
+}
+
+// Número argentino "1.234,56" -> 1234.56
+function numAR(t){ t=String(t).replace(/\$/g,'').trim(); if(!/^-?[\d.]*,?\d+$/.test(t) && !/^-?\d+(\.\d+)?$/.test(t)) return NaN; if(t.indexOf(',')!==-1) t=t.replace(/\./g,'').replace(',','.'); else if(/^\d{1,3}(\.\d{3})+$/.test(t)) t=t.replace(/\./g,''); return parseFloat(t); }
+
+function leerFactura(file){
+  if(!file) return;
+  var est=document.getElementById('fac-estado');
+  if(!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)){ est.textContent='Por ahora solo se pueden leer facturas en PDF. Si tenés una foto, usá "Cargar solo un monto".'; return; }
+  est.textContent='Leyendo la factura...';
+  cargarPdfJs().then(function(pdfjsLib){
+    return file.arrayBuffer().then(function(buf){ return pdfjsLib.getDocument({data:buf}).promise; });
+  }).then(function(pdf){
+    return pdf.getPage(1).then(function(pg){ return pg.getTextContent(); }); // ARCA repite la factura (original/duplicado/triplicado): con la 1ª hoja alcanza
+  }).then(function(tc){
+    var lineas = agruparLineasPdf(tc.items);
+    facturaLeida = interpretarFactura(lineas, file.name);
+    est.textContent='';
+    prepararPaso2(facturaLeida);
+  }).catch(function(e){
+    console.error(e);
+    est.textContent='No pude leer esa factura ('+e.message+'). Probá con "Cargar solo un monto".';
+  });
+}
+
+function agruparLineasPdf(items){
+  var arr = items.filter(function(it){ return it.str && it.str.trim(); }).map(function(it){ return {x:it.transform[4], y:it.transform[5], t:it.str.trim()}; });
+  arr.sort(function(a,b){ return b.y-a.y || a.x-b.x; });
+  var lineas=[];
+  arr.forEach(function(it){
+    var l = lineas.find(function(L){ return Math.abs(L.y-it.y) < 2.5; });
+    if(!l){ l={y:it.y, partes:[]}; lineas.push(l); }
+    l.partes.push(it);
+  });
+  return lineas.sort(function(a,b){ return b.y-a.y; }).map(function(l){
+    l.partes.sort(function(a,b){ return a.x-b.x; });
+    return { texto: l.partes.map(function(p){return p.t;}).join(' '), partes: l.partes };
+  });
+}
+
+function interpretarFactura(lineas, nombreArchivo){
+  var todo = lineas.map(function(l){ return l.texto; }).join('\n');
+  var f = { nro:'', fecha:'', receptor:'', total:0, items:[], tipo:'' };
+  var pv = todo.match(/Punto de Venta:?\s*(\d+)/i), cn = todo.match(/Comp\.?\s*Nro:?\s*(\d+)/i);
+  if(pv && cn) f.nro = pv[1].padStart(5,'0')+'-'+cn[1].padStart(8,'0');
+  else { var m2=(nombreArchivo||'').match(/(\d{4,5})[_-](\d{6,8})/); if(m2) f.nro=m2[1]+'-'+m2[2]; }
+  var tp = todo.match(/\bFACTURA\s+([ABC])\b/i) || todo.match(/^\s*([ABC])\s+FACTURA\b/im) || todo.match(/^\s*([ABC])\s*$/m); if(tp) f.tipo = 'Factura '+tp[1].toUpperCase();
+  var fe = todo.match(/Fecha de Emisi[oó]n:?\s*(\d{2}\/\d{2}\/\d{4})/i); if(fe) f.fecha = fe[1];
+  var rec = todo.match(/Apellido y Nombre\s*\/\s*Raz[oó]n Social:?\s*([^\n]+)/i);
+  if(rec) f.receptor = rec[1].replace(/Domicilio.*$/i,'').replace(/Condici[oó]n.*$/i,'').trim();
+  var tots = todo.match(/Importe Total:?\s*\$?\s*([\d.,]+)/gi);
+  if(tots){ var ult = tots[tots.length-1].match(/([\d.,]+)\s*$/); f.total = numAR(ult[1]) || 0; }
+
+  // Renglones: entre el encabezado de la tabla y los totales
+  var ini = lineas.findIndex(function(l){ return /Producto\s*\/\s*Servicio/i.test(l.texto) || (/Cantidad/i.test(l.texto) && /Subtotal/i.test(l.texto)); });
+  var fin = lineas.findIndex(function(l,i){ return i>ini && /(Importe Otros Tributos|Importe Neto Gravado|Importe Total|^Subtotal:)/i.test(l.texto); });
+  if(ini!==-1){
+    var UNIDADES = /^(unidades|unidad|u\.?|kilogramos|kg|litros|metros|otras unidades|pares|docenas)$/i;
+    lineas.slice(ini+1, fin===-1?undefined:fin).forEach(function(l){
+      var nums=[], textos=[];
+      l.partes.forEach(function(p){
+        p.t.split(/\s+/).forEach(function(tok){
+          var n = numAR(tok.replace('%',''));
+          if(!isNaN(n) && /\d/.test(tok)) nums.push(n); else if(!UNIDADES.test(tok)) textos.push(tok);
+        });
+      });
+      var desc = textos.join(' ').replace(/\s+/g,' ').trim();
+      if(nums.length >= 3 && desc){
+        // Si el renglón arranca con un código numérico corto, no es la cantidad
+        var cant = nums[0], unit = nums[1], sub = nums[nums.length-1];
+        if(cant>0 && unit>0 && Math.abs(cant*unit - sub) > Math.max(1, sub*0.02) && nums.length>=4 && Math.abs(nums[1]*nums[2]-sub) <= Math.max(1,sub*0.02)){ cant=nums[1]; unit=nums[2]; }
+        f.items.push({ desc: desc, cant: cant, unit: unit, subtotal: sub });
+      } else if(desc && !nums.length && f.items.length){
+        f.items[f.items.length-1].desc += ' '+desc;  // descripción en dos líneas
+      }
+    });
+  }
+  if(!f.total && f.items.length) f.total = f.items.reduce(function(a,i){return a+i.subtotal;},0);
+  return f;
+}
+
+function facturaSinArchivo(){
+  facturaLeida = { nro:'', fecha:'', receptor:'', total:0, items:[], manual:true };
+  prepararPaso2(facturaLeida);
+}
+
+function normProd(t){ return String(t||'').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Z0-9 ]/g,' ').split(/\s+/).filter(function(w){ return w.length>1 && ['DE','LA','EL','CON','PARA','LOS','LAS','Y','DEL','EN'].indexOf(w)===-1; }); }
+function similitud(a,b){
+  var A=normProd(a), B=normProd(b); if(!A.length||!B.length) return 0;
+  var hits=0;
+  A.forEach(function(w){ if(B.some(function(v){ return v===w || (w.length>=4 && v.length>=4 && (v.indexOf(w)===0 || w.indexOf(v)===0)); })) hits++; });
+  return hits / Math.max(A.length, B.length);
+}
+
+function prepararPaso2(f){
+  // Clientes con algo pendiente primero
+  var grupos = agruparRemitosPorCliente();
+  var sel = document.getElementById('fac-cliente');
+  sel.innerHTML = grupos.map(function(g){ return '<option value="'+escaparAttr(g.cliente)+'">'+escaparHtml(g.cliente)+(g.totalPendiente>0.5?' — debe '+formatearMoneda(g.totalPendiente):' — al día')+'</option>'; }).join('');
+  // Elegir cliente: por nombre del receptor, y si no, por coincidencia de productos
+  var mejor = null, mejorScore = 0;
+  grupos.forEach(function(g){
+    var sc = f.receptor ? similitud(f.receptor, g.cliente)*2 : 0;
+    if(f.items.length){
+      var prods = []; g.remitos.forEach(function(r){ (r.renglones||[]).forEach(function(x){ prods.push(x.producto); }); });
+      f.items.forEach(function(it){ var m=0; prods.forEach(function(p){ m=Math.max(m, similitud(it.desc,p)); }); sc += m; });
+    }
+    if(g.totalPendiente>0.5) sc += 0.01;
+    if(sc > mejorScore){ mejorScore = sc; mejor = g.cliente; }
+  });
+  if(!mejor){ var conDeuda = grupos.find(function(g){ return g.totalPendiente>0.5; }); mejor = conDeuda ? conDeuda.cliente : (grupos[0]||{}).cliente; }
+  sel.value = mejor;
+  document.getElementById('fac-monto').value = f.total ? Math.round(f.total*100)/100 : '';
+  document.getElementById('fac-nro').value = f.nro || '';
+  var d = document.getElementById('fac-datos');
+  if(f.manual){ d.innerHTML = '<div class="rem-gris">Elegí el cliente y el monto. Se descuenta de lo más viejo que debe.</div>'; }
+  else {
+    d.innerHTML = '<div class="fac-chipline">'+
+      (f.tipo?'<span>'+escaparHtml(f.tipo)+'</span>':'')+
+      (f.nro?'<span>N° '+escaparHtml(f.nro)+'</span>':'')+
+      (f.fecha?'<span>'+escaparHtml(f.fecha)+'</span>':'')+
+      (f.receptor?'<span>Para: <b>'+escaparHtml(f.receptor)+'</b></span>':'')+
+      '<span>Total: <b>'+formatearMoneda(f.total)+'</b></span></div>'+
+      (f.items.length ? '<div class="rem-gris" style="margin-top:6px">'+f.items.length+' producto'+(f.items.length>1?'s':'')+' en la factura</div>' : '<div class="rem-gris" style="margin-top:6px">No encontré el detalle de productos: se descuenta el monto total de lo más viejo.</div>');
+  }
+  mostrarPasoFactura(2);
+  calcularAplicacionFactura();
+}
+
+// Arma el plan: qué cantidad de cada renglón queda pagada
+function calcularAplicacionFactura(){
+  var f = facturaLeida || {items:[]};
+  var cliente = document.getElementById('fac-cliente').value;
+  var monto = parseFloat(document.getElementById('fac-monto').value)||0;
+  var nro = document.getElementById('fac-nro').value.trim();
+  var rems = remitosHistorialCache.filter(function(r){ return (r.cliente||'').trim().toUpperCase() === cliente; })
+    .sort(function(a,b){ return fechaRemitoMs(a)-fechaRemitoMs(b); });
+  // Lo pendiente, del más viejo al más nuevo
+  var pend = [];
+  rems.forEach(function(rem){ (rem.renglones||[]).forEach(function(r, idx){
+    var p = calcularPagoRenglon(r); var falta = p.cantTotal - p.cantPagada;
+    if(falta > 0.0001) pend.push({ remId: rem.id, fecha: rem.fechaEntrega, idx: idx, producto: r.producto, unit: (r.subtotal||0)/p.cantTotal, falta: falta, pagar: 0 });
+  }); });
+  var restante = monto, sinMatch = [];
+  // 1) Por productos de la factura
+  (f.items||[]).forEach(function(it){
+    var cands = pend.map(function(x){ var sc = similitud(it.desc, x.producto); if(it.unit && x.unit && Math.abs(x.unit-it.unit) <= Math.max(1, it.unit*0.02)) sc += 0.25; return {x:x, sc:sc}; })
+      .filter(function(c){ return c.sc >= 0.5 && c.x.falta - c.x.pagar > 0.0001; });
+    if(!cands.length){ sinMatch.push(it); return; }
+    var top = Math.max.apply(null, cands.map(function(c){return c.sc;}));
+    var cantFalta = it.cant || 0;
+    cands.filter(function(c){ return c.sc >= top - 0.01; }).forEach(function(c){
+      if(cantFalta <= 0.0001 || restante <= 0.5) return;
+      var q = Math.min(cantFalta, c.x.falta - c.x.pagar, restante / (c.x.unit||1));
+      c.x.pagar += q; cantFalta -= q; restante -= q * c.x.unit;
+    });
+    if(cantFalta > 0.0001) sinMatch.push({desc: it.desc, cant: cantFalta, subtotal: cantFalta*(it.unit||0)});
+  });
+  // 2) Lo que sobra del monto: a lo más viejo
+  pend.forEach(function(x){
+    if(restante <= 0.5) return;
+    var q = Math.min(x.falta - x.pagar, restante / (x.unit||1));
+    if(q > 0.0001){ x.pagar += q; x.porMonto = true; restante -= q * x.unit; }
+  });
+  facturaPlan = { cliente: cliente, nro: nro, items: pend.filter(function(x){ return x.pagar > 0.0001; }), sobrante: Math.max(0, restante), sinMatch: sinMatch };
+
+  // Aviso de factura ya cargada
+  var aviso = document.getElementById('fac-aviso'), msgs = [];
+  if(nro && remitosHistorialCache.some(function(r){ return (r.facturas||[]).indexOf(nro)!==-1; })) msgs.push('⚠️ La factura <b>'+escaparHtml(nro)+'</b> ya se aplicó antes. Si la volvés a aplicar se descuenta dos veces.');
+  if(f.receptor && similitud(f.receptor, cliente) < 0.3 && !f.manual) msgs.push('La factura está a nombre de <b>'+escaparHtml(f.receptor)+'</b>. Revisá que el cliente elegido sea el correcto.');
+  aviso.innerHTML = msgs.join('<br>'); aviso.style.display = msgs.length ? 'block' : 'none';
+
+  // Vista del plan
+  var plan = document.getElementById('fac-plan'), h = '';
+  if(!facturaPlan.items.length){
+    h = '<div class="rem-vacio" style="padding:1rem">'+(monto>0 ? 'Este cliente no tiene nada pendiente para descontar.' : 'Cargá el monto pagado.')+'</div>';
+  } else {
+    var tot = 0;
+    h += '<div class="fac-tabla">';
+    facturaPlan.items.forEach(function(x){
+      var val = x.pagar * x.unit; tot += val;
+      var completo = x.pagar >= x.falta - 0.0001;
+      h += '<div class="fac-fila"><div><b>'+escaparHtml(x.producto||'—')+'</b><div class="rem-gris">Remito del '+escaparHtml(x.fecha||'—')+(x.porMonto?' · por monto':'')+'</div></div>'+
+        '<div class="fac-q">'+(Math.abs(x.pagar-Math.round(x.pagar))<0.01 ? Math.round(x.pagar)+' u.' : 'pago parcial')+(completo?' <span class="rem-ok">✓ salda</span>':'')+'</div>'+
+        '<div class="fac-v">'+formatearMoneda(val)+'</div></div>';
+    });
+    h += '<div class="fac-fila fac-total"><div>Total que se descuenta</div><div></div><div>'+formatearMoneda(tot)+'</div></div></div>';
+    var g = agruparRemitosPorCliente().find(function(x){ return x.cliente===cliente; });
+    if(g) h += '<div class="fac-resumen">'+escaparHtml(cliente)+' debía <b>'+formatearMoneda(g.totalPendiente)+'</b> y va a quedar debiendo <b>'+formatearMoneda(Math.max(0,g.totalPendiente - tot))+'</b>.</div>';
+  }
+  if(facturaPlan.sinMatch.length) h += '<div class="fac-nota">No encontré en los remitos: '+facturaPlan.sinMatch.map(function(i){ return escaparHtml(i.desc); }).join(', ')+(facturaPlan.items.some(function(x){return x.porMonto;})?'. Ese importe se descontó de lo más viejo que debe.':'.')+'</div>';
+  if(facturaPlan.sobrante > 0.5) h += '<div class="fac-nota">Sobran <b>'+formatearMoneda(facturaPlan.sobrante)+'</b>: el cliente ya no debe nada más (queda a favor).</div>';
+  plan.innerHTML = h;
+  document.getElementById('fac-aplicar').disabled = !facturaPlan.items.length;
+}
+
+function aplicarFactura(){
+  if(!facturaPlan || !facturaPlan.items.length) return;
+  var btn = document.getElementById('fac-aplicar'); btn.disabled = true; btn.textContent = 'Guardando...';
+  var porRemito = {};
+  facturaPlan.items.forEach(function(x){ (porRemito[x.remId] = porRemito[x.remId] || []).push(x); });
+  var batch = firebase.firestore().batch(), cambios = [];
+  Object.keys(porRemito).forEach(function(remId){
+    var rem = remitosHistorialCache.find(function(r){ return r.id===remId; });
+    var nuevos = JSON.parse(JSON.stringify(rem.renglones));
+    porRemito[remId].forEach(function(x){
+      var p = calcularPagoRenglon(rem.renglones[x.idx]);
+      nuevos[x.idx].cantidadPagada = Math.min(p.cantTotal, Math.round((p.cantPagada + x.pagar)*100)/100);
+    });
+    var upd = { renglones: nuevos };
+    var nro = facturaPlan.nro || ('Pago '+new Date().toLocaleDateString('es-AR'));
+    upd.facturas = firebase.firestore.FieldValue.arrayUnion(nro);
+    batch.update(firebase.firestore().collection('remitos_historial').doc(remId), upd);
+    cambios.push({rem: rem, nuevos: nuevos, nro: nro});
+  });
+  batch.commit().then(function(){
+    cambios.forEach(function(c){ c.rem.renglones = c.nuevos; c.rem.facturas = (c.rem.facturas||[]).concat(c.rem.facturas && c.rem.facturas.indexOf(c.nro)!==-1 ? [] : [c.nro]); });
+    btn.textContent = 'Aplicar pago'; btn.disabled = false;
+    cerrarModalFactura();
+    renderHistorialRemitos();
+    alert('Listo: se marcó como pagado lo de '+facturaPlan.cliente+'.');
+  }).catch(function(e){
+    btn.textContent = 'Aplicar pago'; btn.disabled = false;
+    alert('No se pudo guardar: '+e.message);
+  });
+}
+
 document.addEventListener('change', function(e){
   var inp = e.target.closest('.inp-cant-pagada');
   if(inp){
@@ -5734,6 +6023,43 @@ document.addEventListener('change', function(e){
 </div><!-- fin app -->
 <div id="etiqueta-imprimir-area" style="display:none"></div>
 <div id="remito-imprimir-area" style="display:none"></div>
+<!-- MODAL FACTURA: descontar pagos de remitos -->
+<div id="fac-overlay" class="fac-overlay" onclick="if(event.target===this)cerrarModalFactura()">
+  <div class="fac-modal" role="dialog" aria-labelledby="fac-titulo">
+    <button class="fac-cerrar" onclick="cerrarModalFactura()" aria-label="Cerrar">✕</button>
+    <div id="fac-titulo" class="fac-titulo">Cargar factura</div>
+    <div class="fac-sub">Subí la factura (PDF de ARCA/AFIP) y marcamos como pagado lo que corresponde. Antes de guardar te mostramos qué se va a descontar.</div>
+
+    <div id="fac-paso1">
+      <label id="fac-drop" class="fac-drop" ondragover="event.preventDefault();this.classList.add('sobre')" ondragleave="this.classList.remove('sobre')" ondrop="event.preventDefault();this.classList.remove('sobre');leerFactura(event.dataTransfer.files[0])">
+        <input type="file" accept="application/pdf,.pdf" style="display:none" onchange="leerFactura(this.files[0]);this.value=''">
+        <div class="fac-drop-icon">📄</div>
+        <div><b>Elegí o arrastrá la factura en PDF</b></div>
+        <div class="rem-gris">La que descargás de ARCA / AFIP</div>
+      </label>
+      <div class="fac-o">o</div>
+      <button type="button" class="fac-link" onclick="facturaSinArchivo()">Cargar solo un monto pagado, sin factura</button>
+      <div id="fac-estado" class="fac-estado"></div>
+    </div>
+
+    <div id="fac-paso2" style="display:none">
+      <div class="fac-datos" id="fac-datos"></div>
+      <div class="fac-campos">
+        <label>Cliente<select id="fac-cliente" onchange="calcularAplicacionFactura()"></select></label>
+        <label>Monto pagado<input type="number" id="fac-monto" min="0" step="any" oninput="calcularAplicacionFactura()"></label>
+        <label>Comprobante<input type="text" id="fac-nro" placeholder="Ej: 00002-00000123" oninput="calcularAplicacionFactura()"></label>
+      </div>
+      <div id="fac-aviso" class="fac-aviso" style="display:none"></div>
+      <div class="fac-sec">Se va a marcar como pagado</div>
+      <div id="fac-plan"></div>
+      <div class="fac-botones">
+        <button type="button" class="fac-volver" onclick="mostrarPasoFactura(1)">← Otra factura</button>
+        <button type="button" class="fac-aplicar" id="fac-aplicar" onclick="aplicarFactura()">Aplicar pago</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // El input de archivo y el botón "Convertir a SVG" ya están cableados
 // directamente en el HTML (onchange / onclick), no se necesita wiring extra acá.
