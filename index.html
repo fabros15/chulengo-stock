@@ -25,11 +25,27 @@ firebase.initializeApp({
 // Acceso exclusivo al generador de etiquetas de envío
 function actualizarTarjetasInicio(){
   document.querySelectorAll('.solo-admin').forEach(function(el){ el.style.display = isAdmin() ? '' : 'none'; });
+  document.querySelectorAll('.solo-colaborador').forEach(function(el){ el.style.display = isColaborador() ? '' : 'none'; });
   document.querySelectorAll('.solo-sin-sesion').forEach(function(el){ el.style.display = window.currentUser ? 'none' : ''; });
 }
 var ADMIN_EMAILS = ["fabriziomjara@gmail.com"];
 function isAdmin(){
   return !!(window.currentUser && window.currentUser.email && ADMIN_EMAILS.indexOf(window.currentUser.email.toLowerCase()) !== -1);
+}
+// Colaboradores: gente que trabaja con Chulengo y puede usar las etiquetas de envío.
+// La lista la maneja el admin desde la herramienta de etiquetas (Firestore: config/colaboradores).
+var COLABORADORES = [];
+function isColaborador(){
+  if(isAdmin()) return true;
+  var e = window.currentUser && window.currentUser.email ? window.currentUser.email.toLowerCase() : '';
+  return !!e && COLABORADORES.indexOf(e) !== -1;
+}
+function cargarColaboradores(cb){
+  if(!window.currentUser){ COLABORADORES=[]; if(cb) cb(); return; }
+  firebase.firestore().collection('config').doc('colaboradores').get()
+    .then(function(doc){ COLABORADORES = (doc.exists && doc.data().emails) || []; })
+    .catch(function(){ COLABORADORES = []; })
+    .then(function(){ actualizarTarjetasInicio(); if(cb) cb(); });
 }
 
 document.addEventListener('DOMContentLoaded', function(){
@@ -90,8 +106,10 @@ document.addEventListener('DOMContentLoaded', function(){
       }
       cargarFavoritosEnSelect();
       var cardEtiq = document.getElementById('card-etiquetas');
-      if(cardEtiq) cardEtiq.style.display = isAdmin() ? 'block' : 'none';
-      if(!isAdmin() && document.getElementById('herramienta-etiquetas').style.display!=='none'){ cerrarHerramienta(); }
+      if(cardEtiq) cardEtiq.style.display = 'none';
+      cargarColaboradores(function(){
+        var ce=document.getElementById('card-etiquetas'); if(ce) ce.style.display = isColaborador() ? 'block' : 'none';
+      });
       var cardRemito = document.getElementById('card-remito');
       if(cardRemito) cardRemito.style.display = 'block';
       actualizarTarjetasInicio();
@@ -1008,6 +1026,19 @@ body.dark .svg-seg-btn.activo{background:#2A2A2A;color:#FAFAFA}
 }
 @media(prefers-reduced-motion:reduce){.uocra-bandera{animation:none}}
 
+.colab-panel{background:#fff;border:1px solid #DDD6FE;border-radius:12px;padding:0.9rem 1.1rem;margin-bottom:1.25rem;font-family:Inter,sans-serif}
+.colab-panel summary{cursor:pointer;font-weight:700;font-size:0.9rem;color:#1A1814}
+.colab-count{color:#6D28D9;font-weight:600}
+.colab-ayuda{font-size:0.8rem;color:#6B655C;margin:0.6rem 0 0.8rem;line-height:1.5}
+.colab-add{display:flex;gap:8px;margin-bottom:0.75rem}
+.colab-add input{flex:1;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:Inter,sans-serif;color:#1A1814;background:#fff;outline:none}
+.colab-add button{padding:9px 16px;background:#6D28D9;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer}
+.colab-fila{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #F0ECE6;font-size:0.88rem;color:#1A1814}
+.colab-fila button{background:none;border:1px solid #FECACA;color:#B91C1C;border-radius:6px;padding:4px 10px;font-size:0.75rem;font-weight:600;cursor:pointer}
+.colab-vacio{font-size:0.82rem;color:#8A8479;padding:6px 0}
+.colab-msg{font-size:0.8rem;margin-top:6px;min-height:1em}
+body.dark .colab-panel{background:#1A1A1A;border-color:#3B2F5C}
+body.dark .colab-panel summary,body.dark .colab-fila{color:#FAFAFA}
 .page{display:none}
 .page.active{display:block}
 .filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.75rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
@@ -1369,7 +1400,9 @@ function abrirHerramienta(id){
   if(id === 'svg-converter') cargarHistorialSVG();
   if(id === 'qr-generator') cargarHistorialQR();
   if(id === 'etiquetas'){
-    if(!isAdmin()){ cerrarHerramienta(); return; }
+    if(!window.currentUser){ cerrarHerramienta(); mostrarLoginModal('default'); return; }
+    if(!isColaborador()){ cerrarHerramienta(); alert('Las etiquetas de envío son solo para el equipo de Chulengo Estudio.'); return; }
+    renderColaboradores();
     cargarHistorialEtiquetas();
   }
   if(id === 'remito'){
@@ -1496,12 +1529,12 @@ function cerrarHerramienta(){
       <span class="home-card-go">Empezar →</span>
     </a>
 
-    <a href="#etiquetas" class="home-card solo-admin" style="display:none" onclick="irAHerramienta('etiquetas',true);return false;">
+    <a href="#etiquetas" class="home-card solo-colaborador" style="display:none" onclick="irAHerramienta('etiquetas',true);return false;">
       <div class="home-card-icon" style="background:#F3EEFE;color:#7C3AED">📦</div>
       <div class="home-card-body">
         <div class="home-card-title">Etiqueta de envío</div>
-        <div class="home-card-desc">Generá e imprimí la etiqueta con los datos del cliente.</div>
-        <div class="home-card-note">Solo vos</div>
+        <div class="home-card-desc">Completá los datos del cliente e imprimí la etiqueta para el paquete. Se guardan en tu historial.</div>
+        <div class="home-card-note" style="color:#6D28D9;background:#F3EEFE;border-color:#DDD6FE">Equipo Chulengo</div>
       </div>
       <span class="home-card-go">Empezar →</span>
     </a>
@@ -1847,14 +1880,14 @@ function cerrarHerramienta(){
         </div>
       </a>
 
-      <!-- Etiquetas de envío (solo admin) -->
+      <!-- Etiquetas de envío (admin + colaboradores) -->
       <a id="card-etiquetas" href="#etiquetas" style="display:none;text-decoration:none;color:inherit;background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('etiquetas');return false;" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
         <div style="background:linear-gradient(135deg,#7C3AED 0%,#1A1814 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">📦</div>
         <div style="padding:1.25rem">
           <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Inter,sans-serif;margin-bottom:5px">Etiquetas de envío</div>
           <div style="font-size:0.82rem;color:#8A8479;font-family:Inter,sans-serif;line-height:1.5">Generá e imprimí la etiqueta de envío con los datos del cliente y guardá el historial.</div>
           <div style="margin-top:1rem;display:flex;gap:6px;flex-wrap:wrap">
-            <span style="background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Solo vos</span>
+            <span style="background:#F3EEFE;color:#6D28D9;border:1px solid #DDD6FE;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Equipo Chulengo</span>
           </div>
         </div>
       </a>
@@ -2088,7 +2121,7 @@ function cerrarHerramienta(){
       </div>
     </div>
 
-    <!-- ETIQUETAS DE ENVIO TOOL (solo admin) -->
+    <!-- ETIQUETAS DE ENVIO TOOL -->
     <div id="herramienta-etiquetas" style="display:none">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem">
         <button onclick="cerrarHerramienta()" style="background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;padding:7px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#1A1814;display:flex;align-items:center;gap:6px">← Volver</button>
@@ -2097,6 +2130,18 @@ function cerrarHerramienta(){
           <div style="font-size:0.78rem;color:#8A8479;font-family:'Inter',sans-serif">Generá, imprimí y guardá el historial de etiquetas</div>
         </div>
       </div>
+
+      <!-- Colaboradores (solo lo ve el admin) -->
+      <details id="colab-panel" class="colab-panel" style="display:none">
+        <summary>👥 Colaboradores con acceso <span id="colab-count" class="colab-count"></span></summary>
+        <p class="colab-ayuda">Estas personas pueden usar las etiquetas de envío iniciando sesión con su cuenta de Google. Cada una ve solo sus propias etiquetas.</p>
+        <div class="colab-add">
+          <input type="email" id="colab-email" placeholder="mail@gmail.com" onkeydown="if(event.key==='Enter'){agregarColaborador();}">
+          <button type="button" onclick="agregarColaborador()">Agregar</button>
+        </div>
+        <div id="colab-lista"></div>
+        <div id="colab-msg" class="colab-msg"></div>
+      </details>
 
       <!-- Aviso de nombre similar -->
       <div id="etiq-similar-aviso" style="display:none;background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:12px 14px;margin-bottom:1.25rem;font-family:'Inter',sans-serif"></div>
@@ -2109,12 +2154,12 @@ function cerrarHerramienta(){
 
             <div style="margin-bottom:0.875rem">
               <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Pegar datos (autocompleta nombre, DNI y celular)</label>
-              <textarea id="etiq-pegar-texto" rows="3" placeholder="Pegá acá el bloque, ej:&#10;Edna Antonella Ojeda&#10;37550633&#10;2804820894" oninput="onEtiqPegarInput()" style="width:100%;padding:9px 12px;border:1.5px dashed #D4CFC8;border-radius:8px;font-size:0.85rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box;resize:vertical;background:#FDFCFA"></textarea>
+              <textarea id="etiq-pegar-texto" rows="3" placeholder="Pegá acá el bloque, ej:&#10;Juana PérezEdna Antonella Ojeda&#10;37550633&#10;2804820894#10;30123456Edna Antonella Ojeda&#10;37550633&#10;2804820894#10;2801234567" oninput="onEtiqPegarInput()" style="width:100%;padding:9px 12px;border:1.5px dashed #D4CFC8;border-radius:8px;font-size:0.85rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box;resize:vertical;background:#FDFCFA"></textarea>
             </div>
 
             <div style="margin-bottom:0.875rem">
               <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Nombre y apellido</label>
-              <input type="text" id="etiq-nombre" placeholder="Ej: Elías Mauricio Caullan" oninput="onEtiqNombreInput()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+              <input type="text" id="etiq-nombre" placeholder="Ej: Juana Pérez" oninput="onEtiqNombreInput()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0.875rem">
               <div>
@@ -2123,12 +2168,12 @@ function cerrarHerramienta(){
               </div>
               <div>
                 <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">DNI</label>
-                <input type="text" id="etiq-dni" placeholder="34766713" oninput="actualizarPreviewEtiqueta()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+                <input type="text" id="etiq-dni" placeholder="30123456" oninput="actualizarPreviewEtiqueta()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
               </div>
             </div>
             <div>
               <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Destino</label>
-              <input type="text" id="etiq-destino" value="TRELEW" oninput="actualizarPreviewEtiqueta()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box;text-transform:uppercase">
+              <input type="text" id="etiq-destino" value="" placeholder="Ej: TRELEW" oninput="actualizarPreviewEtiqueta()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box;text-transform:uppercase">
             </div>
             <div style="margin-top:0.875rem">
               <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">¿Qué se lleva? <span style="font-weight:400;color:#8A8479;font-size:0.72rem">(para saber qué preparar)</span></label>
@@ -2140,16 +2185,16 @@ function cerrarHerramienta(){
             <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:1rem">Remitente <span style="font-weight:400;color:#8A8479;font-size:0.75rem">(editable por las dudas)</span></div>
             <div style="margin-bottom:0.875rem">
               <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Nombre y apellido</label>
-              <input type="text" id="etiq-rem-nombre" value="FABRIZIO JARA" oninput="actualizarPreviewEtiqueta()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+              <input type="text" id="etiq-rem-nombre" value="" placeholder="Tu nombre y apellido" oninput="actualizarPreviewEtiqueta();guardarRemitenteEtiqueta()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
               <div>
                 <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Teléfono</label>
-                <input type="text" id="etiq-rem-tel" value="2805064128" oninput="actualizarPreviewEtiqueta()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+                <input type="text" id="etiq-rem-tel" value="" placeholder="Tu teléfono" oninput="actualizarPreviewEtiqueta();guardarRemitenteEtiqueta()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
               </div>
               <div>
                 <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">DNI</label>
-                <input type="text" id="etiq-rem-dni" value="46405539" oninput="actualizarPreviewEtiqueta()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+                <input type="text" id="etiq-rem-dni" value="" placeholder="Tu DNI" oninput="actualizarPreviewEtiqueta();guardarRemitenteEtiqueta()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
               </div>
             </div>
           </div>
@@ -2174,7 +2219,7 @@ function cerrarHerramienta(){
                   </div>
                 </div>
 
-                <div style="font-size:1.2rem;font-weight:700;margin-bottom:16px">DESTINO - <span id="prev-destino">TRELEW</span></div>
+                <div style="font-size:1.2rem;font-weight:700;margin-bottom:16px">DESTINO - <span id="prev-destino">—</span></div>
 
                 <div style="border:1.5px solid #1A1814;border-radius:4px;padding:10px 12px;margin-bottom:14px">
                   <div style="font-size:0.7rem;font-weight:700;margin-bottom:8px">RECIBE</div>
@@ -2187,10 +2232,10 @@ function cerrarHerramienta(){
 
                 <div style="border:1.5px solid #1A1814;border-radius:4px;padding:10px 12px;margin-bottom:18px">
                   <div style="font-size:0.7rem;font-weight:700;margin-bottom:8px">REMITENTE</div>
-                  <div style="font-size:1.1rem;font-weight:700;text-align:center;margin-bottom:10px;word-break:break-word" id="prev-rem-nombre">FABRIZIO JARA</div>
+                  <div style="font-size:1.1rem;font-weight:700;text-align:center;margin-bottom:10px;word-break:break-word" id="prev-rem-nombre">—</div>
                   <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-weight:600">
-                    <span>TEL:&nbsp;<span id="prev-rem-tel">2805064128</span></span>
-                    <span>DNI:&nbsp;<span id="prev-rem-dni">46405539</span></span>
+                    <span>TEL:&nbsp;<span id="prev-rem-tel">—</span></span>
+                    <span>DNI:&nbsp;<span id="prev-rem-dni">—</span></span>
                   </div>
                 </div>
 
@@ -2261,7 +2306,7 @@ function cerrarHerramienta(){
             <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:1rem">Entrega a</div>
             <div style="margin-bottom:0.875rem">
               <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Nombre y apellido</label>
-              <input type="text" id="remito-nombre" placeholder="Ej: Elías Mauricio Caullan" oninput="onRemitoNombreInput()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+              <input type="text" id="remito-nombre" placeholder="Ej: Juana Pérez" oninput="onRemitoNombreInput()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
             </div>
             <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Fecha</label>
             <div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:10px">
@@ -4213,18 +4258,52 @@ function aplicarPresetQR(tipo){
 // ══════════════════════════════════════════════
 
 // ══════════════════════════════════════════════
-// HERRAMIENTAS - ETIQUETAS DE ENVIO (solo admin)
+// HERRAMIENTAS - ETIQUETAS DE ENVIO (admin + colaboradores)
 // ══════════════════════════════════════════════
 
 var etiquetasHistorialCache = [];
+
+function renderColaboradores(){
+  var panel=document.getElementById('colab-panel'); if(!panel) return;
+  panel.style.display = isAdmin() ? '' : 'none';
+  if(!isAdmin()) return;
+  var lista=document.getElementById('colab-lista');
+  document.getElementById('colab-count').textContent = COLABORADORES.length ? '('+COLABORADORES.length+')' : '';
+  lista.innerHTML = COLABORADORES.length ? '' : '<div class="colab-vacio">Todavía no agregaste a nadie.</div>';
+  COLABORADORES.forEach(function(e){
+    var fila=document.createElement('div'); fila.className='colab-fila';
+    var t=document.createElement('span'); t.textContent=e;
+    var b=document.createElement('button'); b.type='button'; b.textContent='Quitar'; b.onclick=function(){ quitarColaborador(e); };
+    fila.appendChild(t); fila.appendChild(b); lista.appendChild(fila);
+  });
+}
+function guardarColaboradores(nueva, msgOk){
+  var msg=document.getElementById('colab-msg');
+  firebase.firestore().collection('config').doc('colaboradores').set({emails:nueva, actualizado:firebase.firestore.FieldValue.serverTimestamp()})
+    .then(function(){ COLABORADORES=nueva; renderColaboradores(); msg.style.color='#166534'; msg.textContent=msgOk; })
+    .catch(function(e){ msg.style.color='#B91C1C'; msg.textContent='No se pudo guardar: '+e.message; });
+}
+function agregarColaborador(){
+  if(!isAdmin()) return;
+  var inp=document.getElementById('colab-email'); var e=(inp.value||'').trim().toLowerCase();
+  var msg=document.getElementById('colab-msg');
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){ msg.style.color='#B91C1C'; msg.textContent='Escribí un mail válido.'; return; }
+  if(COLABORADORES.indexOf(e)!==-1){ inp.value=''; return; }
+  inp.value='';
+  guardarColaboradores(COLABORADORES.concat([e]), 'Listo, '+e+' ya tiene acceso.');
+}
+function quitarColaborador(e){
+  if(!isAdmin()) return;
+  guardarColaboradores(COLABORADORES.filter(function(x){return x!==e;}), e+' ya no tiene acceso.');
+}
 
 function actualizarPreviewEtiqueta(){
   var nombre = document.getElementById('etiq-nombre').value.trim();
   var tel = document.getElementById('etiq-tel').value.trim();
   var dni = document.getElementById('etiq-dni').value.trim();
-  var destino = document.getElementById('etiq-destino').value.trim() || 'TRELEW';
+  var destino = document.getElementById('etiq-destino').value.trim() || '—';
   var contenido = document.getElementById('etiq-contenido').value.trim();
-  var remNombre = document.getElementById('etiq-rem-nombre').value.trim() || 'FABRIZIO JARA';
+  var remNombre = document.getElementById('etiq-rem-nombre').value.trim() || '—';
   var remTel = document.getElementById('etiq-rem-tel').value.trim();
   var remDni = document.getElementById('etiq-rem-dni').value.trim();
 
@@ -4368,7 +4447,9 @@ window.addEventListener('afterprint', function(){
 function guardarEImprimirEtiqueta(){
   var nombre = document.getElementById('etiq-nombre').value.trim();
   if(!nombre){ alert('Cargá al menos el nombre del destinatario.'); return; }
-  if(!window.currentUser || !isAdmin()){ return; }
+  if(!window.currentUser){ mostrarLoginModal('default'); return; }
+  if(!isColaborador()){ return; }
+  if(!document.getElementById('etiq-rem-nombre').value.trim()){ alert('Cargá tus datos de remitente (nombre y apellido).'); document.getElementById('etiq-rem-nombre').focus(); return; }
 
   var data = {
     uid: window.currentUser.uid,
@@ -4376,9 +4457,9 @@ function guardarEImprimirEtiqueta(){
     nombre: nombre,
     tel: document.getElementById('etiq-tel').value.trim(),
     dni: document.getElementById('etiq-dni').value.trim(),
-    destino: (document.getElementById('etiq-destino').value.trim()||'TRELEW').toUpperCase(),
+    destino: document.getElementById('etiq-destino').value.trim().toUpperCase(),
     contenido: document.getElementById('etiq-contenido').value.trim(),
-    remNombre: (document.getElementById('etiq-rem-nombre').value.trim()||'FABRIZIO JARA').toUpperCase(),
+    remNombre: document.getElementById('etiq-rem-nombre').value.trim().toUpperCase(),
     remTel: document.getElementById('etiq-rem-tel').value.trim(),
     remDni: document.getElementById('etiq-rem-dni').value.trim()
   };
@@ -4399,7 +4480,7 @@ function guardarEImprimirEtiqueta(){
 }
 
 function cargarHistorialEtiquetas(){
-  if(!window.currentUser || !isAdmin()) return;
+  if(!window.currentUser || !isColaborador()) return;
   firebase.firestore().collection('etiquetas_historial')
     .where('uid','==',window.currentUser.uid)
     .orderBy('fecha','desc')
@@ -4413,6 +4494,7 @@ function cargarHistorialEtiquetas(){
         etiquetasHistorialCache.push(d);
       });
       renderHistorialEtiquetas();
+      cargarRemitenteEtiqueta();
     })
     .catch(function(e){
       var cont = document.getElementById('etiq-historial-contenido');
@@ -4453,7 +4535,7 @@ function renderHistorialEtiquetas(){
     card.innerHTML =
       '<div style="font-size:0.88rem;font-weight:700;color:#1A1814;font-family:\'Inter\',sans-serif;margin-bottom:2px">'+escaparHtml(d.nombre)+'</div>'+
       '<div style="font-size:0.75rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:2px">DNI: '+(d.dni||'—')+' · Tel: '+(d.tel||'—')+'</div>'+
-      '<div style="font-size:0.72rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:'+(d.contenido?'4px':'10px')+'">Destino: '+(d.destino||'TRELEW')+' · '+fecha+'</div>'+
+      '<div style="font-size:0.72rem;color:#8A8479;font-family:\'Inter\',sans-serif;margin-bottom:'+(d.contenido?'4px':'10px')+'">Destino: '+(d.destino||'—')+' · '+fecha+'</div>'+
       (d.contenido ? '<div style="font-size:0.72rem;color:#4B4640;font-family:\'Inter\',sans-serif;margin-bottom:10px;background:#F5F2ED;border-radius:6px;padding:6px 8px;white-space:pre-wrap">'+escaparHtml(d.contenido)+'</div>' : '')+
       '<div style="display:flex;gap:6px">'+
         '<button data-etid="'+d.id+'" class="btn-reimprimir-etiq" style="flex:1;padding:7px;background:#1A1814;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Editar y reimprimir</button>'+
@@ -4464,17 +4546,46 @@ function renderHistorialEtiquetas(){
   cont.appendChild(grid);
 }
 
+var _remitenteTimer=null, _remitenteCargado=false;
+function guardarRemitenteEtiqueta(){
+  if(!window.currentUser) return;
+  clearTimeout(_remitenteTimer);
+  _remitenteTimer=setTimeout(function(){
+    var rem={nombre:document.getElementById('etiq-rem-nombre').value.trim(),tel:document.getElementById('etiq-rem-tel').value.trim(),dni:document.getElementById('etiq-rem-dni').value.trim()};
+    firebase.firestore().collection('usuarios').doc(window.currentUser.uid).set({remitenteEtiqueta:rem},{merge:true}).catch(function(){});
+  },800);
+}
+function cargarRemitenteEtiqueta(){
+  if(!window.currentUser || _remitenteCargado) return;
+  var n=document.getElementById('etiq-rem-nombre');
+  if(n && n.value.trim()) { _remitenteCargado=true; return; }
+  function poner(r){
+    if(!r) return;
+    if(r.nombre) document.getElementById('etiq-rem-nombre').value=r.nombre;
+    if(r.tel) document.getElementById('etiq-rem-tel').value=r.tel;
+    if(r.dni) document.getElementById('etiq-rem-dni').value=r.dni;
+    actualizarPreviewEtiqueta();
+  }
+  firebase.firestore().collection('usuarios').doc(window.currentUser.uid).get().then(function(doc){
+    _remitenteCargado=true;
+    var r=doc.exists && doc.data().remitenteEtiqueta;
+    if(r && r.nombre){ poner(r); return; }
+    var ult=etiquetasHistorialCache[0];
+    if(ult && ult.remNombre){ poner({nombre:ult.remNombre,tel:ult.remTel,dni:ult.remDni}); guardarRemitenteEtiqueta(); }
+  }).catch(function(){});
+}
+
 function usarEtiquetaHistorial(id){
   var d = etiquetasHistorialCache.find(function(x){ return x.id === id; });
   if(!d) return;
   document.getElementById('etiq-nombre').value = d.nombre||'';
   document.getElementById('etiq-tel').value = d.tel||'';
   document.getElementById('etiq-dni').value = d.dni||'';
-  document.getElementById('etiq-destino').value = d.destino||'TRELEW';
+  document.getElementById('etiq-destino').value = d.destino||'';
   document.getElementById('etiq-contenido').value = d.contenido||'';
-  document.getElementById('etiq-rem-nombre').value = d.remNombre||'FABRIZIO JARA';
-  document.getElementById('etiq-rem-tel').value = d.remTel||'2805064128';
-  document.getElementById('etiq-rem-dni').value = d.remDni||'46405539';
+  if(d.remNombre) document.getElementById('etiq-rem-nombre').value = d.remNombre;
+  if(d.remTel) document.getElementById('etiq-rem-tel').value = d.remTel;
+  if(d.remDni) document.getElementById('etiq-rem-dni').value = d.remDni;
   actualizarPreviewEtiqueta();
   document.getElementById('etiq-similar-aviso').style.display='none';
   document.getElementById('etiq-grid-principal').scrollIntoView({behavior:'smooth',block:'start'});
