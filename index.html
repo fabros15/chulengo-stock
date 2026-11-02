@@ -6074,8 +6074,9 @@ function pendientesCliente(cliente, hastaMs){
     .forEach(function(rem){ (rem.renglones||[]).forEach(function(r, idx){
       var p = calcularPagoRenglon(r), falta = p.cantTotal - p.cantPagada;
       if(falta <= 0.0001) return;
-      var key = normProd(r.producto).join(' ') || '—';
-      var g = grupos[key] = grupos[key] || { key:key, nombre:(r.producto||'—').trim(), falta:0, renglones:[], unit:(r.subtotal||0)/p.cantTotal, fechas:[] };
+      var unitR = Math.round((r.subtotal||0)/p.cantTotal);
+      var key = (normProd(r.producto).join(' ') || '—')+'|'+unitR;
+      var g = grupos[key] = grupos[key] || { key:key, nombre:(r.producto||'—').trim(), falta:0, renglones:[], unit:unitR, fechas:[] };
       g.falta += falta; g.renglones.push({ remId: rem.id, idx: idx, fecha: rem.fechaEntrega, falta: falta, unit: (r.subtotal||0)/p.cantTotal, producto: r.producto });
       if(g.fechas.indexOf(rem.fechaEntrega)===-1) g.fechas.push(rem.fechaEntrega);
     }); });
