@@ -40,17 +40,44 @@ function isColaborador(){
   var e = window.currentUser && window.currentUser.email ? window.currentUser.email.toLowerCase() : '';
   return !!e && COLABORADORES.indexOf(e) !== -1;
 }
+var colaboradoresListos = false;
 function cargarColaboradores(cb){
-  if(!window.currentUser){ COLABORADORES=[]; if(cb) cb(); return; }
+  if(!window.currentUser){ COLABORADORES=[]; colaboradoresListos=false; if(cb) cb(); return; }
   firebase.firestore().collection('config').doc('colaboradores').get()
     .then(function(doc){ COLABORADORES = (doc.exists && doc.data().emails) || []; })
     .catch(function(){ COLABORADORES = []; })
-    .then(function(){ actualizarTarjetasInicio(); if(cb) cb(); });
+    .then(function(){ colaboradoresListos = true; actualizarTarjetasInicio(); if(cb) cb(); });
+}
+// Remitos compartidos: el admin y los colaboradores trabajan sobre los mismos remitos
+// (marcados con equipo:'chulengo'). Cualquier otra persona ve solo los suyos.
+var EQUIPO = 'chulengo';
+function filtroRemitos(col){
+  var ref = firebase.firestore().collection(col);
+  return isColaborador() ? ref.where('equipo','==',EQUIPO) : ref.where('uid','==',window.currentUser.uid);
+}
+function mensajeErrorRemitos(e){
+  return /permission|insufficient/i.test(e.message||'') ? 'No tenés permiso para ver estos remitos todavía. Avisale a Fabri (falta actualizar las reglas de Firebase).' : 'Error: '+e.message;
+}
+// Una sola vez: marca los remitos y clientes viejos del admin como del equipo
+function migrarRemitosAlEquipo(){
+  if(!isAdmin()) return Promise.resolve();
+  var db = firebase.firestore();
+  return Promise.all(['remitos_historial','clientes_remito_info'].map(function(col){
+    return db.collection(col).where('uid','==',window.currentUser.uid).get().then(function(snap){
+      var pend = snap.docs.filter(function(d){ return d.data().equipo !== EQUIPO; });
+      for(var i=0;i<pend.length;i+=400){
+        var b = db.batch();
+        pend.slice(i,i+400).forEach(function(d){ b.update(d.ref, {equipo: EQUIPO}); });
+        b.commit().catch(function(){});
+      }
+    });
+  })).catch(function(){});
 }
 
 document.addEventListener('DOMContentLoaded', function(){
   firebase.auth().onAuthStateChanged(function(user){
     window.currentUser = user;
+    colaboradoresListos = false;
     document.getElementById('app').style.display='block';
     initCarrusel();
     var btnSalir = document.getElementById('btn-salir');
@@ -5287,8 +5314,10 @@ function guardarEImprimirRemito(){
     fechaEntrega: fechaEntrega,
     cliente: nombre.toUpperCase(),
     renglones: renglonesCalc,
-    total: total
+    total: total,
+    creadoPor: window.currentUser.displayName || window.currentUser.email || ''
   };
+  if(isColaborador()) data.equipo = EQUIPO;
 
   var btn = document.getElementById('btn-guardar-imprimir-remito');
   var textoBtn = btn ? btn.textContent : '';
@@ -5303,8 +5332,9 @@ function guardarEImprimirRemito(){
       var vr = (viejo.renglones||[]).find(function(o,i){ return !usados[i] && (o.producto||'').trim().toUpperCase() === (r.producto||'').trim().toUpperCase() && (usados[i]=true); });
       if(vr){ var pg = calcularPagoRenglon(vr).cantPagada; r.cantidadPagada = Math.min(pg, parseNumeroRemito(r.cantidad||'1')||1); }
     });
-    delete data.fecha; delete data.uid;
+    delete data.fecha; delete data.uid; delete data.creadoPor;
     data.editado = firebase.firestore.FieldValue.serverTimestamp();
+    data.editadoPor = window.currentUser.displayName || window.currentUser.email || '';
     promesa = firebase.firestore().collection('remitos_historial').doc(remitoEditandoId).update(data);
   } else {
     promesa = firebase.firestore().collection('remitos_historial').add(data);
@@ -5368,8 +5398,8 @@ var clientesInfoCache = {};
 
 function cargarInfoClientesRemito(){
   if(!window.currentUser) return;
-  firebase.firestore().collection('clientes_remito_info')
-    .where('uid','==',window.currentUser.uid)
+  if(!colaboradoresListos){ cargarColaboradores(cargarInfoClientesRemito); return; }
+  filtroRemitos('clientes_remito_info')
     .get()
     .then(function(snap){
       clientesInfoCache = {};
@@ -5393,6 +5423,7 @@ function guardarInfoCliente(cliente, campo, valor){
     firebase.firestore().collection('clientes_remito_info').doc(existente.id).update({ [campo]: valor }).catch(function(){});
   } else {
     var nuevo = { uid: window.currentUser.uid, cliente: clienteKey, telefono:'', domicilio:'', observaciones:'' };
+    if(isColaborador()) nuevo.equipo = EQUIPO;
     nuevo[campo] = valor;
     clientesInfoCache[clienteKey] = nuevo;
     firebase.firestore().collection('clientes_remito_info').add(nuevo).then(function(ref){
@@ -5402,12 +5433,12 @@ function guardarInfoCliente(cliente, campo, valor){
 }
 
 
+var _migracionHecha = false;
 function cargarHistorialRemitos(){
   if(!window.currentUser) return;
-  firebase.firestore().collection('remitos_historial')
-    .where('uid','==',window.currentUser.uid)
-    .orderBy('fecha','desc')
-    .limit(500)
+  if(!colaboradoresListos){ cargarColaboradores(cargarHistorialRemitos); return; }
+  if(isAdmin() && !_migracionHecha){ _migracionHecha = true; migrarRemitosAlEquipo().then(function(){ setTimeout(cargarHistorialRemitos, 800); }); return; }
+  filtroRemitos('remitos_historial')
     .get()
     .then(function(snap){
       remitosHistorialCache = [];
@@ -5416,12 +5447,13 @@ function cargarHistorialRemitos(){
         d.id = doc.id;
         remitosHistorialCache.push(d);
       });
+      remitosHistorialCache.sort(function(a,b){ return (b.fecha&&b.fecha.toMillis?b.fecha.toMillis():Date.now()) - (a.fecha&&a.fecha.toMillis?a.fecha.toMillis():Date.now()); });
       actualizarSugerenciasClientes();
       renderHistorialRemitos();
     })
     .catch(function(e){
       var cont = document.getElementById('remito-historial-clientes');
-      if(cont) cont.innerHTML = '<div style="color:#B91C1C;padding:1rem;font-size:0.85rem;font-family:\'Inter\',sans-serif">Error: '+e.message+'</div>';
+      if(cont) cont.innerHTML = '<div style="color:#B91C1C;padding:1rem;font-size:0.85rem;font-family:\'Inter\',sans-serif">'+mensajeErrorRemitos(e)+'</div>';
     });
 }
 
@@ -5636,6 +5668,7 @@ function renderFichaRemito(rem){
       '<div class="rem-hero-r"><div class="rem-hero-total">'+formatearMoneda(est.total)+'</div>'+chipEstado(est)+'</div>'+
       '<div class="rem-barra"><div style="width:'+pct+'%"></div></div>'+
       '<div class="rem-hero-pie"><span>Cobrado <b class="rem-ok">'+formatearMoneda(est.pagado)+'</b></span><span>Falta <b class="'+(est.pendiente>0.5?'rem-debe':'rem-ok')+'">'+formatearMoneda(Math.max(0,est.pendiente))+'</b></span></div>'+
+      ((rem.creadoPor||rem.editadoPor) ? '<div class="rem-hero-pie rem-gris" style="font-size:0.76rem">'+(rem.creadoPor?'<span>Cargado por '+escaparHtml(rem.creadoPor)+'</span>':'<span></span>')+(rem.editadoPor?'<span>Editado por '+escaparHtml(rem.editadoPor)+'</span>':'')+'</div>' : '')+
     '</div>'+
     '<div class="rem-bloque"><div class="rem-bloque-t">Productos <span class="rem-gris">· tocá uno para marcar lo pagado</span></div>';
   (rem.renglones||[]).forEach(function(r, idx){
