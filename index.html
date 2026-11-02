@@ -1258,6 +1258,20 @@ body.dark .rem-tabla td{color:#FAFAFA;border-color:#2A2A2A}
 .rem-unir .rem-radio{flex-direction:row;align-items:center;gap:6px;font-weight:500;margin:3px 0}
 .rem-unir-ok{background:#2D6A4F;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
 .rem-unir-cancel{background:#fff;border:1px solid #E2DDD6;border-radius:8px;padding:8px 14px;cursor:pointer}
+.fac-items{display:flex;flex-direction:column;gap:8px}
+.fac-item{border:1px solid #E2DDD6;border-radius:10px;padding:10px 12px;background:#fff}
+.fac-item.noweb{background:#FAF8F5}
+.fac-item.revisar{border-color:#FCD34D;background:#FFFBEB}
+.fac-revisar{font-size:0.74rem;font-weight:700;color:#92400E;margin-bottom:4px}
+.fac-item-top{display:flex;justify-content:space-between;gap:10px;font-size:0.86rem}
+.fac-item-sel{margin-top:8px;font-size:0.76rem;color:#6B655C;display:flex;flex-direction:column;gap:5px}
+.fac-sel-fila{display:flex;gap:6px}
+.fac-sel-fila select{flex:1;padding:7px 8px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.82rem;font-family:Inter,sans-serif;background:#fff;color:#1A1814;min-width:0}
+.fac-quitar{background:#fff;border:1px solid #E2DDD6;border-radius:8px;padding:0 10px;cursor:pointer;color:#8A8479}
+.fac-falta{color:#B45309;font-weight:600}
+.fac-falta button,.fac-deshacer{background:#fff;border:1px solid #E2DDD6;border-radius:7px;padding:4px 9px;font-size:0.75rem;font-weight:600;cursor:pointer;margin-left:4px;color:#1A1814}
+.fac-ok{color:#2D6A4F;font-weight:600}
+.fac-deshacer{color:#B91C1C;border-color:#FECACA;background:#FEF2F2}
 .page{display:none}
 .page.active{display:block}
 .filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.75rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
@@ -5916,6 +5930,7 @@ function abrirModalFactura(){
   if(!remitosHistorialCache.length){ alert('Todavía no tenés remitos para descontar.'); return; }
   mostrarPasoFactura(1);
   document.getElementById('fac-estado').textContent='';
+  renderFacturasAplicadas();
   document.getElementById('fac-overlay').classList.add('open');
 }
 function cerrarModalFactura(){ document.getElementById('fac-overlay').classList.remove('open'); }
@@ -5938,6 +5953,8 @@ function cargarPdfJs(){
 // Número argentino "1.234,56" -> 1234.56
 function numAR(t){ t=String(t).replace(/\$/g,'').trim(); if(!/^-?[\d.]*,?\d+$/.test(t) && !/^-?\d+(\.\d+)?$/.test(t)) return NaN; if(t.indexOf(',')!==-1) t=t.replace(/\./g,'').replace(',','.'); else if(/^\d{1,3}(\.\d{3})+$/.test(t)) t=t.replace(/\./g,''); return parseFloat(t); }
 
+var NO_WEB = '__noweb__';
+
 function leerFactura(file){
   if(!file) return;
   var est=document.getElementById('fac-estado');
@@ -5946,11 +5963,26 @@ function leerFactura(file){
   cargarPdfJs().then(function(pdfjsLib){
     return file.arrayBuffer().then(function(buf){ return pdfjsLib.getDocument({data:buf}).promise; });
   }).then(function(pdf){
-    return pdf.getPage(1).then(function(pg){ return pg.getTextContent(); }); // ARCA repite la factura (original/duplicado/triplicado): con la 1ª hoja alcanza
-  }).then(function(tc){
-    var lineas = agruparLineasPdf(tc.items);
+    // ARCA repite la factura en ORIGINAL / DUPLICADO / TRIPLICADO y cada copia puede tener varias hojas:
+    // se leen las hojas hasta que empieza la segunda copia.
+    var lineasTot = [];
+    function pagina(n){
+      if(n > pdf.numPages) return Promise.resolve();
+      return pdf.getPage(n).then(function(pg){ return pg.getTextContent(); }).then(function(tc){
+        var lineas = agruparLineasPdf(tc.items);
+        var texto = lineas.map(function(l){ return l.texto; }).join(' ');
+        if(n>1 && /\b(DUPLICADO|TRIPLICADO)\b/.test(texto)) return;
+        lineasTot = lineasTot.concat(lineas);
+        var pag = texto.match(/P[áa]g\.?\s*(\d+)\s*\/\s*(\d+)/);
+        if(pag && parseInt(pag[1],10) >= parseInt(pag[2],10)) return;
+        return pagina(n+1);
+      });
+    }
+    return pagina(1).then(function(){ return lineasTot; });
+  }).then(function(lineas){
     facturaLeida = interpretarFactura(lineas, file.name);
     est.textContent='';
+    if(!facturaLeida.items.length && !facturaLeida.total){ est.textContent='No pude leer los datos de esa factura. Probá con "Cargar solo un monto".'; return; }
     prepararPaso2(facturaLeida);
   }).catch(function(e){
     console.error(e);
@@ -5978,7 +6010,7 @@ function interpretarFactura(lineas, nombreArchivo){
   var f = { nro:'', fecha:'', receptor:'', total:0, items:[], tipo:'' };
   var pv = todo.match(/Punto de Venta:?\s*(\d+)/i), cn = todo.match(/Comp\.?\s*Nro:?\s*(\d+)/i);
   if(pv && cn) f.nro = pv[1].padStart(5,'0')+'-'+cn[1].padStart(8,'0');
-  else { var m2=(nombreArchivo||'').match(/(\d{4,5})[_-](\d{6,8})/); if(m2) f.nro=m2[1]+'-'+m2[2]; }
+  else { var m2=(nombreArchivo||'').match(/(\d{4,5})[_-](\d{6,8})\.pdf$/i); if(m2) f.nro=m2[1].padStart(5,'0')+'-'+m2[2].padStart(8,'0'); }
   var tp = todo.match(/\bFACTURA\s+([ABC])\b/i) || todo.match(/^\s*([ABC])\s+FACTURA\b/im) || todo.match(/^\s*([ABC])\s*$/m); if(tp) f.tipo = 'Factura '+tp[1].toUpperCase();
   var fe = todo.match(/Fecha de Emisi[oó]n:?\s*(\d{2}\/\d{2}\/\d{4})/i); if(fe) f.fecha = fe[1];
   var rec = todo.match(/Apellido y Nombre\s*\/\s*Raz[oó]n Social:?\s*([^\n]+)/i);
@@ -5986,30 +6018,29 @@ function interpretarFactura(lineas, nombreArchivo){
   var tots = todo.match(/Importe Total:?\s*\$?\s*([\d.,]+)/gi);
   if(tots){ var ult = tots[tots.length-1].match(/([\d.,]+)\s*$/); f.total = numAR(ult[1]) || 0; }
 
-  // Renglones: entre el encabezado de la tabla y los totales
-  var ini = lineas.findIndex(function(l){ return /Producto\s*\/\s*Servicio/i.test(l.texto) || (/Cantidad/i.test(l.texto) && /Subtotal/i.test(l.texto)); });
-  var fin = lineas.findIndex(function(l,i){ return i>ini && /(Importe Otros Tributos|Importe Neto Gravado|Importe Total|^Subtotal:)/i.test(l.texto); });
-  if(ini!==-1){
-    var UNIDADES = /^(unidades|unidad|u\.?|kilogramos|kg|litros|metros|otras unidades|pares|docenas)$/i;
-    lineas.slice(ini+1, fin===-1?undefined:fin).forEach(function(l){
-      var nums=[], textos=[];
-      l.partes.forEach(function(p){
-        p.t.split(/\s+/).forEach(function(tok){
-          var n = numAR(tok.replace('%',''));
-          if(!isNaN(n) && /\d/.test(tok)) nums.push(n); else if(!UNIDADES.test(tok)) textos.push(tok);
-        });
+  // Renglones: puede haber una tabla por hoja
+  var UNIDADES = /^(unidades|unidad|u\.?|kg|kilogramos|gramos|litros|metros|otras|pares|docenas|kilos)$/i;
+  var enTabla = false;
+  lineas.forEach(function(l){
+    if(/Producto\s*\/\s*Servicio/i.test(l.texto) || (/Cantidad/i.test(l.texto) && /Subtotal/i.test(l.texto))){ enTabla = true; return; }
+    if(/(Subtotal:|Importe Otros Tributos|Importe Neto Gravado|Importe Total|CAE N|P[áa]g\.\s*\d)/i.test(l.texto)){ enTabla = false; return; }
+    if(!enTabla) return;
+    var nums=[], textos=[];
+    l.partes.forEach(function(p){
+      p.t.split(/\s+/).forEach(function(tok){
+        var n = numAR(tok.replace('%',''));
+        if(!isNaN(n) && /\d/.test(tok) && /^[\d.,%$]+$/.test(tok)) nums.push(n); else if(!UNIDADES.test(tok)) textos.push(tok);
       });
-      var desc = textos.join(' ').replace(/\s+/g,' ').trim();
-      if(nums.length >= 3 && desc){
-        // Si el renglón arranca con un código numérico corto, no es la cantidad
-        var cant = nums[0], unit = nums[1], sub = nums[nums.length-1];
-        if(cant>0 && unit>0 && Math.abs(cant*unit - sub) > Math.max(1, sub*0.02) && nums.length>=4 && Math.abs(nums[1]*nums[2]-sub) <= Math.max(1,sub*0.02)){ cant=nums[1]; unit=nums[2]; }
-        f.items.push({ desc: desc, cant: cant, unit: unit, subtotal: sub });
-      } else if(desc && !nums.length && f.items.length){
-        f.items[f.items.length-1].desc += ' '+desc;  // descripción en dos líneas
-      }
     });
-  }
+    var desc = textos.join(' ').replace(/\s+/g,' ').trim();
+    if(nums.length >= 3 && desc){
+      var cant = nums[0], unit = nums[1], sub = nums[nums.length-1];
+      if(cant>0 && unit>0 && Math.abs(cant*unit - sub) > Math.max(1, sub*0.02) && nums.length>=4 && Math.abs(nums[1]*nums[2]-sub) <= Math.max(1,sub*0.02)){ cant=nums[1]; unit=nums[2]; }
+      f.items.push({ desc: desc, cant: cant, unit: unit, subtotal: sub });
+    } else if(desc && !nums.length && f.items.length){
+      f.items[f.items.length-1].desc += ' '+desc;
+    }
+  });
   if(!f.total && f.items.length) f.total = f.items.reduce(function(a,i){return a+i.subtotal;},0);
   return f;
 }
@@ -6019,20 +6050,47 @@ function facturaSinArchivo(){
   prepararPaso2(facturaLeida);
 }
 
-function normProd(t){ return String(t||'').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Z0-9 ]/g,' ').split(/\s+/).filter(function(w){ return w.length>1 && ['DE','LA','EL','CON','PARA','LOS','LAS','Y','DEL','EN'].indexOf(w)===-1; }); }
+// Abreviaturas comunes en las facturas
+var ABREV = { 'POCH':'POCHOCLERA', 'POCHOC':'POCHOCLERA', 'POCHO':'POCHOCLERA', 'FIG':'FIGURA', 'LLAV':'LLAVERO', 'SPIDERMAN':'SPIDER MAN', 'TOPP':'TOPPER' };
+function normProd(t){
+  var palabras = String(t||'').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Z0-9 ]/g,' ').split(/\s+/);
+  var out=[]; palabras.forEach(function(w){ (ABREV[w]||w).split(' ').forEach(function(x){ if(x.length>1 && ['DE','LA','EL','CON','PARA','LOS','LAS','Y','DEL','EN','UN','UNA'].indexOf(x)===-1) out.push(x.replace(/S$/,'')); }); });
+  return out;
+}
 function similitud(a,b){
   var A=normProd(a), B=normProd(b); if(!A.length||!B.length) return 0;
   var hits=0;
   A.forEach(function(w){ if(B.some(function(v){ return v===w || (w.length>=4 && v.length>=4 && (v.indexOf(w)===0 || w.indexOf(v)===0)); })) hits++; });
   return hits / Math.max(A.length, B.length);
 }
+function fechaTextoMs(t){ var p=String(t||'').split('/'); return p.length===3 ? new Date(+p[2], +p[1]-1, +p[0]).getTime() : 0; }
+function claveFactura(nro){ return 'f'+String(nro||'').replace(/[^0-9A-Za-z]/g,'_'); }
+
+// Productos pendientes del cliente (agrupados por nombre), sólo de remitos hasta la fecha de la factura
+function pendientesCliente(cliente, hastaMs){
+  var grupos = {};
+  remitosHistorialCache.filter(function(r){ return (r.cliente||'').trim().toUpperCase()===cliente && (!hastaMs || fechaRemitoMs(r) <= hastaMs + 86400000); })
+    .sort(function(a,b){ return fechaRemitoMs(a)-fechaRemitoMs(b); })
+    .forEach(function(rem){ (rem.renglones||[]).forEach(function(r, idx){
+      var p = calcularPagoRenglon(r), falta = p.cantTotal - p.cantPagada;
+      if(falta <= 0.0001) return;
+      var key = normProd(r.producto).join(' ') || '—';
+      var g = grupos[key] = grupos[key] || { key:key, nombre:(r.producto||'—').trim(), falta:0, renglones:[], unit:(r.subtotal||0)/p.cantTotal, fechas:[] };
+      g.falta += falta; g.renglones.push({ remId: rem.id, idx: idx, fecha: rem.fechaEntrega, falta: falta, unit: (r.subtotal||0)/p.cantTotal, producto: r.producto });
+      if(g.fechas.indexOf(rem.fechaEntrega)===-1) g.fechas.push(rem.fechaEntrega);
+    }); });
+  return Object.keys(grupos).map(function(k){ return grupos[k]; });
+}
+
+var facturaElecciones = [];
+// Recuerda a qué cliente corresponde cada razón social de las facturas
+function receptoresGuardados(){ try{ return JSON.parse(localStorage.getItem('chulengo_receptores')||'{}'); }catch(e){ return {}; } }
+function recordarReceptor(receptor, cliente){ if(!receptor) return; try{ var m=receptoresGuardados(); m[normCliente(receptor)]=cliente; localStorage.setItem('chulengo_receptores', JSON.stringify(m)); }catch(e){} } // por cada item de la factura: lista de keys de grupos elegidos (o NO_WEB)
 
 function prepararPaso2(f){
-  // Clientes con algo pendiente primero
   var grupos = agruparRemitosPorCliente();
   var sel = document.getElementById('fac-cliente');
   sel.innerHTML = grupos.map(function(g){ return '<option value="'+escaparAttr(g.cliente)+'">'+escaparHtml(g.cliente)+(g.totalPendiente>0.5?' — debe '+formatearMoneda(g.totalPendiente):' — al día')+'</option>'; }).join('');
-  // Elegir cliente: por nombre del receptor, y si no, por coincidencia de productos
   var mejor = null, mejorScore = 0;
   grupos.forEach(function(g){
     var sc = f.receptor ? similitud(f.receptor, g.cliente)*2 : 0;
@@ -6044,120 +6102,221 @@ function prepararPaso2(f){
     if(sc > mejorScore){ mejorScore = sc; mejor = g.cliente; }
   });
   if(!mejor){ var conDeuda = grupos.find(function(g){ return g.totalPendiente>0.5; }); mejor = conDeuda ? conDeuda.cliente : (grupos[0]||{}).cliente; }
+  var recordado = f.receptor && receptoresGuardados()[normCliente(f.receptor)];
+  if(recordado && grupos.some(function(g){ return g.cliente===recordado; })) mejor = recordado;
   sel.value = mejor;
   document.getElementById('fac-monto').value = f.total ? Math.round(f.total*100)/100 : '';
+  document.getElementById('fac-monto').parentNode.style.display = f.manual ? '' : 'none';
   document.getElementById('fac-nro').value = f.nro || '';
+  document.getElementById('fac-sec-titulo').textContent = f.manual ? 'Se va a marcar como pagado (de lo más viejo a lo más nuevo)' : 'Productos de la factura · elegí dónde se paga cada uno';
   var d = document.getElementById('fac-datos');
   if(f.manual){ d.innerHTML = '<div class="rem-gris">Elegí el cliente y el monto. Se descuenta de lo más viejo que debe.</div>'; }
   else {
     d.innerHTML = '<div class="fac-chipline">'+
-      (f.tipo?'<span>'+escaparHtml(f.tipo)+'</span>':'')+
-      (f.nro?'<span>N° '+escaparHtml(f.nro)+'</span>':'')+
-      (f.fecha?'<span>'+escaparHtml(f.fecha)+'</span>':'')+
-      (f.receptor?'<span>Para: <b>'+escaparHtml(f.receptor)+'</b></span>':'')+
-      '<span>Total: <b>'+formatearMoneda(f.total)+'</b></span></div>'+
-      (f.items.length ? '<div class="rem-gris" style="margin-top:6px">'+f.items.length+' producto'+(f.items.length>1?'s':'')+' en la factura</div>' : '<div class="rem-gris" style="margin-top:6px">No encontré el detalle de productos: se descuenta el monto total de lo más viejo.</div>');
+      (f.tipo?'<span>'+escaparHtml(f.tipo)+'</span>':'')+(f.nro?'<span>N° '+escaparHtml(f.nro)+'</span>':'')+
+      (f.fecha?'<span>'+escaparHtml(f.fecha)+'</span>':'')+(f.receptor?'<span>Para: <b>'+escaparHtml(f.receptor)+'</b></span>':'')+
+      '<span>Total: <b>'+formatearMoneda(f.total)+'</b></span></div>';
   }
+  facturaElecciones = null; // se sugieren al calcular
   mostrarPasoFactura(2);
   calcularAplicacionFactura();
 }
 
-// Arma el plan: qué cantidad de cada renglón queda pagada
+// Cuántas palabras de la factura aparecen en el nombre del remito (1 = todas)
+function contencion(desc, prod){
+  var A=normProd(desc), B=normProd(prod); if(!A.length) return 0;
+  var hits=0; A.forEach(function(w){ if(B.some(function(v){ return v===w || (w.length>=4 && v.length>=4 && (v.indexOf(w)===0 || w.indexOf(v)===0)); })) hits++; });
+  return hits/A.length;
+}
+function sugerirElecciones(f, cliente){
+  var hasta = fechaTextoMs(f.fecha);
+  var grupos = pendientesCliente(cliente, hasta);
+  var disp = {}; grupos.forEach(function(g){ disp[g.key]=g.falta; });
+  return f.items.map(function(it){
+    var palabras = normProd(it.desc).length;
+    var cands = grupos.map(function(g){
+      var cont = contencion(it.desc, g.nombre), sim = similitud(it.desc, g.nombre);
+      var precio = !!(it.unit && g.unit && Math.abs(g.unit-it.unit) <= Math.max(1, it.unit*0.02));
+      var muyDistinto = !!(it.unit && g.unit && (g.unit > it.unit*1.3 || g.unit < it.unit*0.7));
+      var ok = palabras >= 2 && !muyDistinto && ((cont===1 && (precio || sim>=0.5)) || (sim>=0.75 && precio));
+      return { g:g, cont:cont, sim:sim, precio:precio, ok:ok, sc: cont + sim + (precio?0.3:0) };
+    }).filter(function(c){ return c.ok; }).sort(function(a,b){ return b.sc-a.sc; });
+    if(!cands.length){ var r=[NO_WEB]; return r; }
+    var elegidos=[], falta=it.cant||0, seguro = cands[0].cont===1 && cands[0].precio;
+    cands.forEach(function(c, i){
+      if(falta<=0.0001 || disp[c.g.key]<=0.0001) return;
+      if(i>0 && !(c.cont===1 && c.precio)) return;          // sumar otro producto solo si es claramente el mismo
+      elegidos.push(c.g.key); var q=Math.min(falta, disp[c.g.key]); disp[c.g.key]-=q; falta-=q;
+    });
+    if(!elegidos.length) return [NO_WEB];
+    elegidos.revisar = !seguro;
+    return elegidos;
+  });
+}
+
 function calcularAplicacionFactura(){
   var f = facturaLeida || {items:[]};
   var cliente = document.getElementById('fac-cliente').value;
-  var monto = parseFloat(document.getElementById('fac-monto').value)||0;
   var nro = document.getElementById('fac-nro').value.trim();
-  var rems = remitosHistorialCache.filter(function(r){ return (r.cliente||'').trim().toUpperCase() === cliente; })
-    .sort(function(a,b){ return fechaRemitoMs(a)-fechaRemitoMs(b); });
-  // Lo pendiente, del más viejo al más nuevo
-  var pend = [];
-  rems.forEach(function(rem){ (rem.renglones||[]).forEach(function(r, idx){
-    var p = calcularPagoRenglon(r); var falta = p.cantTotal - p.cantPagada;
-    if(falta > 0.0001) pend.push({ remId: rem.id, fecha: rem.fechaEntrega, idx: idx, producto: r.producto, unit: (r.subtotal||0)/p.cantTotal, falta: falta, pagar: 0 });
-  }); });
-  var restante = monto, sinMatch = [];
-  // 1) Por productos de la factura
-  (f.items||[]).forEach(function(it){
-    var cands = pend.map(function(x){ var sc = similitud(it.desc, x.producto); if(it.unit && x.unit && Math.abs(x.unit-it.unit) <= Math.max(1, it.unit*0.02)) sc += 0.25; return {x:x, sc:sc}; })
-      .filter(function(c){ return c.sc >= 0.5 && c.x.falta - c.x.pagar > 0.0001; });
-    if(!cands.length){ sinMatch.push(it); return; }
-    var top = Math.max.apply(null, cands.map(function(c){return c.sc;}));
-    var cantFalta = it.cant || 0;
-    cands.filter(function(c){ return c.sc >= top - 0.01; }).forEach(function(c){
-      if(cantFalta <= 0.0001 || restante <= 0.5) return;
-      var q = Math.min(cantFalta, c.x.falta - c.x.pagar, restante / (c.x.unit||1));
-      c.x.pagar += q; cantFalta -= q; restante -= q * c.x.unit;
+  var hasta = fechaTextoMs(f.fecha);
+  var grupos = pendientesCliente(cliente, f.manual ? 0 : hasta);
+  var porKey = {}; grupos.forEach(function(g){ porKey[g.key]=g; g.libre=g.falta; g.renglones.forEach(function(r){ r.libre=r.falta; }); });
+  var pagos = []; // {remId, idx, pagar, unit, producto, fecha, item}
+  function asignar(key, cant, itemIdx){
+    var g = porKey[key]; if(!g) return 0; var hecho=0;
+    g.renglones.forEach(function(r){
+      if(cant-hecho <= 0.0001 || r.libre <= 0.0001) return;
+      var q = Math.min(cant-hecho, r.libre); r.libre -= q; g.libre -= q; hecho += q;
+      pagos.push({ remId:r.remId, idx:r.idx, pagar:q, unit:r.unit, producto:r.producto, fecha:r.fecha, item:itemIdx });
     });
-    if(cantFalta > 0.0001) sinMatch.push({desc: it.desc, cant: cantFalta, subtotal: cantFalta*(it.unit||0)});
-  });
-  // 2) Lo que sobra del monto: a lo más viejo
-  pend.forEach(function(x){
-    if(restante <= 0.5) return;
-    var q = Math.min(x.falta - x.pagar, restante / (x.unit||1));
-    if(q > 0.0001){ x.pagar += q; x.porMonto = true; restante -= q * x.unit; }
-  });
-  facturaPlan = { cliente: cliente, nro: nro, items: pend.filter(function(x){ return x.pagar > 0.0001; }), sobrante: Math.max(0, restante), sinMatch: sinMatch };
-
-  // Aviso de factura ya cargada
-  var aviso = document.getElementById('fac-aviso'), msgs = [];
-  if(nro && remitosHistorialCache.some(function(r){ return (r.facturas||[]).indexOf(nro)!==-1; })) msgs.push('⚠️ La factura <b>'+escaparHtml(nro)+'</b> ya se aplicó antes. Si la volvés a aplicar se descuenta dos veces.');
-  if(f.receptor && similitud(f.receptor, cliente) < 0.3 && !f.manual) msgs.push('La factura está a nombre de <b>'+escaparHtml(f.receptor)+'</b>. Revisá que el cliente elegido sea el correcto.');
-  aviso.innerHTML = msgs.join('<br>'); aviso.style.display = msgs.length ? 'block' : 'none';
-
-  // Vista del plan
-  var plan = document.getElementById('fac-plan'), h = '';
-  if(!facturaPlan.items.length){
-    h = '<div class="rem-vacio" style="padding:1rem">'+(monto>0 ? 'Este cliente no tiene nada pendiente para descontar.' : 'Cargá el monto pagado.')+'</div>';
-  } else {
-    var tot = 0;
-    h += '<div class="fac-tabla">';
-    facturaPlan.items.forEach(function(x){
-      var val = x.pagar * x.unit; tot += val;
-      var completo = x.pagar >= x.falta - 0.0001;
-      h += '<div class="fac-fila"><div><b>'+escaparHtml(x.producto||'—')+'</b><div class="rem-gris">Remito del '+escaparHtml(x.fecha||'—')+(x.porMonto?' · por monto':'')+'</div></div>'+
-        '<div class="fac-q">'+(Math.abs(x.pagar-Math.round(x.pagar))<0.01 ? Math.round(x.pagar)+' u.' : 'pago parcial')+(completo?' <span class="rem-ok">✓ salda</span>':'')+'</div>'+
-        '<div class="fac-v">'+formatearMoneda(val)+'</div></div>';
-    });
-    h += '<div class="fac-fila fac-total"><div>Total que se descuenta</div><div></div><div>'+formatearMoneda(tot)+'</div></div></div>';
-    var g = agruparRemitosPorCliente().find(function(x){ return x.cliente===cliente; });
-    if(g) h += '<div class="fac-resumen">'+escaparHtml(cliente)+' debía <b>'+formatearMoneda(g.totalPendiente)+'</b> y va a quedar debiendo <b>'+formatearMoneda(Math.max(0,g.totalPendiente - tot))+'</b>.</div>';
+    return hecho;
   }
-  if(facturaPlan.sinMatch.length) h += '<div class="fac-nota">No encontré en los remitos: '+facturaPlan.sinMatch.map(function(i){ return escaparHtml(i.desc); }).join(', ')+(facturaPlan.items.some(function(x){return x.porMonto;})?'. Ese importe se descontó de lo más viejo que debe.':'.')+'</div>';
-  if(facturaPlan.sobrante > 0.5) h += '<div class="fac-nota">Sobran <b>'+formatearMoneda(facturaPlan.sobrante)+'</b>: el cliente ya no debe nada más (queda a favor).</div>';
-  plan.innerHTML = h;
-  document.getElementById('fac-aplicar').disabled = !facturaPlan.items.length;
+  var h = '', noWeb = 0, descontado = 0;
+  if(f.manual){
+    var restante = parseFloat(document.getElementById('fac-monto').value)||0;
+    grupos.slice().sort(function(a,b){ return 0; });
+    var todos = []; grupos.forEach(function(g){ g.renglones.forEach(function(r){ todos.push(r); }); });
+    todos.sort(function(a,b){ return fechaTextoMs(a.fecha)-fechaTextoMs(b.fecha); });
+    todos.forEach(function(r){ if(restante<=0.5) return; var q=Math.min(r.falta, restante/(r.unit||1)); if(q>0.0001){ pagos.push({remId:r.remId, idx:r.idx, pagar:q, unit:r.unit, producto:r.producto, fecha:r.fecha}); restante-=q*r.unit; } });
+    var tot=0; h += '<div class="fac-tabla">';
+    pagos.forEach(function(x){ var v=x.pagar*x.unit; tot+=v; h += '<div class="fac-fila"><div><b>'+escaparHtml(x.producto||'—')+'</b><div class="rem-gris">Remito del '+escaparHtml(x.fecha||'—')+'</div></div><div class="fac-q">'+(Math.abs(x.pagar-Math.round(x.pagar))<0.01?Math.round(x.pagar)+' u.':'parcial')+'</div><div class="fac-v">'+formatearMoneda(v)+'</div></div>'; });
+    h += '<div class="fac-fila fac-total"><div>Total que se descuenta</div><div></div><div>'+formatearMoneda(tot)+'</div></div></div>';
+    if(!pagos.length) h = '<div class="rem-vacio" style="padding:1rem">'+(restante>0?'Este cliente no tiene nada pendiente.':'Cargá el monto pagado.')+'</div>';
+    descontado = tot;
+  } else {
+    if(!facturaElecciones || facturaElecciones._cliente !== cliente){ facturaElecciones = sugerirElecciones(f, cliente); facturaElecciones._cliente = cliente; }
+    h += '<div class="fac-items">';
+    f.items.forEach(function(it, i){
+      var elec = facturaElecciones[i] || [NO_WEB];
+      var hecho = 0;
+      elec.forEach(function(k){ if(k!==NO_WEB) hecho += asignar(k, (it.cant||0)-hecho, i); });
+      var esNoWeb = elec.length===1 && elec[0]===NO_WEB;
+      var valor = hecho * (it.unit || (it.subtotal/(it.cant||1)));
+      if(esNoWeb) noWeb += it.subtotal; else descontado += pagos.filter(function(p){return p.item===i;}).reduce(function(a,p){return a+p.pagar*p.unit;},0);
+      var opciones = function(sel){
+        return '<option value="'+NO_WEB+'"'+(sel===NO_WEB?' selected':'')+'>— No está en la web (remito a mano) —</option>'+
+          grupos.slice().sort(function(a,b){ return similitud(it.desc,b.nombre)-similitud(it.desc,a.nombre); }).map(function(g){
+            return '<option value="'+escaparAttr(g.key)+'"'+(g.key===sel?' selected':'')+'>'+escaparHtml(g.nombre)+' · faltan '+(Math.round(g.falta*100)/100)+' u. · '+formatearMoneda(g.unit)+' · '+escaparHtml(g.fechas.slice(0,3).join(', '))+(g.fechas.length>3?'…':'')+'</option>';
+          }).join('');
+      };
+      h += '<div class="fac-item'+(esNoWeb?' noweb':'')+(elec.revisar?' revisar':'')+'">'+(elec.revisar?'<div class="fac-revisar">⚠️ Revisá: el nombre no coincide del todo</div>':'')+
+        '<div class="fac-item-top"><div><b>'+escaparHtml(it.desc)+'</b><div class="rem-gris">'+(Math.round(it.cant*100)/100)+' × '+formatearMoneda(it.unit)+'</div></div><div class="fac-v">'+formatearMoneda(it.subtotal)+'</div></div>'+
+        '<div class="fac-item-sel">Se paga en:'+
+          elec.map(function(k, j){ return '<div class="fac-sel-fila"><select class="fac-eleccion" data-item="'+i+'" data-pos="'+j+'">'+opciones(k)+'</select>'+(j>0?'<button type="button" class="fac-quitar" data-item="'+i+'" data-pos="'+j+'">✕</button>':'')+'</div>'; }).join('')+
+          (!esNoWeb && hecho < (it.cant||0)-0.0001 ? '<div class="fac-falta">⚠️ Se encontraron '+(Math.round(hecho*100)/100)+' de '+(Math.round(it.cant*100)/100)+' u. <button type="button" class="fac-agregar" data-item="'+i+'">+ sumar otro producto</button></div>' : '')+
+          (!esNoWeb && hecho >= (it.cant||0)-0.0001 ? '<div class="fac-ok">✓ Se marcan '+(Math.round(hecho*100)/100)+' u. como pagadas</div>' : '')+
+          (esNoWeb ? '<div class="rem-gris">No se descuenta nada de la web.</div>' : '')+
+        '</div></div>';
+    });
+    h += '</div>';
+    h += '<div class="fac-resumen">'+
+      '<div>Se descuenta de remitos de la web: <b>'+formatearMoneda(descontado)+'</b></div>'+
+      (noWeb>0.5?'<div>Remitos a mano (no se toca nada): <b>'+formatearMoneda(noWeb)+'</b></div>':'')+
+      '<div class="rem-gris">Total de la factura: '+formatearMoneda(f.total)+'</div></div>';
+  }
+  facturaPlan = { cliente: cliente, nro: nro, items: pagos };
+
+  var aviso = document.getElementById('fac-aviso'), msgs = [];
+  if(nro && remitosHistorialCache.some(function(r){ return (r.facturas||[]).indexOf(nro)!==-1; })) msgs.push('⚠️ La factura <b>'+escaparHtml(nro)+'</b> ya se aplicó. Si la volvés a aplicar se descuenta dos veces (podés deshacerla desde la pantalla anterior).');
+  if(f.receptor && similitud(f.receptor, cliente) < 0.3 && !f.manual && receptoresGuardados()[normCliente(f.receptor)]!==cliente) msgs.push('La factura está a nombre de <b>'+escaparHtml(f.receptor)+'</b>. Revisá que el cliente elegido sea el correcto.');
+  if(!f.manual && f.fecha) msgs.unshift('Solo se muestran remitos de la web hasta el '+escaparHtml(f.fecha)+' (fecha de la factura).');
+  aviso.innerHTML = msgs.join('<br>'); aviso.style.display = msgs.length ? 'block' : 'none';
+  document.getElementById('fac-plan').innerHTML = h;
+  document.getElementById('fac-aplicar').disabled = !pagos.length;
+  document.getElementById('fac-aplicar').textContent = pagos.length ? 'Aplicar pago ('+formatearMoneda(descontado)+')' : 'Nada para descontar';
 }
+
+document.addEventListener('change', function(e){
+  var s2 = e.target.closest('.fac-eleccion'); if(!s2) return;
+  var i=+s2.dataset.item, j=+s2.dataset.pos;
+  facturaElecciones[i][j] = s2.value; facturaElecciones[i].revisar = false;
+  if(s2.value===NO_WEB) facturaElecciones[i] = [NO_WEB];
+  calcularAplicacionFactura();
+});
+document.addEventListener('click', function(e){
+  var ag = e.target.closest('.fac-agregar');
+  if(ag){ var i=+ag.dataset.item; var gs=pendientesCliente(document.getElementById('fac-cliente').value, fechaTextoMs(facturaLeida.fecha)); var usada=facturaElecciones[i]; var otro=gs.find(function(g){ return usada.indexOf(g.key)===-1; }); if(otro){ usada.push(otro.key); calcularAplicacionFactura(); } return; }
+  var qu = e.target.closest('.fac-quitar');
+  if(qu){ facturaElecciones[+qu.dataset.item].splice(+qu.dataset.pos,1); calcularAplicacionFactura(); return; }
+  var dz = e.target.closest('.fac-deshacer');
+  if(dz){ deshacerFactura(dz.dataset.nro); return; }
+});
 
 function aplicarFactura(){
   if(!facturaPlan || !facturaPlan.items.length) return;
   var btn = document.getElementById('fac-aplicar'); btn.disabled = true; btn.textContent = 'Guardando...';
+  var nro = facturaPlan.nro || ('Pago '+new Date().toLocaleDateString('es-AR'));
+  var clave = claveFactura(nro);
+  if(facturaLeida && facturaLeida.receptor) recordarReceptor(facturaLeida.receptor, facturaPlan.cliente);
   var porRemito = {};
   facturaPlan.items.forEach(function(x){ (porRemito[x.remId] = porRemito[x.remId] || []).push(x); });
   var batch = firebase.firestore().batch(), cambios = [];
   Object.keys(porRemito).forEach(function(remId){
     var rem = remitosHistorialCache.find(function(r){ return r.id===remId; });
     var nuevos = JSON.parse(JSON.stringify(rem.renglones));
+    var registro = (rem.pagosFacturas && rem.pagosFacturas[clave]) ? rem.pagosFacturas[clave].slice() : [];
     porRemito[remId].forEach(function(x){
       var p = calcularPagoRenglon(rem.renglones[x.idx]);
-      nuevos[x.idx].cantidadPagada = Math.min(p.cantTotal, Math.round((p.cantPagada + x.pagar)*100)/100);
+      var q = Math.min(p.cantTotal - p.cantPagada, x.pagar);
+      nuevos[x.idx].cantidadPagada = Math.round((p.cantPagada + q)*100)/100;
+      registro.push({ i: x.idx, c: Math.round(q*100)/100 });
     });
-    var upd = { renglones: nuevos };
-    var nro = facturaPlan.nro || ('Pago '+new Date().toLocaleDateString('es-AR'));
-    upd.facturas = firebase.firestore.FieldValue.arrayUnion(nro);
-    batch.update(firebase.firestore().collection('remitos_historial').doc(remId), upd);
-    cambios.push({rem: rem, nuevos: nuevos, nro: nro});
+    var pf = Object.assign({}, rem.pagosFacturas||{}); pf[clave] = registro;
+    var facs = (rem.facturas||[]).indexOf(nro)===-1 ? (rem.facturas||[]).concat([nro]) : (rem.facturas||[]);
+    batch.update(firebase.firestore().collection('remitos_historial').doc(remId), { renglones: nuevos, facturas: facs, pagosFacturas: pf });
+    cambios.push({rem: rem, nuevos: nuevos, facs: facs, pf: pf});
   });
   batch.commit().then(function(){
-    cambios.forEach(function(c){ c.rem.renglones = c.nuevos; c.rem.facturas = (c.rem.facturas||[]).concat(c.rem.facturas && c.rem.facturas.indexOf(c.nro)!==-1 ? [] : [c.nro]); });
-    btn.textContent = 'Aplicar pago'; btn.disabled = false;
+    cambios.forEach(function(c){ c.rem.renglones = c.nuevos; c.rem.facturas = c.facs; c.rem.pagosFacturas = c.pf; });
+    btn.disabled = false;
     cerrarModalFactura();
     renderHistorialRemitos();
-    alert('Listo: se marcó como pagado lo de '+facturaPlan.cliente+'.');
+    alert('Listo: se aplicó la factura '+nro+'.');
   }).catch(function(e){
-    btn.textContent = 'Aplicar pago'; btn.disabled = false;
+    btn.disabled = false; btn.textContent = 'Aplicar pago';
     alert('No se pudo guardar: '+e.message);
   });
+}
+
+// Deshace exactamente lo que descontó una factura
+function deshacerFactura(nro){
+  var clave = claveFactura(nro);
+  var rems = remitosHistorialCache.filter(function(r){ return (r.facturas||[]).indexOf(nro)!==-1; });
+  var conRegistro = rems.filter(function(r){ return r.pagosFacturas && r.pagosFacturas[clave]; });
+  if(!rems.length) return;
+  if(conRegistro.length < rems.length){
+    alert('Esta factura se cargó con la versión anterior y no guardó el detalle de lo que descontó, así que no se puede deshacer sola. Pedile a Fabri que la corrija.');
+    return;
+  }
+  if(!confirm('¿Deshacer la factura '+nro+'? Se van a desmarcar los pagos que hizo en '+rems.length+' remito'+(rems.length!==1?'s':'')+'.')) return;
+  var batch = firebase.firestore().batch(), cambios=[];
+  rems.forEach(function(rem){
+    var nuevos = JSON.parse(JSON.stringify(rem.renglones));
+    rem.pagosFacturas[clave].forEach(function(x){
+      if(!nuevos[x.i]) return;
+      var actual = calcularPagoRenglon(nuevos[x.i]).cantPagada;
+      nuevos[x.i].cantidadPagada = Math.max(0, Math.round((actual - x.c)*100)/100);
+    });
+    var pf = Object.assign({}, rem.pagosFacturas); delete pf[clave];
+    var facs = (rem.facturas||[]).filter(function(n){ return n!==nro; });
+    batch.update(firebase.firestore().collection('remitos_historial').doc(rem.id), { renglones: nuevos, facturas: facs, pagosFacturas: pf });
+    cambios.push({rem:rem, nuevos:nuevos, pf:pf, facs:facs});
+  });
+  batch.commit().then(function(){
+    cambios.forEach(function(c){ c.rem.renglones=c.nuevos; c.rem.pagosFacturas=c.pf; c.rem.facturas=c.facs; });
+    renderHistorialRemitos(); renderFacturasAplicadas();
+    alert('Listo: se deshizo la factura '+nro+'.');
+  }).catch(function(e){ alert('No se pudo deshacer: '+e.message); });
+}
+
+function renderFacturasAplicadas(){
+  var cont = document.getElementById('fac-aplicadas'); if(!cont) return;
+  var m = {};
+  remitosHistorialCache.forEach(function(r){ (r.facturas||[]).forEach(function(n){ (m[n]=m[n]||{n:n, cliente:r.cliente, rems:0}).rems++; }); });
+  var lista = Object.keys(m).sort().reverse().map(function(k){ return m[k]; });
+  cont.innerHTML = lista.length ? '<div class="fac-sec" style="margin-top:1.25rem">Facturas ya aplicadas</div><div class="fac-tabla">'+lista.map(function(x){
+    return '<div class="fac-fila"><div><b>'+escaparHtml(x.n)+'</b><div class="rem-gris">'+escaparHtml(x.cliente||'')+' · '+x.rems+' remito'+(x.rems!==1?'s':'')+'</div></div><div></div><div><button type="button" class="fac-deshacer" data-nro="'+escaparAttr(x.n)+'">Deshacer</button></div></div>';
+  }).join('')+'</div>' : '';
 }
 
 document.addEventListener('change', function(e){
@@ -6362,6 +6521,7 @@ document.addEventListener('change', function(e){
       <div class="fac-o">o</div>
       <button type="button" class="fac-link" onclick="facturaSinArchivo()">Cargar solo un monto pagado, sin factura</button>
       <div id="fac-estado" class="fac-estado"></div>
+      <div id="fac-aplicadas"></div>
     </div>
 
     <div id="fac-paso2" style="display:none">
@@ -6372,7 +6532,7 @@ document.addEventListener('change', function(e){
         <label>Comprobante<input type="text" id="fac-nro" placeholder="Ej: 00002-00000123" oninput="calcularAplicacionFactura()"></label>
       </div>
       <div id="fac-aviso" class="fac-aviso" style="display:none"></div>
-      <div class="fac-sec">Se va a marcar como pagado</div>
+      <div class="fac-sec" id="fac-sec-titulo">Productos de la factura · elegí dónde se paga cada uno</div>
       <div id="fac-plan"></div>
       <div class="fac-botones">
         <button type="button" class="fac-volver" onclick="mostrarPasoFactura(1)">← Otra factura</button>
