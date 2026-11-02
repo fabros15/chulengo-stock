@@ -65,11 +65,13 @@ function migrarRemitosAlEquipo(){
   return Promise.all(['remitos_historial','clientes_remito_info'].map(function(col){
     return db.collection(col).where('uid','==',window.currentUser.uid).get().then(function(snap){
       var pend = snap.docs.filter(function(d){ return d.data().equipo !== EQUIPO; });
+      var commits = [];
       for(var i=0;i<pend.length;i+=400){
         var b = db.batch();
         pend.slice(i,i+400).forEach(function(d){ b.update(d.ref, {equipo: EQUIPO}); });
-        b.commit().catch(function(){});
+        commits.push(b.commit().catch(function(){}));
       }
+      return Promise.all(commits);
     });
   })).catch(function(){});
 }
@@ -5437,7 +5439,7 @@ var _migracionHecha = false;
 function cargarHistorialRemitos(){
   if(!window.currentUser) return;
   if(!colaboradoresListos){ cargarColaboradores(cargarHistorialRemitos); return; }
-  if(isAdmin() && !_migracionHecha){ _migracionHecha = true; migrarRemitosAlEquipo().then(function(){ setTimeout(cargarHistorialRemitos, 800); }); return; }
+  if(isAdmin() && !_migracionHecha){ _migracionHecha = true; migrarRemitosAlEquipo().then(cargarHistorialRemitos); return; }
   filtroRemitos('remitos_historial')
     .get()
     .then(function(snap){
