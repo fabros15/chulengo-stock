@@ -1222,6 +1222,13 @@ body.dark .fac-modal{background:#1A1A1A;color:#FAFAFA}
 body.dark .rem-tabla,body.dark .rem-bloque,body.dark .rem-back{background:#1A1A1A;border-color:#2A2A2A;color:#FAFAFA}
 body.dark .rem-tabla th{background:#141414}
 body.dark .rem-tabla td{color:#FAFAFA;border-color:#2A2A2A}
+.rem-btn-unir{background:#fff;border:1px solid #E2DDD6;border-radius:8px;padding:5px 10px;font-size:0.76rem;font-weight:600;color:#1A1814;cursor:pointer;text-transform:none;letter-spacing:0;font-family:Inter,sans-serif}
+.rem-unir{background:#FAF8F5;border:1px solid #E2DDD6;border-radius:10px;padding:12px;margin-bottom:12px;font-size:0.86rem}
+.rem-unir label{display:flex;flex-direction:column;gap:4px;font-weight:600}
+.rem-unir select{padding:8px;border:1px solid #E2DDD6;border-radius:8px;font-size:0.86rem;font-family:Inter,sans-serif;background:#fff;color:#1A1814}
+.rem-unir .rem-radio{flex-direction:row;align-items:center;gap:6px;font-weight:500;margin:3px 0}
+.rem-unir-ok{background:#2D6A4F;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
+.rem-unir-cancel{background:#fff;border:1px solid #E2DDD6;border-radius:8px;padding:8px 14px;cursor:pointer}
 .page{display:none}
 .page.active{display:block}
 .filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.75rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
@@ -2490,7 +2497,7 @@ function cerrarHerramienta(){
             <div style="font-size:0.875rem;font-weight:700;color:#1A1814;font-family:'Inter',sans-serif;margin-bottom:1rem">Entrega a</div>
             <div style="margin-bottom:0.875rem">
               <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Nombre y apellido</label>
-              <input type="text" id="remito-nombre" placeholder="Ej: Juana Pérez" oninput="onRemitoNombreInput()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
+              <input type="text" id="remito-nombre" list="remito-clientes-lista" autocomplete="off" placeholder="Ej: Juana Pérez" oninput="onRemitoNombreInput()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box">
             </div>
             <label style="font-size:0.78rem;font-weight:600;color:#1A1814;font-family:'Inter',sans-serif;display:block;margin-bottom:5px">Fecha</label>
             <div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:10px">
@@ -5171,11 +5178,101 @@ function calcularPagoRenglon(r){
   return { cantTotal: cantTotal, cantPagada: cantPagada, montoPagado: montoPagado, montoPendiente: montoPendiente };
 }
 
+// ── Clientes: evitar duplicados por nombres escritos distinto ──
+function normCliente(n){ return String(n||'').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim(); }
+function distEdicion(a,b){
+  var m=a.length,n=b.length; if(Math.abs(m-n)>3) return 99; var d=[]; for(var i=0;i<=m;i++){ d[i]=[i]; }
+  for(var j=1;j<=n;j++) d[0][j]=j;
+  for(i=1;i<=m;i++) for(j=1;j<=n;j++) d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return d[m][n];
+}
+function clientesParecidos(a,b){
+  var A=normCliente(a), B=normCliente(b);
+  if(!A||!B||A===B) return A===B;
+  var ta=A.split(' ').sort().join(' '), tb=B.split(' ').sort().join(' ');
+  if(ta===tb) return true;                                   // mismas palabras en otro orden
+  if(A.replace(/ /g,'')===B.replace(/ /g,'')) return true;   // espacios de más
+  if(Math.min(A.length,B.length)>=5 && distEdicion(A,B)<=2) return true; // errores de tipeo
+  var wa=A.split(' ').filter(function(w){return w.length>2;}), wb=B.split(' ').filter(function(w){return w.length>2;});
+  if(wa.length && wb.length){ var cortas=wa.length<=wb.length?wa:wb, largas=cortas===wa?wb:wa;
+    if(cortas.length>=2 && cortas.every(function(w){ return largas.indexOf(w)!==-1; })) return true; } // "CINE TEATRO" ⊂ "CINE TEATRO AUDITORIUM"
+  return false;
+}
+function nombresClientes(){
+  var vistos={}; remitosHistorialCache.forEach(function(r){ var c=(r.cliente||'').trim().toUpperCase(); if(c) vistos[c]=(vistos[c]||0)+1; });
+  return Object.keys(vistos).sort(function(a,b){ return vistos[b]-vistos[a]; });
+}
+function actualizarSugerenciasClientes(){
+  var dl=document.getElementById('remito-clientes-lista'); if(!dl) return;
+  dl.innerHTML = nombresClientes().map(function(c){ return '<option value="'+escaparAttr(c)+'">'; }).join('');
+}
+function clientesDuplicadosSugeridos(){
+  var ns=nombresClientes(), pares=[];
+  for(var i=0;i<ns.length;i++) for(var j=i+1;j<ns.length;j++) if(clientesParecidos(ns[i],ns[j])) pares.push([ns[i],ns[j]]);
+  return pares;
+}
+// Pasa todos los remitos de "origen" al nombre "destino" (los pagos se mantienen)
+function unirClientes(destino, origen){
+  var rems = remitosHistorialCache.filter(function(r){ return (r.cliente||'').trim().toUpperCase()===origen; });
+  if(!rems.length) return;
+  if(!confirm('Se van a pasar '+rems.length+' remito'+(rems.length!==1?'s':'')+' de «'+origen+'» a «'+destino+'».\nLos pagos y facturas se mantienen.\n\n¿Unimos?')) return;
+  var batch=firebase.firestore().batch();
+  rems.forEach(function(r){ batch.update(firebase.firestore().collection('remitos_historial').doc(r.id), {cliente: destino}); });
+  batch.commit().then(function(){
+    rems.forEach(function(r){ r.cliente = destino; });
+    // Completar datos de contacto que falten con los del cliente unido
+    var infoO = clientesInfoCache[origen] || {}, infoD = clientesInfoCache[destino] || {};
+    ['telefono','domicilio','observaciones'].forEach(function(c){
+      if(infoO[c] && !infoD[c]) guardarInfoCliente(destino, c, infoO[c]);
+      else if(infoO[c] && infoD[c] && c==='observaciones' && infoO[c]!==infoD[c]) guardarInfoCliente(destino, c, infoD[c]+' / '+infoO[c]);
+    });
+    remNavPila = remNavPila.filter(function(n){ return !(n.tipo==='cliente' && n.cliente===origen); });
+    if(remNav.tipo==='cliente') remNav = {tipo:'cliente', cliente:destino};
+    actualizarSugerenciasClientes();
+    renderHistorialRemitos(true);
+  }).catch(function(e){ alert('No se pudo unir: '+e.message); });
+}
+function pedirUnirCliente(actual){
+  var otros = nombresClientes().filter(function(c){ return c!==actual; });
+  var parecidos = otros.filter(function(c){ return clientesParecidos(c, actual); });
+  var resto = otros.filter(function(c){ return parecidos.indexOf(c)===-1; });
+  var box = document.getElementById('rem-unir-box'); if(!box) return;
+  if(!otros.length){ box.innerHTML='<div class="rem-gris">No hay otros clientes para unir.</div>'; return; }
+  box.innerHTML = '<div class="rem-unir">'+
+    '<label>Unir «'+escaparHtml(actual)+'» con:<select id="rem-unir-otro">'+
+      (parecidos.length?'<optgroup label="Parecidos">'+parecidos.map(function(c){return '<option>'+escaparHtml(c)+'</option>';}).join('')+'</optgroup>':'')+
+      '<optgroup label="Todos">'+resto.map(function(c){return '<option>'+escaparHtml(c)+'</option>';}).join('')+'</optgroup>'+
+    '</select></label>'+
+    '<div class="rem-gris" style="margin:8px 0 4px">¿Qué nombre queda?</div>'+
+    '<label class="rem-radio"><input type="radio" name="rem-unir-queda" value="actual" checked> '+escaparHtml(actual)+'</label>'+
+    '<label class="rem-radio"><input type="radio" name="rem-unir-queda" value="otro"> <span id="rem-unir-otro-txt">'+escaparHtml(parecidos[0]||resto[0])+'</span></label>'+
+    '<div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="rem-unir-ok">Unir clientes</button><button type="button" class="rem-unir-cancel">Cancelar</button></div>'+
+  '</div>';
+  var sel=document.getElementById('rem-unir-otro');
+  sel.onchange=function(){ document.getElementById('rem-unir-otro-txt').textContent=sel.value; };
+  box.querySelector('.rem-unir-cancel').onclick=function(){ box.innerHTML=''; };
+  box.querySelector('.rem-unir-ok').onclick=function(){
+    var otro=sel.value, queda=box.querySelector('input[name=rem-unir-queda]:checked').value;
+    if(queda==='actual') unirClientes(actual, otro); else unirClientes(otro, actual);
+  };
+}
+
 function guardarEImprimirRemito(){
   var nombre = document.getElementById('remito-nombre').value.trim();
   if(!nombre){ alert('Cargá al menos el nombre de quien recibe.'); return; }
   var renglonesCalc = obtenerRenglonesCalculadosRemito();
   if(!renglonesCalc.length){ alert('Cargá al menos un producto.'); return; }
+  var nombreUp = nombre.toUpperCase().replace(/\s+/g,' ');
+  var existentes = nombresClientes();
+  if(existentes.indexOf(nombreUp)===-1){
+    var parecido = existentes.find(function(c){ return clientesParecidos(c, nombreUp); });
+    if(parecido){
+      if(confirm('Ya tenés un cliente «'+parecido+'», que se parece a «'+nombreUp+'».\n\nAceptar: guardar este remito a nombre de «'+parecido+'».\nCancelar: es otro cliente, guardarlo como «'+nombreUp+'».')){
+        nombreUp = parecido; document.getElementById('remito-nombre').value = parecido; actualizarPreviewRemito();
+      }
+    }
+  }
+  nombre = nombreUp;
   if(!window.currentUser) return;
 
   var dia = document.getElementById('remito-dia').value;
@@ -5319,6 +5416,7 @@ function cargarHistorialRemitos(){
         d.id = doc.id;
         remitosHistorialCache.push(d);
       });
+      actualizarSugerenciasClientes();
       renderHistorialRemitos();
     })
     .catch(function(e){
@@ -5596,7 +5694,9 @@ function renderFichaCliente(cliente){
       '<div class="rem-barra"><div style="width:'+pct+'%"></div></div>'+
       '<div class="rem-hero-pie"><span>Total comprado <b>'+formatearMoneda(g.totalVendido)+'</b></span><span>Cobrado <b class="rem-ok">'+formatearMoneda(g.totalPagado)+'</b></span></div>'+
     '</div>'+
-    '<div class="rem-bloque"><div class="rem-bloque-t">Datos del cliente</div><div class="rem-cli-info">'+
+    (function(){ var par = nombresClientes().filter(function(c){ return c!==g.cliente && clientesParecidos(c,g.cliente); });
+      return par.length ? '<div class="rem-aviso">Este cliente se parece a <b>'+par.map(escaparHtml).join('</b>, <b>')+'</b>. Si es el mismo, unilos para que la deuda quede junta.</div>' : ''; })()+
+    '<div class="rem-bloque"><div class="rem-bloque-t" style="display:flex;justify-content:space-between;align-items:center">Datos del cliente <button type="button" class="rem-btn-unir" data-cliente="'+escaparAttr(g.cliente)+'">🔗 Unir con otro cliente</button></div><div id="rem-unir-box"></div><div class="rem-cli-info">'+
       ['telefono','domicilio','observaciones'].map(function(c){
         var lbl = {telefono:'📞 Teléfono',domicilio:'📍 Domicilio',observaciones:'📝 Notas'}[c];
         return '<label>'+lbl+'<input class="info-cliente-campo" data-cliente="'+escaparAttr(g.cliente)+'" data-campo="'+c+'" value="'+escaparAttr(info[c]||'')+'" placeholder="—"></label>';
@@ -5629,6 +5729,9 @@ function renderHistorialRemitos(animar){
   if(avisoDup){
     var dups = buscarDuplicadosRemitos(), sobran = dups.reduce(function(a,g){return a+g.length-1;},0);
     avisoDup.innerHTML = sobran ? '<div class="rem-aviso">Hay <b>'+sobran+' remito'+(sobran>1?'s':'')+' repetido'+(sobran>1?'s':'')+'</b> (copias exactas, de cuando reimprimir guardaba de nuevo). <button type="button" onclick="borrarDuplicadosRemitos()">Borrar copias</button></div>' : '';
+    clientesDuplicadosSugeridos().forEach(function(par){
+      avisoDup.innerHTML += '<div class="rem-aviso">¿<b>'+escaparHtml(par[0])+'</b> y <b>'+escaparHtml(par[1])+'</b> son el mismo cliente? <button type="button" class="rem-btn-unir-par" data-a="'+escaparAttr(par[0])+'" data-b="'+escaparAttr(par[1])+'">Unir</button></div>';
+    });
   }
   var cont = document.getElementById('remito-historial-clientes');
   if(!cont) return;
@@ -5741,6 +5844,11 @@ document.addEventListener('click', function(e){
     renderHistorialRemitos(); return;
   }
   if(e.target.closest('.rem-back')){ remVolver(); return; }
+  var bUnir = e.target.closest('.rem-btn-unir');
+  if(bUnir){ pedirUnirCliente(bUnir.dataset.cliente); return; }
+  var bPar = e.target.closest('.rem-btn-unir-par');
+  if(bPar){ unirClientes(bPar.dataset.a, bPar.dataset.b); return; }
+  if(e.target.closest('#rem-unir-box')) return;
   var paso = e.target.closest('.btn-paso');
   if(paso){
     var rp = remitosHistorialCache.find(function(r){ return r.id===paso.dataset.remid; });
@@ -6201,6 +6309,7 @@ document.addEventListener('change', function(e){
 </div><!-- fin app -->
 <div id="etiqueta-imprimir-area" style="display:none"></div>
 <div id="remito-imprimir-area" style="display:none"></div>
+<datalist id="remito-clientes-lista"></datalist>
 <!-- MODAL FACTURA: descontar pagos de remitos -->
 <div id="fac-overlay" class="fac-overlay" onclick="if(event.target===this)cerrarModalFactura()">
   <div class="fac-modal" role="dialog" aria-labelledby="fac-titulo">
