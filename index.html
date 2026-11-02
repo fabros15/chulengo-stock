@@ -1141,6 +1141,87 @@ body.dark .colab-panel summary,body.dark .colab-fila{color:#FAFAFA}
 .fac-aplicar:disabled{opacity:0.5;cursor:not-allowed}
 @media(max-width:600px){.fac-campos{grid-template-columns:1fr}.fac-fila{grid-template-columns:1fr auto;}.fac-v{grid-column:2}}
 body.dark .fac-modal{background:#1A1A1A;color:#FAFAFA}
+.rem-vista.entra{animation:remEntra .22s ease-out}
+@keyframes remEntra{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+.rem-tabla{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid #E2DDD6;border-radius:12px;overflow:hidden;font-family:Inter,sans-serif;font-size:0.86rem}
+.rem-tabla th{text-align:left;font-size:0.74rem;font-weight:700;color:#6B655C;padding:11px 12px;border-bottom:1px solid #E2DDD6;background:#FAF8F5;white-space:nowrap;user-select:none}
+.rem-th[data-col]{cursor:pointer}
+.rem-th[data-col]:hover,.rem-th.activo{color:#1A1814}
+.rem-tabla td{padding:12px;border-bottom:1px solid #F0ECE6;color:#1A1814;vertical-align:middle}
+.rem-tabla tr:last-child td{border-bottom:none}
+.rem-tabla .num{text-align:right;white-space:nowrap}
+.rem-tabla .col-fecha{white-space:nowrap;color:#6B655C}
+.rem-tabla .col-prod{color:#6B655C;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rem-tabla .col-av{width:36px;padding-right:0}
+.rem-row,.cli-row{cursor:pointer;transition:background .12s}
+.rem-row:hover,.cli-row:hover{background:#FAF8F5}
+.rem-row:active,.cli-row:active{background:#F0ECE6}
+.rem-flecha{color:#B8B2A8;font-size:1.3rem;width:18px;text-align:right}
+.rem-row-movil{display:none;font-size:0.76rem;color:#8A8479;margin-top:2px;font-weight:400}
+.rem-avatar{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;color:#fff;font-weight:700;font-size:0.72rem;flex-shrink:0}
+.rem-avatar.sm{width:22px;height:22px;font-size:0.6rem;margin-right:6px}
+.rem-avatar.lg{width:48px;height:48px;font-size:1rem}
+.rem-ficha{font-family:Inter,sans-serif;color:#1A1814}
+.rem-ficha-top{margin-bottom:10px}
+.rem-back{background:#fff;border:1px solid #E2DDD6;border-radius:10px;padding:8px 14px;font-weight:600;font-size:0.86rem;cursor:pointer;font-family:Inter,sans-serif;color:#1A1814}
+.rem-back:hover{background:#FAF8F5}
+.rem-bloque{background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.rem-bloque-t{font-size:0.78rem;font-weight:700;color:#6B655C;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px}
+.rem-bloque-t .rem-gris{text-transform:none;letter-spacing:0;font-weight:500}
+.rem-hero{display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:start}
+.rem-hero-fecha{font-size:1.35rem;font-weight:800;line-height:1.2}
+.rem-hero-r{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.rem-hero-total{font-size:1.5rem;font-weight:800}
+.rem-link-cli{display:inline-flex;align-items:center;margin-top:8px;background:#F5F2ED;border:none;border-radius:20px;padding:5px 12px 5px 5px;font-weight:700;font-size:0.86rem;cursor:pointer;color:#1A1814;font-family:Inter,sans-serif}
+.rem-link-cli:hover{background:#ECE7DF}
+.rem-barra{grid-column:1 / -1;height:8px;background:#F0ECE6;border-radius:6px;overflow:hidden}
+.rem-barra div{height:100%;background:#2D6A4F;border-radius:6px;transition:width .3s}
+.rem-barra.sm{height:6px;margin-bottom:10px}
+.rem-hero-pie{grid-column:1 / -1;display:flex;justify-content:space-between;font-size:0.84rem;color:#6B655C}
+.rem-prod{border-top:1px solid #F0ECE6}
+.rem-prod:first-of-type{border-top:none}
+.rem-prod-head{display:flex;align-items:center;gap:10px;padding:11px 2px;cursor:pointer}
+.rem-prod-head:hover{background:#FDFCFA}
+.rem-check{width:22px;height:22px;border-radius:50%;border:2px solid #D4CFC8;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;color:#fff;flex-shrink:0}
+.rem-check.ok{background:#2D6A4F;border-color:#2D6A4F}
+.rem-check.parcial{border-color:#D97706;background:linear-gradient(90deg,#FCD34D 50%,transparent 50%)}
+.rem-prod-main{flex:1;min-width:0}
+.rem-prod-nom{font-weight:600;font-size:0.9rem}
+.rem-prod-r{text-align:right;font-size:0.86rem;white-space:nowrap}
+.rem-prod-r div{font-size:0.75rem;font-weight:600}
+.rem-prod-body{padding:4px 2px 14px 34px;animation:remEntra .18s ease-out}
+.rem-stepper{display:flex;align-items:center;gap:8px;font-size:0.84rem;color:#6B655C;flex-wrap:wrap}
+.rem-stepper .btn-paso{width:36px;height:36px;border-radius:10px;border:1px solid #E2DDD6;background:#fff;font-size:1.2rem;font-weight:700;cursor:pointer;color:#1A1814}
+.rem-stepper .btn-paso:active{background:#F0ECE6}
+.rem-stepper input[type=number]{width:70px !important;height:36px;padding:4px 6px !important;text-align:center;font-size:0.95rem !important;font-weight:700;border:1px solid #E2DDD6 !important;border-radius:10px !important;background:#fff !important}
+.rem-prod-acc{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.rem-prod-acc button{padding:8px 12px;border-radius:9px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif}
+.rem-prod-acc .btn-pagado-todo{background:#2D6A4F;color:#fff;border:none}
+.rem-prod-acc .btn-pagado-nada{background:#fff;color:#6B655C;border:1px solid #E2DDD6}
+.rem-fac-lista{display:flex;flex-wrap:wrap;gap:6px}
+.rem-fac-lista span{background:#F3EEFE;color:#6D28D9;border-radius:6px;padding:4px 8px;font-size:0.8rem}
+.rem-acciones-ficha{display:flex;gap:8px;flex-wrap:wrap}
+.rem-acciones-ficha button{padding:10px 14px;border-radius:10px;border:1px solid #E2DDD6;background:#fff;font-size:0.86rem;font-weight:600;cursor:pointer;color:#1A1814;font-family:Inter,sans-serif}
+.rem-acciones-ficha .principal{background:#1A1814;color:#fff;border-color:#1A1814}
+.rem-acciones-ficha .btn-del-remito{margin-left:auto;color:#B91C1C;border-color:#FECACA;background:#FEF2F2}
+.rem-mini{display:flex;align-items:center;gap:10px;padding:11px 4px;border-top:1px solid #F0ECE6}
+.rem-mini:first-of-type{border-top:none}
+.rem-mini-main{flex:1;min-width:0}
+.rem-mini-main .rem-gris{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rem-mini-r{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:0.88rem}
+@media(max-width:700px){
+  .rem-tabla .col-prod,.rem-tabla .col-est,.rem-tabla thead .col-fecha,.rem-tabla td.col-fecha{display:none}
+  .rem-row-movil{display:block}
+  .rem-tabla td,.rem-tabla th{padding:10px 8px}
+  .rem-hero-fecha{font-size:1.1rem}
+  .rem-hero-total{font-size:1.2rem}
+  .rem-prod-body{padding-left:2px}
+  .rem-acciones-ficha button{flex:1 1 45%}
+  .rem-acciones-ficha .btn-del-remito{margin-left:0}
+}
+body.dark .rem-tabla,body.dark .rem-bloque,body.dark .rem-back{background:#1A1A1A;border-color:#2A2A2A;color:#FAFAFA}
+body.dark .rem-tabla th{background:#141414}
+body.dark .rem-tabla td{color:#FAFAFA;border-color:#2A2A2A}
 .page{display:none}
 .page.active{display:block}
 .filters-bar{background:#fff;border-bottom:1px solid #E2DDD6;padding:0.75rem 1rem;display:flex;gap:10px;flex-wrap:wrap;width:100%}
@@ -2497,8 +2578,8 @@ function cerrarHerramienta(){
             <button type="button" data-v="pagados">Pagados</button>
           </div>
           <div class="rem-chips" id="rem-vista">
-            <button type="button" data-v="clientes" class="activo">Por cliente</button>
-            <button type="button" data-v="lista">Todos los remitos</button>
+            <button type="button" data-v="lista" class="activo">Remitos</button>
+            <button type="button" data-v="clientes">Clientes</button>
           </div>
         </div>
 
@@ -5343,7 +5424,7 @@ function escaparHtml(str){
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-var remFiltroEstado = 'todos', remVista = 'clientes';
+var remFiltroEstado = 'todos', remVista = 'lista';
 
 function estadoRemito(rem){
   var total=0, pagado=0;
@@ -5376,53 +5457,164 @@ function borrarDuplicadosRemitos(){
   batch.commit().then(cargarHistorialRemitos).catch(function(e){ alert('No se pudo borrar: '+e.message); });
 }
 
-function htmlRemitoItem(rem, opts){
+// ── Navegación tipo AppSheet: lista → ficha del remito / ficha del cliente ──
+var remNav = { tipo:'lista' };          // {tipo:'lista'} | {tipo:'remito', remId} | {tipo:'cliente', cliente}
+var remNavPila = [];
+var remOrden = { col:'fecha', dir:-1 };
+var remLineaAbierta = null;
+
+function remIr(destino){
+  remNavPila.push(remNav); remNav = destino; remLineaAbierta = null;
+  renderHistorialRemitos(true);
+  var w=document.getElementById('remito-historial-wrap'); if(w) w.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function remVolver(){
+  remNav = remNavPila.pop() || {tipo:'lista'}; remLineaAbierta = null;
+  renderHistorialRemitos(true);
+}
+function chipEstado(est){
+  return est.estado==='pagado' ? '<span class="rem-chip ok">Pagado</span>'
+       : est.estado==='parcial' ? '<span class="rem-chip parcial">Parcial</span>'
+       : '<span class="rem-chip debe">Debe</span>';
+}
+function iniciales(n){ return String(n||'?').trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join('').toUpperCase(); }
+function colorCliente(n){ var h=0; String(n).split('').forEach(function(c){ h=(h*31+c.charCodeAt(0))%360; }); return 'hsl('+h+',45%,38%)'; }
+function thOrden(col, txt, cls){
+  var act = remOrden.col===col;
+  return '<th class="rem-th '+(cls||'')+(act?' activo':'')+'" data-col="'+col+'">'+txt+(act?(remOrden.dir<0?' ↓':' ↑'):'')+'</th>';
+}
+function ordenar(lista, valor){
+  return lista.sort(function(a,b){ var x=valor(a), y=valor(b); return (x<y?-1:x>y?1:0)*remOrden.dir; });
+}
+
+function renderListaRemitos(lista){
+  var val = { fecha:fechaRemitoMs, cliente:function(r){return (r.cliente||'');}, total:function(r){return estadoRemito(r).total;}, debe:function(r){return estadoRemito(r).pendiente;} };
+  ordenar(lista, val[remOrden.col] || val.fecha);
+  if(!lista.length) return '<div class="rem-vacio">No hay remitos con ese filtro.</div>';
+  var h = '<table class="rem-tabla"><thead><tr>'+thOrden('fecha','Fecha','col-fecha')+thOrden('cliente','Cliente')+'<th class="rem-th col-prod">Productos</th>'+thOrden('total','Total','num')+thOrden('debe','Debe','num')+'<th class="rem-th col-est"></th><th></th></tr></thead><tbody>';
+  lista.forEach(function(rem){
+    var est = estadoRemito(rem);
+    var prods = (rem.renglones||[]).map(function(r){ return r.producto||'—'; });
+    h += '<tr class="rem-row" data-remid="'+rem.id+'">'+
+      '<td class="col-fecha">'+escaparHtml(rem.fechaEntrega||'—')+'</td>'+
+      '<td class="col-cli"><b>'+escaparHtml(rem.cliente||'—')+'</b><div class="rem-row-movil">'+escaparHtml(rem.fechaEntrega||'—')+' · '+prods.length+' producto'+(prods.length!==1?'s':'')+'</div></td>'+
+      '<td class="col-prod">'+escaparHtml(prods.slice(0,2).join(', ')+(prods.length>2?' +'+(prods.length-2):''))+'</td>'+
+      '<td class="num">'+formatearMoneda(est.total)+'</td>'+
+      '<td class="num '+(est.pendiente>0.5?'rem-debe':'rem-gris')+'">'+(est.pendiente>0.5?formatearMoneda(est.pendiente):'—')+'</td>'+
+      '<td class="col-est">'+chipEstado(est)+'</td>'+
+      '<td class="rem-flecha">›</td></tr>';
+  });
+  return h + '</tbody></table>';
+}
+
+function renderListaClientes(grupos){
+  var val = { fecha:function(g){ return Math.max.apply(null, g.remitos.map(fechaRemitoMs)); }, cliente:function(g){return g.cliente;}, total:function(g){return g.totalVendido;}, debe:function(g){return g.totalPendiente;} };
+  ordenar(grupos, val[remOrden.col] || val.debe);
+  if(!grupos.length) return '<div class="rem-vacio">Sin resultados para esa búsqueda.</div>';
+  var h = '<table class="rem-tabla"><thead><tr><th></th>'+thOrden('cliente','Cliente')+thOrden('fecha','Último remito','col-fecha')+'<th class="rem-th num col-prod">Remitos</th>'+thOrden('total','Total','num')+thOrden('debe','Debe','num')+'<th></th></tr></thead><tbody>';
+  grupos.forEach(function(g){
+    var ult = Math.max.apply(null, g.remitos.map(fechaRemitoMs));
+    h += '<tr class="cli-row" data-cliente="'+escaparAttr(g.cliente)+'">'+
+      '<td class="col-av"><span class="rem-avatar" style="background:'+colorCliente(g.cliente)+'">'+escaparHtml(iniciales(g.cliente))+'</span></td>'+
+      '<td class="col-cli"><b>'+escaparHtml(g.cliente)+'</b><div class="rem-row-movil">'+g.remitos.length+' remito'+(g.remitos.length!==1?'s':'')+'</div></td>'+
+      '<td class="col-fecha">'+(ult?new Date(ult).toLocaleDateString('es-AR'):'—')+'</td>'+
+      '<td class="num col-prod">'+g.remitos.length+'</td>'+
+      '<td class="num">'+formatearMoneda(g.totalVendido)+'</td>'+
+      '<td class="num '+(g.totalPendiente>0.5?'rem-debe':'rem-ok')+'">'+(g.totalPendiente>0.5?formatearMoneda(g.totalPendiente):'Al día')+'</td>'+
+      '<td class="rem-flecha">›</td></tr>';
+  });
+  return h + '</tbody></table>';
+}
+
+function renderFichaRemito(rem){
   var est = estadoRemito(rem);
-  var abierto = remitosExpandidosIds.indexOf(rem.id) !== -1 || opts.forzarAbierto;
-  var prods = (rem.renglones||[]).map(function(r){ return r.producto||'—'; });
-  var resumen = prods.slice(0,2).join(', ') + (prods.length>2 ? ' y '+(prods.length-2)+' más' : '');
-  var chip = est.estado==='pagado' ? '<span class="rem-chip ok">Pagado</span>'
-           : est.estado==='parcial' ? '<span class="rem-chip parcial">Debe '+formatearMoneda(est.pendiente)+'</span>'
-           : '<span class="rem-chip debe">Debe '+formatearMoneda(est.pendiente)+'</span>';
-  var h = '<div class="rem-item'+(abierto?' abierto':'')+'">'+
-    '<div class="rem-item-head" data-remid="'+rem.id+'">'+
-      '<span class="rem-caret">'+(abierto?'▾':'▸')+'</span>'+
-      '<div class="rem-item-main">'+
-        '<div class="rem-item-top"><b>'+escaparHtml(rem.fechaEntrega||'—')+'</b>'+(opts.mostrarCliente?' · <span class="rem-item-cli">'+escaparHtml(rem.cliente||'—')+'</span>':'')+'</div>'+
-        '<div class="rem-item-res">'+escaparHtml(resumen)+'</div>'+
-      '</div>'+
-      '<div class="rem-item-right"><div class="rem-item-total">'+formatearMoneda(est.total)+'</div>'+chip+'</div>'+
-    '</div>';
-  if(abierto){
-    h += '<div class="rem-item-body">';
-    (rem.renglones||[]).forEach(function(r, idx){
-      var pago = calcularPagoRenglon(r);
-      var completo = pago.cantTotal>0 && pago.cantPagada >= pago.cantTotal;
-      h += '<div class="rem-linea">'+
-        '<div class="rem-linea-prod'+(completo?' tachado':'')+'">'+escaparHtml(r.producto||'—')+' <span class="rem-gris">('+escaparHtml(String(r.cantidad||'1'))+(r.unidad?' '+escaparHtml(r.unidad):'')+' × '+formatearMoneda(r.precio||0)+')</span></div>'+
-        '<div class="rem-linea-sub">'+formatearMoneda(r.subtotal||0)+'</div>'+
-        '<div class="rem-linea-pago">Pagado '+
-          '<input type="number" min="0" max="'+pago.cantTotal+'" step="any" value="'+(Math.round(pago.cantPagada*100)/100)+'" class="inp-cant-pagada" data-remid="'+rem.id+'" data-idx="'+idx+'" data-canttotal="'+pago.cantTotal+'">'+
-          ' de '+pago.cantTotal+
-          (!completo ? ' <button class="btn-pagado-todo" data-remid="'+rem.id+'" data-idx="'+idx+'" data-canttotal="'+pago.cantTotal+'">Todo pagado</button>' : '')+
-          '<span class="rem-linea-est">'+(pago.montoPendiente>0.5 ? '<span class="rem-debe">'+formatearMoneda(pago.montoPendiente)+' pend.</span>' : '<span class="rem-ok">✓ Pagado</span>')+'</span>'+
-        '</div>'+
+  var pct = est.total>0 ? Math.round(est.pagado/est.total*100) : 0;
+  var otros = remitosHistorialCache.filter(function(r){ return r.cliente===rem.cliente; }).length;
+  var h = '<div class="rem-ficha">'+
+    '<div class="rem-ficha-top"><button type="button" class="rem-back">← Volver</button></div>'+
+    '<div class="rem-bloque rem-hero">'+
+      '<div class="rem-hero-l"><div class="rem-gris">Remito del</div><div class="rem-hero-fecha">'+escaparHtml(rem.fechaEntrega||'—')+'</div>'+
+        '<button type="button" class="rem-link-cli" data-cliente="'+escaparAttr(rem.cliente||'')+'"><span class="rem-avatar sm" style="background:'+colorCliente(rem.cliente)+'">'+escaparHtml(iniciales(rem.cliente))+'</span>'+escaparHtml(rem.cliente||'—')+'&nbsp;<span class="rem-gris">&nbsp;('+otros+' remito'+(otros!==1?'s':'')+') ›</span></button></div>'+
+      '<div class="rem-hero-r"><div class="rem-hero-total">'+formatearMoneda(est.total)+'</div>'+chipEstado(est)+'</div>'+
+      '<div class="rem-barra"><div style="width:'+pct+'%"></div></div>'+
+      '<div class="rem-hero-pie"><span>Cobrado <b class="rem-ok">'+formatearMoneda(est.pagado)+'</b></span><span>Falta <b class="'+(est.pendiente>0.5?'rem-debe':'rem-ok')+'">'+formatearMoneda(Math.max(0,est.pendiente))+'</b></span></div>'+
+    '</div>'+
+    '<div class="rem-bloque"><div class="rem-bloque-t">Productos <span class="rem-gris">· tocá uno para marcar lo pagado</span></div>';
+  (rem.renglones||[]).forEach(function(r, idx){
+    var pago = calcularPagoRenglon(r);
+    var completo = pago.cantTotal>0 && pago.cantPagada >= pago.cantTotal;
+    var abierta = remLineaAbierta === idx;
+    var pctL = pago.cantTotal>0 ? Math.round(pago.cantPagada/pago.cantTotal*100) : 0;
+    h += '<div class="rem-prod'+(abierta?' abierta':'')+'">'+
+      '<div class="rem-prod-head" data-idx="'+idx+'">'+
+        '<span class="rem-check'+(completo?' ok':pago.cantPagada>0?' parcial':'')+'">'+(completo?'✓':'')+'</span>'+
+        '<div class="rem-prod-main"><div class="rem-prod-nom">'+escaparHtml(r.producto||'—')+'</div>'+
+          '<div class="rem-gris">'+escaparHtml(String(r.cantidad||'1'))+(r.unidad?' '+escaparHtml(r.unidad):'')+' × '+formatearMoneda(r.precio||0)+(r.bonif?' · bonif. '+r.bonif+'%':'')+' · pagado '+(Math.round(pago.cantPagada*100)/100)+' de '+pago.cantTotal+'</div></div>'+
+        '<div class="rem-prod-r"><b>'+formatearMoneda(r.subtotal||0)+'</b>'+(pago.montoPendiente>0.5?'<div class="rem-debe">'+formatearMoneda(pago.montoPendiente)+' pend.</div>':'<div class="rem-ok">Pagado</div>')+'</div>'+
+        '<span class="rem-caret">'+(abierta?'▾':'▸')+'</span>'+
       '</div>';
-    });
-    if(rem.facturas && rem.facturas.length){
-      h += '<div class="rem-facturas">Facturas aplicadas: '+rem.facturas.map(escaparHtml).join(', ')+'</div>';
+    if(abierta){
+      h += '<div class="rem-prod-body">'+
+        '<div class="rem-barra sm"><div style="width:'+pctL+'%"></div></div>'+
+        '<div class="rem-stepper">Unidades pagadas'+
+          '<button type="button" class="btn-paso" data-remid="'+rem.id+'" data-idx="'+idx+'" data-d="-1">−</button>'+
+          '<input type="number" min="0" max="'+pago.cantTotal+'" step="any" value="'+(Math.round(pago.cantPagada*100)/100)+'" class="inp-cant-pagada" data-remid="'+rem.id+'" data-idx="'+idx+'" data-canttotal="'+pago.cantTotal+'">'+
+          '<button type="button" class="btn-paso" data-remid="'+rem.id+'" data-idx="'+idx+'" data-d="1">+</button>'+
+          '<span class="rem-gris">de '+pago.cantTotal+'</span>'+
+        '</div>'+
+        '<div class="rem-prod-acc">'+
+          (!completo?'<button type="button" class="btn-pagado-todo" data-remid="'+rem.id+'" data-idx="'+idx+'" data-canttotal="'+pago.cantTotal+'">✓ Todo pagado</button>':'')+
+          (pago.cantPagada>0?'<button type="button" class="btn-pagado-nada" data-remid="'+rem.id+'" data-idx="'+idx+'">Desmarcar</button>':'')+
+        '</div></div>';
     }
-    h += '<div class="rem-acciones">'+
-      '<button class="btn-reimprimir-remito" data-remid="'+rem.id+'">🖨 Reimprimir</button>'+
+    h += '</div>';
+  });
+  h += '</div>';
+  if(rem.facturas && rem.facturas.length){
+    h += '<div class="rem-bloque"><div class="rem-bloque-t">Facturas aplicadas</div><div class="rem-fac-lista">'+rem.facturas.map(function(f){ return '<span>🧾 '+escaparHtml(f)+'</span>'; }).join('')+'</div></div>';
+  }
+  h += '<div class="rem-bloque rem-acciones-ficha">'+
+      '<button class="btn-reimprimir-remito principal" data-remid="'+rem.id+'">🖨 Reimprimir (2 copias)</button>'+
       '<button class="btn-editar-remito" data-remid="'+rem.id+'">✏️ Editar</button>'+
       '<button class="btn-copiar-remito" data-remid="'+rem.id+'">📋 Copiar como nuevo</button>'+
       '<button class="btn-del-remito" data-remid="'+rem.id+'">🗑 Borrar</button>'+
     '</div></div>';
-  }
-  return h + '</div>';
+  return h;
 }
 
-function renderHistorialRemitos(){
+function renderFichaCliente(cliente){
+  var g = agruparRemitosPorCliente().find(function(x){ return x.cliente===cliente; });
+  if(!g){ remNav={tipo:'lista'}; return ''; }
+  var info = clientesInfoCache[g.cliente] || {};
+  var pct = g.totalVendido>0 ? Math.round(g.totalPagado/g.totalVendido*100) : 0;
+  var h = '<div class="rem-ficha">'+
+    '<div class="rem-ficha-top"><button type="button" class="rem-back">← Volver</button></div>'+
+    '<div class="rem-bloque rem-hero">'+
+      '<div class="rem-hero-l" style="display:flex;align-items:center;gap:12px"><span class="rem-avatar lg" style="background:'+colorCliente(g.cliente)+'">'+escaparHtml(iniciales(g.cliente))+'</span>'+
+        '<div><div class="rem-hero-fecha">'+escaparHtml(g.cliente)+'</div><div class="rem-gris">'+g.remitos.length+' remito'+(g.remitos.length!==1?'s':'')+'</div></div></div>'+
+      '<div class="rem-hero-r"><div class="rem-gris">Debe</div><div class="rem-hero-total '+(g.totalPendiente>0.5?'rem-debe':'rem-ok')+'">'+(g.totalPendiente>0.5?formatearMoneda(g.totalPendiente):'Al día')+'</div></div>'+
+      '<div class="rem-barra"><div style="width:'+pct+'%"></div></div>'+
+      '<div class="rem-hero-pie"><span>Total comprado <b>'+formatearMoneda(g.totalVendido)+'</b></span><span>Cobrado <b class="rem-ok">'+formatearMoneda(g.totalPagado)+'</b></span></div>'+
+    '</div>'+
+    '<div class="rem-bloque"><div class="rem-bloque-t">Datos del cliente</div><div class="rem-cli-info">'+
+      ['telefono','domicilio','observaciones'].map(function(c){
+        var lbl = {telefono:'📞 Teléfono',domicilio:'📍 Domicilio',observaciones:'📝 Notas'}[c];
+        return '<label>'+lbl+'<input class="info-cliente-campo" data-cliente="'+escaparAttr(g.cliente)+'" data-campo="'+c+'" value="'+escaparAttr(info[c]||'')+'" placeholder="—"></label>';
+      }).join('')+
+    '</div></div>'+
+    '<div class="rem-bloque"><div class="rem-bloque-t">Remitos</div>';
+  var lista = g.remitos.slice().sort(function(a,b){ return fechaRemitoMs(b)-fechaRemitoMs(a); });
+  lista.forEach(function(rem){
+    var est = estadoRemito(rem);
+    var prods = (rem.renglones||[]).map(function(r){ return r.producto||'—'; });
+    h += '<div class="rem-mini rem-row" data-remid="'+rem.id+'">'+
+      '<div class="rem-mini-main"><b>'+escaparHtml(rem.fechaEntrega||'—')+'</b><div class="rem-gris">'+escaparHtml(prods.slice(0,2).join(', ')+(prods.length>2?' +'+(prods.length-2):''))+'</div></div>'+
+      '<div class="rem-mini-r"><b>'+formatearMoneda(est.total)+'</b>'+chipEstado(est)+'</div><span class="rem-flecha">›</span></div>';
+  });
+  return h + '</div></div>';
+}
+
+function renderHistorialRemitos(animar){
   var grupos = agruparRemitosPorCliente();
   var totalVendidoGlobal = 0, totalPagadoGlobal = 0;
   grupos.forEach(function(g){ totalVendidoGlobal += g.totalVendido; totalPagadoGlobal += g.totalPagado; });
@@ -5438,76 +5630,48 @@ function renderHistorialRemitos(){
     var dups = buscarDuplicadosRemitos(), sobran = dups.reduce(function(a,g){return a+g.length-1;},0);
     avisoDup.innerHTML = sobran ? '<div class="rem-aviso">Hay <b>'+sobran+' remito'+(sobran>1?'s':'')+' repetido'+(sobran>1?'s':'')+'</b> (copias exactas, de cuando reimprimir guardaba de nuevo). <button type="button" onclick="borrarDuplicadosRemitos()">Borrar copias</button></div>' : '';
   }
-
   var cont = document.getElementById('remito-historial-clientes');
   if(!cont) return;
+  var toolbar = document.querySelector('#remito-historial-wrap .rem-toolbar');
   if(!remitosHistorialCache.length){
+    if(toolbar) toolbar.style.display='none';
     cont.innerHTML = '<div class="rem-vacio">Todavía no generaste ningún remito.</div>';
     return;
   }
 
-  var q = (document.getElementById('remito-historial-search').value||'').trim().toUpperCase();
-  function remCoincide(rem){
-    if(!q) return true;
-    if((rem.cliente||'').toUpperCase().indexOf(q)!==-1) return true;
-    if((rem.fechaEntrega||'').indexOf(q)!==-1) return true;
-    return (rem.renglones||[]).some(function(r){ return (r.producto||'').toUpperCase().indexOf(q)!==-1; });
-  }
-  function remPasaEstado(rem){
-    if(remFiltroEstado==='todos') return true;
-    var e = estadoRemito(rem).estado;
-    return remFiltroEstado==='pagados' ? e==='pagado' : e!=='pagado';
-  }
-  var html = '';
-
-  if(remVista === 'lista'){
-    var lista = remitosHistorialCache.filter(function(r){ return remCoincide(r) && remPasaEstado(r); })
-      .sort(function(a,b){ return fechaRemitoMs(b)-fechaRemitoMs(a); });
-    var mesActual = '';
-    lista.forEach(function(rem){
-      var ms = fechaRemitoMs(rem);
-      var mes = ms ? new Date(ms).toLocaleDateString('es-AR',{month:'long',year:'numeric'}) : 'Sin fecha';
-      if(mes !== mesActual){ mesActual = mes; html += '<div class="rem-mes">'+mes.charAt(0).toUpperCase()+mes.slice(1)+'</div>'; }
-      html += htmlRemitoItem(rem, {mostrarCliente:true});
-    });
-    if(!lista.length) html = '<div class="rem-vacio">No hay remitos con ese filtro.</div>';
-    cont.innerHTML = html;
+  var html;
+  if(remNav.tipo==='remito'){
+    var rem = remitosHistorialCache.find(function(r){ return r.id===remNav.remId; });
+    if(!rem){ remNav={tipo:'lista'}; remNavPila=[]; return renderHistorialRemitos(); }
+    html = renderFichaRemito(rem);
+  } else if(remNav.tipo==='cliente'){
+    html = renderFichaCliente(remNav.cliente);
+    if(!html) return renderHistorialRemitos();
   } else {
-    var visibles = 0;
-    grupos.forEach(function(g){
-      var rems = g.remitos.filter(function(r){ return remCoincide(r) && remPasaEstado(r); });
-      if(!rems.length) return;
-      visibles++;
-      var abierto = remitoClienteExpandido === g.cliente || (q && (g.cliente.indexOf(q)===-1));
-      var ultimo = rems.slice().sort(function(a,b){ return fechaRemitoMs(b)-fechaRemitoMs(a); })[0];
-      var info = clientesInfoCache[g.cliente] || {};
-      html += '<div class="rem-cli'+(abierto?' abierto':'')+'">'+
-        '<div class="rem-cli-head fila-cliente-tabla" data-cliente="'+escaparAttr(g.cliente)+'">'+
-          '<span class="rem-caret">'+(abierto?'▾':'▸')+'</span>'+
-          '<div class="rem-cli-main"><div class="rem-cli-nombre">'+escaparHtml(g.cliente)+'</div>'+
-            '<div class="rem-gris">'+g.remitos.length+' remito'+(g.remitos.length!==1?'s':'')+' · último '+escaparHtml(ultimo.fechaEntrega||'—')+(info.telefono?' · 📞 '+escaparHtml(info.telefono):'')+'</div></div>'+
-          '<div class="rem-cli-right"><div class="rem-gris">Total '+formatearMoneda(g.totalVendido)+'</div>'+
-            (g.totalPendiente>0.5 ? '<span class="rem-chip debe">Debe '+formatearMoneda(g.totalPendiente)+'</span>' : '<span class="rem-chip ok">Al día</span>')+
-          '</div>'+
-        '</div>';
-      if(abierto){
-        html += '<div class="rem-cli-body">'+
-          '<div class="rem-cli-info">'+
-            ['telefono','domicilio','observaciones'].map(function(c){
-              var lbl = {telefono:'Teléfono',domicilio:'Domicilio',observaciones:'Notas'}[c];
-              return '<label>'+lbl+'<input class="info-cliente-campo" data-cliente="'+escaparAttr(g.cliente)+'" data-campo="'+c+'" value="'+escaparAttr(info[c]||'')+'" placeholder="—"></label>';
-            }).join('')+
-          '</div>';
-        rems.sort(function(a,b){ return fechaRemitoMs(b)-fechaRemitoMs(a); }).forEach(function(rem){
-          var tieneProd = q && (rem.renglones||[]).some(function(r){ return (r.producto||'').toUpperCase().indexOf(q)!==-1; }) && g.cliente.indexOf(q)===-1;
-          html += htmlRemitoItem(rem, {forzarAbierto: tieneProd});
-        });
-        html += '</div>';
-      }
-      html += '</div>';
-    });
-    cont.innerHTML = visibles ? html : '<div class="rem-vacio">Sin resultados para esa búsqueda.</div>';
+    var q = (document.getElementById('remito-historial-search').value||'').trim().toUpperCase();
+    var remCoincide = function(rem){
+      if(!q) return true;
+      if((rem.cliente||'').toUpperCase().indexOf(q)!==-1 || (rem.fechaEntrega||'').indexOf(q)!==-1) return true;
+      return (rem.renglones||[]).some(function(r){ return (r.producto||'').toUpperCase().indexOf(q)!==-1; });
+    };
+    var remPasaEstado = function(rem){
+      if(remFiltroEstado==='todos') return true;
+      var e = estadoRemito(rem).estado; return remFiltroEstado==='pagados' ? e==='pagado' : e!=='pagado';
+    };
+    if(remVista==='lista'){
+      html = renderListaRemitos(remitosHistorialCache.filter(function(r){ return remCoincide(r) && remPasaEstado(r); }));
+    } else {
+      var gs = grupos.filter(function(g){
+        if(q && g.cliente.indexOf(q)===-1 && !g.remitos.some(remCoincide)) return false;
+        if(remFiltroEstado==='deuda') return g.totalPendiente>0.5;
+        if(remFiltroEstado==='pagados') return g.totalPendiente<=0.5;
+        return true;
+      });
+      html = renderListaClientes(gs);
+    }
   }
+  if(toolbar) toolbar.style.display = remNav.tipo==='lista' ? '' : 'none';
+  cont.innerHTML = '<div class="rem-vista'+(animar?' entra':'')+'">'+html+'</div>';
 
   var contEstadisticas = document.getElementById('remito-estadisticas-mensuales');
   if(contEstadisticas && contEstadisticas.style.display !== 'none'){ renderEstadisticasMensuales(); }
@@ -5532,8 +5696,8 @@ function setCantidadPagadaRenglon(remId, idx, nuevaCantidad){
 }
 
 document.addEventListener('click', function(e){
-  var header = e.target.closest('.fila-cliente-tabla');
-  var fechaHeader = e.target.closest('.rem-item-head');
+  var header = null;
+  var fechaHeader = null;
   var delRem = e.target.closest('.btn-del-remito');
   var reimpRem = e.target.closest('.btn-reimprimir-remito');
   var btnTodo = e.target.closest('.btn-pagado-todo');
@@ -5565,23 +5729,37 @@ document.addEventListener('click', function(e){
   if(delRem){
     if(!confirm('¿Eliminar este remito del historial? Esta acción no se puede deshacer.')) return;
     if(remitoEditandoId === delRem.dataset.remid) cancelarEdicionRemito();
+    if(remNav.tipo==='remito' && remNav.remId===delRem.dataset.remid){ remNav = remNavPila.pop() || {tipo:'lista'}; }
     firebase.firestore().collection('remitos_historial').doc(delRem.dataset.remid).delete()
       .then(cargarHistorialRemitos);
     return;
   }
-  if(fechaHeader){
-    var remId = fechaHeader.dataset.remid;
-    var pos = remitosExpandidosIds.indexOf(remId);
-    if(pos === -1) remitosExpandidosIds.push(remId);
-    else remitosExpandidosIds.splice(pos,1);
-    renderHistorialRemitos();
+  var th = e.target.closest('.rem-th[data-col]');
+  if(th){
+    var col = th.dataset.col;
+    remOrden = remOrden.col===col ? {col:col, dir:-remOrden.dir} : {col:col, dir:(col==='cliente'?1:-1)};
+    renderHistorialRemitos(); return;
+  }
+  if(e.target.closest('.rem-back')){ remVolver(); return; }
+  var paso = e.target.closest('.btn-paso');
+  if(paso){
+    var rp = remitosHistorialCache.find(function(r){ return r.id===paso.dataset.remid; });
+    var ip = parseInt(paso.dataset.idx,10);
+    if(rp){ var pg = calcularPagoRenglon(rp.renglones[ip]); setCantidadPagadaRenglon(rp.id, ip, Math.round(pg.cantPagada)+parseInt(paso.dataset.d,10)); }
     return;
   }
-  if(header){
-    var cliente = header.dataset.cliente;
-    remitoClienteExpandido = (remitoClienteExpandido === cliente) ? null : cliente;
-    renderHistorialRemitos();
+  var nada = e.target.closest('.btn-pagado-nada');
+  if(nada){ setCantidadPagadaRenglon(nada.dataset.remid, parseInt(nada.dataset.idx,10), 0); return; }
+  var prodHead = e.target.closest('.rem-prod-head');
+  if(prodHead){
+    var i2 = parseInt(prodHead.dataset.idx,10);
+    remLineaAbierta = remLineaAbierta===i2 ? null : i2;
+    renderHistorialRemitos(); return;
   }
+  var linkCli = e.target.closest('.rem-link-cli, .cli-row');
+  if(linkCli){ remIr({tipo:'cliente', cliente: linkCli.dataset.cliente}); return; }
+  var fila = e.target.closest('.rem-row');
+  if(fila){ remIr({tipo:'remito', remId: fila.dataset.remid}); return; }
 });
 
 // ══════════════════════════════════════════════
