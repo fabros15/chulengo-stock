@@ -768,17 +768,28 @@ function cargarFormasPago(){
     document.querySelectorAll('#pdf-formas-pago input[type=checkbox]').forEach(function(c){ c.checked=sel.indexOf(c.value)!==-1; });
   }catch(e){}
 }
+// Número de Chulengo Estudio. Si el presupuesto no tiene teléfono o tiene
+// uno de los números viejos, se usa este.
+var TEL_CHULENGO='2805064128';
+var TELS_VIEJOS=['2804639991','2804585359'];
+function telChulengo(t){
+  var dig=String(t||'').replace(/\D/g,'');
+  if(!dig || TELS_VIEJOS.some(function(v){ return dig.indexOf(v)!==-1; })) return TEL_CHULENGO;
+  return t;
+}
 function guardarConfigMarca(){
   var config={empresa:document.getElementById('pdf-empresa').value,color1:document.getElementById('pdf-color1').value,color2:document.getElementById('pdf-color2').value,tel:document.getElementById('pdf-tel').value,email:document.getElementById('pdf-email').value,web:document.getElementById('pdf-web').value,logo:pdfLogoBase64};
   try{localStorage.setItem('chulengo_marca',JSON.stringify(config));}catch(e){}
 }
 function cargarConfigMarca(){
   try{
-    var raw=localStorage.getItem('chulengo_marca'); if(!raw)return; var c=JSON.parse(raw);
+    var raw=localStorage.getItem('chulengo_marca');
+    if(!raw){ document.getElementById('pdf-tel').value=TEL_CHULENGO; return; }
+    var c=JSON.parse(raw);
     document.getElementById('pdf-empresa').value=c.empresa||'';
     document.getElementById('pdf-color1').value=c.color1||'#1A1814'; document.getElementById('pdf-color1-hex').value=c.color1||'#1A1814';
     document.getElementById('pdf-color2').value=c.color2||'#2D6A4F'; document.getElementById('pdf-color2-hex').value=c.color2||'#2D6A4F';
-    document.getElementById('pdf-tel').value=c.tel||''; document.getElementById('pdf-email').value=c.email||''; document.getElementById('pdf-web').value=c.web||'';
+    document.getElementById('pdf-tel').value=telChulengo(c.tel); document.getElementById('pdf-email').value=c.email||''; document.getElementById('pdf-web').value=c.web||'';
     if(c.logo){ pdfLogoBase64=c.logo; var prev=document.getElementById('pdf-logo-preview'); prev.src=c.logo; prev.style.display='block'; }
   }catch(e){}
 }
@@ -3131,7 +3142,7 @@ function regenerarPDF(docId, d){
   var rgb1 = hexToRgb(color1);
   var rgb2 = hexToRgb(color2);
   var empresa = d.empresa || 'Mi Empresa';
-  var tel = d.tel || '';
+  var tel = telChulengo(d.tel);
   var email = d.email2 || '';
   var web = d.web || '';
   var proyecto = d.proyecto || 'Proyecto sin nombre';
@@ -6477,7 +6488,7 @@ document.addEventListener('change', function(e){
       <div class="field"><label>Color secundario</label><div class="color-row"><input type="color" id="pdf-color2" value="#2D6A4F" oninput="document.getElementById('pdf-color2-hex').value=this.value"><input type="text" id="pdf-color2-hex" value="#2D6A4F" placeholder="#2D6A4F" oninput="document.getElementById('pdf-color2').value=this.value"></div></div>
     </div>
     <div class="pdf-row2">
-      <div class="field"><label>Teléfono / WhatsApp</label><input type="text" id="pdf-tel" placeholder="Ej: +54 9 280 4000000"></div>
+      <div class="field"><label>Teléfono / WhatsApp</label><input type="text" id="pdf-tel" value="2805064128" placeholder="2805064128"></div>
       <div class="field"><label>Email</label><input type="text" id="pdf-email" placeholder="Ej: hola@empresa.com"></div>
     </div>
     <div class="field"><label>Instagram / Web</label><input type="text" id="pdf-web" placeholder="Ej: @miempresa o www.miempresa.com"></div>
