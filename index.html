@@ -710,6 +710,7 @@ var pdfLogoBase64 = null;
 var precioFinalPDF = 0;
 
 function abrirPDFModal(){
+  cargarFormasPago();
   if(!window.currentUser){ window._pendingPDF=true; mostrarLoginModal('presupuesto'); return; }
   cargarConfigMarca();
   if(itemsPresupuesto.length > 0){ var total = itemsPresupuesto.reduce(function(s,i){return s+i.precio;},0); document.getElementById('pdf-precio-unit').value = Math.round(total); }
@@ -724,12 +725,49 @@ function actualizarDescuento(){
   if(desc > 0 && precio > 0){ var total = Math.round(precio * (1 - desc/100)); document.getElementById('descuento-preview-val').textContent = fmtPeso(total); preview.style.display = 'block'; }
   else { preview.style.display = 'none'; }
 }
-function cerrarPDFModal(){ document.getElementById('pdf-modal-overlay').classList.remove('open'); }
+function cerrarPDFModal(){ document.getElementById('pdf-modal-overlay').classList.remove('open'); window._editandoPresupuesto=null; var av=document.getElementById('pdf-aviso-edicion'); if(av) av.style.display='none'; }
+function editarPresupuesto(id, d){
+  var items=(d.items&&d.items.length)?d.items:[];
+  var esLista=items.length>1 || (items.length===1 && items[0].nombre!==(d.proyecto||''));
+  if(esLista){ itemsPresupuesto=JSON.parse(JSON.stringify(items)); } else { itemsPresupuesto=[]; }
+  renderItemsPresupuesto();
+  abrirPDFModal();
+  if(!window.currentUser) return;
+  window._editandoPresupuesto=id;
+  var set=function(k,v){ var el=document.getElementById(k); if(el) el.value=(v==null?'':v); };
+  set('pdf-proyecto',d.proyecto); set('pdf-cliente',d.cliente); set('pdf-descripcion',d.descripcion);
+  set('pdf-validez',d.validez); set('pdf-notas',d.condiciones);
+  var cant=d.cantidad||1;
+  if(esLista){
+    var sub=items.reduce(function(s,i){return s+(i.precio||0);},0);
+    set('pdf-precio-unit',Math.round(sub)); set('pdf-cantidad',1);
+    set('pdf-descuento', sub>d.precioTotal&&sub>0 ? Math.round((1-d.precioTotal/sub)*100) : '');
+  } else {
+    set('pdf-cantidad',cant); set('pdf-precio-unit',Math.round((d.precioTotal||0)/cant)); set('pdf-descuento','');
+  }
+  if(d.formasPago) document.querySelectorAll('#pdf-formas-pago input[type=checkbox]').forEach(function(c){ c.checked=d.formasPago.indexOf(c.value)!==-1; });
+  actualizarDescuento();
+  var av=document.getElementById('pdf-aviso-edicion');
+  if(!av){ av=document.createElement('div'); av.id='pdf-aviso-edicion'; av.style.cssText='background:#FEF3C7;border:1px solid #FCD34D;color:#78350F;border-radius:8px;padding:8px 12px;font-size:0.82rem;font-family:Inter,sans-serif;margin-bottom:12px';
+    var campo=document.getElementById('pdf-proyecto').closest('.field'); campo.parentNode.insertBefore(av,campo); }
+  av.textContent='Editando el presupuesto P-'+id.slice(-6)+'. Al generar, se actualiza el mismo (no se crea uno nuevo).';
+  av.style.display='block';
+}
 var pdfOverlay=document.getElementById('pdf-modal-overlay');
 if(pdfOverlay){pdfOverlay.addEventListener('click',function(e){if(e.target===this)cerrarPDFModal();});}
 
 function previewLogo(input){ var file=input.files[0]; if(!file)return; var reader=new FileReader(); reader.onload=function(e){ pdfLogoBase64=e.target.result; var prev=document.getElementById('pdf-logo-preview'); prev.src=e.target.result; prev.style.display='block'; }; reader.readAsDataURL(file); }
 
+function leerFormasPago(){
+  var out=[]; document.querySelectorAll('#pdf-formas-pago input[type=checkbox]').forEach(function(c){ if(c.checked) out.push(c.value); });
+  try{localStorage.setItem('chulengo_formas_pago',JSON.stringify(out));}catch(e){}
+  return out;
+}
+function cargarFormasPago(){
+  try{ var raw=localStorage.getItem('chulengo_formas_pago'); if(!raw) return; var sel=JSON.parse(raw);
+    document.querySelectorAll('#pdf-formas-pago input[type=checkbox]').forEach(function(c){ c.checked=sel.indexOf(c.value)!==-1; });
+  }catch(e){}
+}
 function guardarConfigMarca(){
   var config={empresa:document.getElementById('pdf-empresa').value,color1:document.getElementById('pdf-color1').value,color2:document.getElementById('pdf-color2').value,tel:document.getElementById('pdf-tel').value,email:document.getElementById('pdf-email').value,web:document.getElementById('pdf-web').value,logo:pdfLogoBase64};
   try{localStorage.setItem('chulengo_marca',JSON.stringify(config));}catch(e){}
@@ -805,7 +843,7 @@ function dibujarPresupuestoPDF(doc, P){
     doc.text(doc.splitTextToSize(valor,colW-6)[0],bx2+4,y+6);
   }
   bloque(M,'PROYECTO',P.proyecto||'Proyecto sin nombre');
-  if(P.cliente) bloque(M+colW+8,'PARA',P.cliente);
+  if(P.cliente) bloque(M+colW+8,'CLIENTE',P.cliente);
   y+=16;
   if(P.descripcion){
     txt(gris); doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
@@ -849,7 +887,7 @@ function dibujarPresupuestoPDF(doc, P){
   fill(c2); doc.rect(tx,y+3,1.6,12,'F');
   doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.text('TOTAL',tx+6,y+7.4);
   doc.setFontSize(16); doc.text($(P.total),w-M-5,y+12.4,{align:'right'});
-  var finTotales=y+18;
+  var finTotales=y+18, finBloques=finTotales;
 
   // Condiciones (a la izquierda de los totales si entra)
   if(P.notas){
@@ -860,6 +898,24 @@ function dibujarPresupuestoPDF(doc, P){
     fill(suave2); doc.roundedRect(M,ny-5,nw,nl.length*4.2+12,2.5,2.5,'F');
     txt(c2); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.text('CONDICIONES',M+4,ny+0.5);
     txt([70,70,70]); doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.text(nl,M+4,ny+5.5);
+    finBloques=Math.max(finBloques, ny-5+nl.length*4.2+12);
+  }
+
+  // Formas de pago
+  if(P.formasPago && P.formasPago.length){
+    var py=finBloques+9;
+    if(py+16>h-30){ doc.addPage(); py=24; }
+    txt(c2); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.text('FORMAS DE PAGO',M,py);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+    var chx=M, chy=py+4;
+    P.formasPago.forEach(function(fp){
+      var cw=doc.getTextWidth(fp)+10;
+      if(chx+cw>w-M){ chx=M; chy+=9; }
+      fill(suave1); doc.roundedRect(chx,chy,cw,7,3.5,3.5,'F');
+      fill(c2); doc.circle(chx+3.6,chy+3.5,1,'F');
+      txt(tinta); doc.text(fp,chx+6.2,chy+4.8);
+      chx+=cw+3;
+    });
   }
 
   // Pie
@@ -891,13 +947,15 @@ function generarPDF(sendWA){
   var descripcion=document.getElementById('pdf-descripcion').value;
   var cantidad=parseInt(document.getElementById('pdf-cantidad').value)||1;
   var validez=document.getElementById('pdf-validez').value||'7 días';
+  var formasPago=leerFormasPago();
   var notas=document.getElementById('pdf-notas')?document.getElementById('pdf-notas').value:(document.getElementById('pdf-condiciones')?document.getElementById('pdf-condiciones').value:'');
   var precioUnit=parseFloat(document.getElementById('pdf-precio-unit').value)||0;
   var descuento=parseFloat(document.getElementById('pdf-descuento').value)||0;
   var precioOriginal=precioUnit;
   if(descuento>0) precioUnit=Math.round(precioUnit*(1-descuento/100));
   var precioTotal=precioUnit*cantidad;
-  var nro='P-'+Date.now().toString().slice(-6);
+  var editId=window._editandoPresupuesto||null;
+  var nro=editId?'P-'+editId.slice(-6):'P-'+Date.now().toString().slice(-6);
   var fecha=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
   var jsPDF=window.jspdf&&window.jspdf.jsPDF?window.jspdf.jsPDF:window.jsPDF; if(!jsPDF){alert('Error: no se pudo cargar la librería PDF. Recargá la página.');return;}
   var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'}); var w=210, h=297;
@@ -919,11 +977,11 @@ function generarPDF(sendWA){
   dibujarPresupuestoPDF(doc, {
     empresa: empresa, color1: color1, color2: color2, tel: tel, email: email, web: web, logo: pdfLogoBase64,
     proyecto: proyecto, cliente: document.getElementById('pdf-cliente').value||'', descripcion: descripcion, notas: notas,
-    nro: nro, fecha: fecha, validoHasta: validoHastaTexto(validez),
+    nro: nro, fecha: fecha, validoHasta: validoHastaTexto(validez), formasPago: formasPago,
     items: itemsAjustados, subtotal: grandTotal, descuento: descuento, total: precioTotal
   });
   var filename='Presupuesto-'+nro+'-'+proyecto.replace(/\s+/g,'-')+'.pdf';
-  guardarPresupuesto({ proyecto: proyecto, cliente: document.getElementById('pdf-cliente').value||'', descripcion: document.getElementById('pdf-descripcion').value||'', cantidad: cantidad, precioUnit: precioUnit, precioTotal: precioTotal, validez: document.getElementById('pdf-validez').value||'', condiciones: document.getElementById('pdf-notas')?document.getElementById('pdf-notas').value||'':'', items: itemsPresupuesto.length > 0 ? JSON.parse(JSON.stringify(itemsPresupuesto)) : [{nombre:proyecto, precio:precioTotal}], empresa: document.getElementById('pdf-empresa').value||'', tel: document.getElementById('pdf-tel').value||'', email2: document.getElementById('pdf-email').value||'', web: document.getElementById('pdf-web').value||'', colorPrimario: document.getElementById('pdf-color1').value||'', colorSecundario: document.getElementById('pdf-color2').value||'' });
+  guardarPresupuesto({ proyecto: proyecto, cliente: document.getElementById('pdf-cliente').value||'', descripcion: document.getElementById('pdf-descripcion').value||'', cantidad: cantidad, precioUnit: precioUnit, precioTotal: precioTotal, validez: document.getElementById('pdf-validez').value||'', condiciones: document.getElementById('pdf-notas')?document.getElementById('pdf-notas').value||'':'', items: itemsPresupuesto.length > 0 ? JSON.parse(JSON.stringify(itemsPresupuesto)) : [{nombre:proyecto, precio:precioTotal}], empresa: document.getElementById('pdf-empresa').value||'', tel: document.getElementById('pdf-tel').value||'', email2: document.getElementById('pdf-email').value||'', web: document.getElementById('pdf-web').value||'', colorPrimario: document.getElementById('pdf-color1').value||'', colorSecundario: document.getElementById('pdf-color2').value||'', formasPago: formasPago, _editId: editId });
   if(sendWA){ doc.save(filename); var msg='Hola! Te adjunto el presupuesto N° '+nro+' por el proyecto: *'+proyecto+'*. Total: '+new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(precioTotal)+'. Quedo a disposicion para cualquier consulta!'; setTimeout(function(){window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');},500); }
   else { doc.save(filename); }
   cerrarPDFModal(); itemsPresupuesto = []; renderItemsPresupuesto();
@@ -2989,11 +3047,13 @@ function cargarMisPresupuestos(){
   lista.innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">Cargando...</p>';
   firebase.firestore().collection('presupuestos')
     .where('uid','==',window.currentUser.uid)
-    .orderBy('fecha','desc')
-    .limit(100)
     .get()
     .then(function(snap){
-      todosPresupuestos = snap.docs.map(function(doc){ return { id: doc.id, data: doc.data() }; });
+      // Se ordena acá y no en la consulta: where + orderBy pide un índice
+      // compuesto en Firebase que no existe, y sin él el historial no cargaba.
+      var ms=function(d){ return d.fecha && d.fecha.toMillis ? d.fecha.toMillis() : Date.now(); };
+      todosPresupuestos = snap.docs.map(function(doc){ return { id: doc.id, data: doc.data() }; })
+        .sort(function(a,b){ return ms(b.data)-ms(a.data); });
       actualizarStatsPresupuestos();
       renderPresupuestosFiltrados();
     })
@@ -3031,10 +3091,18 @@ function guardarPresupuesto(data){
   if(!window.currentUser) return;
   data.uid = window.currentUser.uid;
   data.estado = data.estado || 'Enviado';
-  data.fecha = firebase.firestore.FieldValue.serverTimestamp();
-  firebase.firestore().collection('presupuestos').add(data)
-    .then(function(){ if(typeof cargarMisPresupuestos==='function') cargarMisPresupuestos(); })
-    .catch(function(e){ console.error('Error al guardar presupuesto:', e); });
+  var col=firebase.firestore().collection('presupuestos'), op;
+  if(!data._editId) delete data._editId;
+  if(data._editId){
+    var id=data._editId; delete data._editId; delete data.estado;
+    data.editado = firebase.firestore.FieldValue.serverTimestamp();
+    op = col.doc(id).update(data);
+  } else {
+    data.fecha = firebase.firestore.FieldValue.serverTimestamp();
+    op = col.add(data);
+  }
+  op.then(function(){ if(typeof cargarMisPresupuestos==='function') cargarMisPresupuestos(); })
+    .catch(function(e){ console.error('Error al guardar presupuesto:', e); alert('El PDF se descargó, pero no se pudo guardar en el historial: '+e.message); });
 }
 
 function eliminarPresupuesto(docId, btnEl){
@@ -3081,7 +3149,7 @@ function regenerarPDF(docId, d){
   dibujarPresupuestoPDF(doc, {
     empresa: empresa, color1: color1, color2: color2, tel: tel, email: email, web: web, logo: pdfLogoBase64,
     proyecto: proyecto, cliente: d.cliente||'', descripcion: descripcion, notas: notas,
-    nro: nro, fecha: fecha, validoHasta: validoHastaTexto(validez, desde),
+    nro: nro, fecha: fecha, validoHasta: validoHastaTexto(validez, desde), formasPago: d.formasPago||[],
     items: itemsR, subtotal: subtotalR, descuento: descR, total: precioTotal
   });
   var filename = 'Presupuesto-'+nro+'-'+proyecto.replace(/\s+/g,'-')+'.pdf';
@@ -3144,7 +3212,8 @@ function renderListaPresupuestos(docs){
     var btnWA=document.createElement('a'); btnWA.style.cssText='flex:1;min-width:120px;padding:9px;background:#25D366;color:#fff;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none'; btnWA.textContent='💬 Enviar WA'; btnWA.target='_blank';
     var waMsg='Hola! Te envio el presupuesto de *'+(d.proyecto||'tu pedido')+'* por '+fmtPeso(d.precioTotal)+'.'; btnWA.href='https://wa.me/'+WA+'?text='+encodeURIComponent(waMsg);
     var btnDel=document.createElement('button'); btnDel.style.cssText='padding:9px 14px;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;border-radius:8px;font-size:0.82rem;cursor:pointer;font-family:Inter,sans-serif'; btnDel.textContent='🗑'; btnDel.addEventListener('click',function(){eliminarPresupuesto(id,btnDel);});
-    acciones.appendChild(btnPDF); acciones.appendChild(btnWA); acciones.appendChild(btnDel); detalle.appendChild(acciones);
+    var btnEdit=document.createElement('button'); btnEdit.style.cssText='flex:1;min-width:120px;padding:9px;background:#fff;color:#1A1814;border:1.5px solid #1A1814;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif'; btnEdit.textContent='✏️ Editar'; btnEdit.addEventListener('click',function(){editarPresupuesto(id,d);});
+    acciones.appendChild(btnEdit); acciones.appendChild(btnPDF); acciones.appendChild(btnWA); acciones.appendChild(btnDel); detalle.appendChild(acciones);
     header.addEventListener('click',function(){ var isOpen=detalle.style.display!=='none'; detalle.style.display=isOpen?'none':'block'; hChev.style.transform=isOpen?'':'rotate(180deg)'; });
     card.appendChild(header); card.appendChild(detalle); lista.appendChild(card);
   });
@@ -6430,6 +6499,16 @@ document.addEventListener('change', function(e){
         <div style="position:relative;flex:1"><input type="number" id="pdf-descuento" min="0" max="100" step="1" placeholder="0" oninput="actualizarDescuento()" style="width:100%;padding:10px 32px 10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:1rem;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.88rem;pointer-events:none">%</span></div>
         <div id="descuento-preview" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;text-align:center;min-width:110px"><div style="font-size:0.68rem;color:#8A8479;font-family:Inter,sans-serif">Total con descuento</div><div id="descuento-preview-val" style="font-size:1rem;font-weight:700;color:#2D6A4F;font-variant-numeric:tabular-nums"></div></div>
       </div>
+    </div>
+    <div class="field"><label>Formas de pago</label>
+      <div id="pdf-formas-pago" style="display:flex;flex-wrap:wrap;gap:6px">
+        <label class="fp-chip"><input type="checkbox" value="Efectivo" checked> Efectivo</label>
+        <label class="fp-chip"><input type="checkbox" value="Transferencia" checked> Transferencia</label>
+        <label class="fp-chip"><input type="checkbox" value="Mercado Pago" checked> Mercado Pago</label>
+        <label class="fp-chip"><input type="checkbox" value="Tarjeta de débito" checked> Débito</label>
+        <label class="fp-chip"><input type="checkbox" value="Tarjeta de crédito (en cuotas)" checked> Crédito en cuotas</label>
+      </div>
+      <style>.fp-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border:1.5px solid #E2DDD6;border-radius:999px;font-size:0.82rem;font-family:Inter,sans-serif;color:#1A1814;cursor:pointer;background:#fff;user-select:none}.fp-chip:has(input:checked){border-color:#2D6A4F;background:#F0FDF4}.fp-chip input{accent-color:#2D6A4F;width:15px;height:15px;margin:0}</style>
     </div>
     <div class="field"><label>Condiciones / notas <span style="font-size:0.75rem;color:#8A8479;font-weight:400">(opcional)</span></label><textarea id="pdf-notas" placeholder="Ej: Seña del 50% para iniciar. Entrega en 5 días hábiles.">Seña del 50% para comenzar. Saldo contra entrega. Los colores pueden variar levemente según el lote de filamento.</textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:1rem">
