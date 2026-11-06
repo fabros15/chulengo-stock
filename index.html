@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     if(!window._handledInitialToolHash){
       window._handledInitialToolHash = true;
-      var herramientasValidas = ['etiquetas','remito','svg-converter','qr-generator'];
+      var herramientasValidas = ['etiquetas','remito','svg-converter','qr-generator','estado-cuenta'];
       var hashActual = (window.location.hash||'').replace('#','');
       if(herramientasValidas.indexOf(hashActual) !== -1){
         showPage('herramientas');
@@ -592,6 +592,8 @@ document.addEventListener('click',function(e){
 });
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="html2canvas.min.js"></script>
+<script src="estado-cuenta.js"></script>
 <script>
 function getStorage(key){ try{ return localStorage.getItem(key); }catch(e){ try{ return sessionStorage.getItem(key); }catch(e2){ return null; } } }
 function setStorage(key,val){ try{ localStorage.setItem(key,val); }catch(e){ try{ sessionStorage.setItem(key,val); }catch(e2){} } }
@@ -1701,6 +1703,7 @@ function abrirHerramienta(id){
   history.replaceState({page:'herramientas', tool:id}, '', '#'+id);
 
   if(id === 'svg-converter') cargarHistorialSVG();
+  if(id === 'estado-cuenta' && typeof ecInit==='function') ecInit();
   if(id === 'qr-generator') cargarHistorialQR();
   if(id === 'etiquetas'){
     if(!window.currentUser){ cerrarHerramienta(); mostrarLoginModal('default'); return; }
@@ -1810,6 +1813,15 @@ function cerrarHerramienta(){
         <div class="home-card-title">Hacer un remito</div>
         <div class="home-card-desc">Anotá qué entregaste, a quién y a qué precio. Se guarda en tu historial y lo imprimís en un clic.</div>
         <div class="home-card-note solo-sin-sesion">Necesitás iniciar sesión con Google</div>
+      </div>
+      <span class="home-card-go">Empezar →</span>
+    </a>
+
+    <a href="#estado-cuenta" class="home-card" onclick="irAHerramienta('estado-cuenta');return false;">
+      <div class="home-card-icon" style="background:#FEF3E7;color:#C2410C">📋</div>
+      <div class="home-card-body">
+        <div class="home-card-title">Estado de cuenta</div>
+        <div class="home-card-desc">Anotá lo que te encargó un cliente y lo que ya te pagó. Te calcula cuánto falta y lo bajás en PDF o JPG.</div>
       </div>
       <span class="home-card-go">Empezar →</span>
     </a>
@@ -2203,6 +2215,18 @@ function cerrarHerramienta(){
           <div style="font-size:0.82rem;color:#8A8479;font-family:Inter,sans-serif;line-height:1.5">Generá e imprimí un remito con los productos entregados y sus precios, con tu propia marca.</div>
           <div style="margin-top:1rem;display:flex;gap:6px;flex-wrap:wrap">
             <span style="background:#EFF6F1;color:#2D6A4F;border:1px solid #CBE3D3;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">Personalizable</span>
+          </div>
+        </div>
+      </a>
+      <!-- Estado de cuenta -->
+      <a href="#estado-cuenta" style="display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid #E2DDD6;border-radius:14px;overflow:hidden;cursor:pointer;transition:all 0.2s" onclick="abrirHerramienta('estado-cuenta');return false;" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+        <div style="background:linear-gradient(135deg,#C2410C 0%,#1A1814 100%);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">📋</div>
+        <div style="padding:1.25rem">
+          <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Inter,sans-serif;margin-bottom:5px">Estado de cuenta</div>
+          <div style="font-size:0.82rem;color:#8A8479;font-family:Inter,sans-serif;line-height:1.5">Lo que encargó un cliente, lo que ya pagó y el saldo que le falta. Descargalo en PDF o JPG.</div>
+          <div style="margin-top:1rem;display:flex;gap:6px;flex-wrap:wrap">
+            <span style="background:#EFF6F1;color:#2D6A4F;border:1px solid #CBE3D3;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">PDF</span>
+            <span style="background:#EFF6F1;color:#2D6A4F;border:1px solid #CBE3D3;border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:600">JPG</span>
           </div>
         </div>
       </a>
@@ -2716,6 +2740,127 @@ function cerrarHerramienta(){
           <div id="remito-estadisticas-mensuales" style="display:none;padding:0 1.25rem 1.25rem"></div>
         </div>
       </div>
+    </div>
+
+    <!-- ESTADO DE CUENTA -->
+    <div id="herramienta-estado-cuenta" style="display:none">
+      <style>
+        #herramienta-estado-cuenta{font-family:'Inter',sans-serif;color:#1A1814}
+        .ec-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.5rem;align-items:start}
+        .ec-card{background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:1rem}
+        .ec-card-tit{font-size:0.875rem;font-weight:700;margin-bottom:0.75rem;display:flex;justify-content:space-between;align-items:center}
+        .ec-label{display:block;font-size:0.75rem;font-weight:600;color:#6B665E;margin-bottom:4px}
+        .ec-in{width:100%;padding:8px 10px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.88rem;font-family:'Inter',sans-serif;color:#1A1814;outline:none;box-sizing:border-box;background:#fff;min-width:0}
+        .ec-in:focus{border-color:#2D6A4F}
+        .ec-in:disabled{background:#F5F2ED;color:#A09890}
+        .ec-seccion{background:#FBFAF8;border:1px solid #E2DDD6;border-radius:10px;padding:10px;margin-bottom:10px}
+        .ec-sec-head{display:flex;gap:6px;margin-bottom:8px}
+        .ec-sec-titulo{font-weight:700}
+        .ec-item-cab,.ec-item{display:grid;grid-template-columns:minmax(0,1fr) 62px 100px 46px 28px;gap:6px;align-items:center}
+        .ec-item-cab{font-size:0.68rem;font-weight:700;color:#8A8479;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;padding:0 2px}
+        .ec-item{margin-bottom:6px}
+        .ec-regalo{display:flex;align-items:center;justify-content:center;gap:2px;font-size:0.9rem;cursor:pointer}
+        .ec-x{background:none;border:none;color:#B91C1C;font-size:0.85rem;cursor:pointer;padding:4px;border-radius:6px}
+        .ec-x:hover{background:#FEF2F2}
+        .ec-add{width:100%;margin-top:2px;padding:8px;background:#fff;border:1.5px dashed #D4CFC8;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#1A1814}
+        .ec-pago{display:grid;grid-template-columns:132px 110px minmax(0,1fr) 28px;gap:6px;align-items:center;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #F0ECE6}
+        .ec-pago .ec-pago-det{grid-column:1 / 4}
+        .ec-vacio{font-size:0.8rem;color:#8A8479;text-align:center;padding:0.75rem}
+        .ec-btn{padding:11px 14px;border:none;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;color:#fff;display:flex;align-items:center;justify-content:center;gap:6px}
+        .ec-btn:disabled{opacity:0.6;cursor:wait}
+        .ec-acciones{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        .ec-guardada{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F0ECE6}
+        .ec-guardada:last-child{border-bottom:none}
+        .ec-g-nombre{font-weight:700;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .ec-g-sub{font-size:0.75rem;color:#8A8479}
+        .ec-g-saldo{margin-left:auto;font-size:0.78rem;font-weight:700;color:#B91C1C;background:#FEF2F2;border-radius:20px;padding:3px 10px;white-space:nowrap}
+        .ec-g-saldo.ok{color:#2D6A4F;background:#EFF6F1}
+        .ec-g-acc{display:flex;gap:4px}
+        .ec-g-acc button{padding:5px 10px;border:1px solid #E2DDD6;background:#fff;border-radius:7px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+        .ec-g-acc button.del{color:#B91C1C;border-color:#FECACA;background:#FEF2F2}
+        #ec-aviso{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1A1814;color:#fff;padding:10px 18px;border-radius:10px;font-size:0.85rem;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999}
+        @media(max-width:900px){ .ec-grid{grid-template-columns:minmax(0,1fr)} }
+        @media(max-width:600px){
+          .ec-item-cab{display:none}
+          .ec-item{grid-template-columns:70px minmax(0,1fr) 44px 28px;padding-bottom:8px;border-bottom:1px solid #EEEAE4}
+          .ec-item > :first-child{grid-column:1 / -1}
+          .ec-pago{grid-template-columns:1fr 1fr 28px}
+          .ec-pago select{grid-column:1 / 3}
+          .ec-pago .ec-pago-det{grid-column:1 / 3}
+          .ec-guardada{flex-wrap:wrap}
+        }
+      </style>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem">
+        <button onclick="cerrarHerramienta()" style="background:#F5F2ED;border:1px solid #E2DDD6;border-radius:8px;padding:7px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:#1A1814;display:flex;align-items:center;gap:6px">← Volver</button>
+        <div>
+          <div style="font-size:1.1rem;font-weight:800">Estado de cuenta</div>
+          <div style="font-size:0.78rem;color:#8A8479">Lo que te encargó un cliente, lo que ya pagó y cuánto le falta</div>
+        </div>
+      </div>
+
+      <div class="ec-grid">
+        <div class="ec-form">
+          <div class="ec-card">
+            <div class="ec-card-tit" onclick="ecToggleMarca()" style="cursor:pointer;margin-bottom:0"><span>Tu marca</span><span style="font-size:0.8rem;color:#2D6A4F">Personalizar <span id="ec-marca-chev">▾</span></span></div>
+            <div id="ec-marca-campos" style="display:none;margin-top:0.85rem">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+                <div><label class="ec-label">Nombre</label><input id="ec-m-empresa" class="ec-in" placeholder="Chulengo Estudio" onchange="ecGuardarMarca()"></div>
+                <div><label class="ec-label">Teléfono / WhatsApp</label><input id="ec-m-tel" class="ec-in" onchange="ecGuardarMarca()"></div>
+                <div><label class="ec-label">Instagram o web</label><input id="ec-m-web" class="ec-in" placeholder="@chulengoestudio" onchange="ecGuardarMarca()"></div>
+                <div><label class="ec-label">Logo</label><input type="file" accept="image/*" class="ec-in" style="padding:6px" onchange="ecSubirLogo(this)"></div>
+                <div><label class="ec-label">Color principal</label><input id="ec-m-color1" type="color" class="ec-in" style="padding:2px;height:36px" onchange="ecGuardarMarca()"></div>
+                <div><label class="ec-label">Color secundario</label><input id="ec-m-color2" type="color" class="ec-in" style="padding:2px;height:36px" onchange="ecGuardarMarca()"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ec-card">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:8px">
+              <div><label class="ec-label">Cliente</label><input id="ec-cliente" class="ec-in" placeholder="Ej: Pedro"></div>
+              <div><label class="ec-label">Fecha</label><input id="ec-fecha" type="date" class="ec-in"></div>
+            </div>
+          </div>
+
+          <div class="ec-card">
+            <div class="ec-card-tit"><span>Lo que encargó</span></div>
+            <div style="font-size:0.75rem;color:#8A8479;margin:-0.4rem 0 0.75rem">Separá en grupos si hay cosas de distintos lados (ej: lo de la liga y lo personal). Marcá 🎁 lo que va de regalo.</div>
+            <div id="ec-secciones"></div>
+            <button type="button" class="ec-add" style="background:#F5F2ED" onclick="ecAgregarSeccion()">+ Agregar otro grupo</button>
+          </div>
+
+          <div class="ec-card">
+            <div class="ec-card-tit"><span>Lo que ya pagó</span></div>
+            <div id="ec-pagos"></div>
+            <button type="button" class="ec-add" onclick="ecAgregarPago()">+ Agregar pago</button>
+          </div>
+
+          <div class="ec-card">
+            <label class="ec-label">Notas (opcional)</label>
+            <textarea id="ec-notas" class="ec-in" rows="2" placeholder="Ej: El saldo se abona al retirar."></textarea>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:0.78rem;font-weight:600;color:#8A8479;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Vista previa</div>
+          <div id="ec-resumen-rapido" style="font-size:0.85rem;margin-bottom:8px"></div>
+          <div id="ec-doc-wrap" style="background:#EDEAE4;border-radius:12px;padding:1rem;overflow:hidden;margin-bottom:1rem">
+            <div id="ec-doc" style="position:relative;width:700px;margin:0 auto;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:32px;box-sizing:border-box;font-family:'Inter',sans-serif;color:#1A1814;overflow:hidden"></div>
+          </div>
+          <div class="ec-acciones">
+            <button type="button" class="ec-btn" style="background:#1A1814" onclick="ecDescargarPDF(this)">⬇ Descargar PDF</button>
+            <button type="button" class="ec-btn" style="background:#0F766E" onclick="ecDescargarJPG(this)">⬇ Descargar JPG</button>
+            <button type="button" class="ec-btn" style="background:#25D366" onclick="ecCompartir(this)">Enviar por WhatsApp</button>
+            <button type="button" class="ec-btn" style="background:#2D6A4F" onclick="ecGuardar()">Guardar cuenta</button>
+          </div>
+
+          <div class="ec-card" style="margin-top:1.25rem">
+            <div class="ec-card-tit"><span>Cuentas guardadas</span><button type="button" onclick="ecNueva()" style="background:#F5F2ED;border:1px solid #E2DDD6;border-radius:7px;padding:5px 10px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">+ Nueva cuenta</button></div>
+            <div id="ec-guardadas"></div>
+            <div style="font-size:0.7rem;color:#A09890;margin-top:8px">Se guardan en este navegador.</div>
+          </div>
+        </div>
+      </div>
+      <div id="ec-aviso"></div>
     </div>
 
   </div>
