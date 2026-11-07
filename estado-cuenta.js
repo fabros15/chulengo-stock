@@ -96,6 +96,7 @@
       h+='<div class="ec-seccion" data-si="'+si+'">'+
         '<div class="ec-sec-head"><input class="ec-in ec-sec-titulo" data-si="'+si+'" placeholder="Nombre del grupo (ej: Liga de Fútbol Femenina)" value="'+esc(s.titulo)+'">'+
         (EC.secciones.length>1?'<button type="button" class="ec-x" title="Quitar grupo" onclick="ecQuitarSeccion('+si+')">✕</button>':'')+'</div>'+
+        (s.presupuestoId?'<div style="font-size:0.72rem;color:#2D6A4F;font-weight:600;margin:-4px 0 8px">📄 Viene del presupuesto P-'+esc(String(s.presupuestoId).slice(-6))+'</div>':'')+
         '<div class="ec-item-cab"><span>Descripción</span><span>Cant.</span><span>Precio unit.</span><span>Regalo</span><span></span></div>';
       s.items.forEach(function(it,ii){
         h+='<div class="ec-item">'+
@@ -373,4 +374,144 @@
     ecLeerFormulario(); ecPreview();
   });
   window.addEventListener('resize', function(){ ajustarVista(); });
+
+  // ═══ Enlace con los presupuestos ═══
+  // Cuando un presupuesto pasa a Aprobado / Señado / Pagado se suma solo
+  // al estado de cuenta de ese cliente (un grupo por presupuesto).
+  var ACTIVOS = ['Aprobado','Señado','Pagado'];
+  function norm(t){ return String(t||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' '); }
+  function nroPres(id){ return 'P-'+String(id).slice(-6); }
+  function itemsDesdePresupuesto(d){
+    var items = (d.items&&d.items.length) ? d.items : [{nombre:d.proyecto||'Presupuesto', precio:d.precioTotal||0, cant:d.cantidad||1}];
+    var out = items.map(function(it){ var c=num(it.cant)||1; return { desc: it.nombre||'', cant: c, precio: Math.round(num(it.precio)/c), regalo:false }; });
+    var suma = out.reduce(function(a,it){ return a+it.cant*it.precio; },0);
+    var total = num(d.precioTotal);
+    if(total>0 && Math.abs(suma-total)>=1) out.push({desc: total<suma?'Descuento':'Ajuste', cant:1, precio: Math.round(total-suma), regalo:false});
+    return out;
+  }
+  function esVacia(sec){ return !sec.presupuestoId && !String(sec.titulo||'').trim() && sec.items.every(function(it){ return !String(it.desc||'').trim() && !num(it.precio); }); }
+  function quitarSeccionDe(c, si){
+    c.secciones.splice(si,1);
+    c.pagos = c.pagos.filter(function(p){ return +p.seccion!==si; });
+    c.pagos.forEach(function(p){ if(+p.seccion>si) p.seccion=+p.seccion-1; });
+  }
+  function guardarCuentaObj(c){
+    c.actualizado = Date.now();
+    var l = leerCuentas(), i = l.findIndex(function(x){ return x.id===c.id; });
+    if(i===-1) l.unshift(c); else l[i]=c;
+    escribirCuentas(l);
+    if(EC && EC.id===c.id){ EC = JSON.parse(JSON.stringify(c)); if($('ec-secciones')){ ecRenderFormulario(); ecPreview(); } }
+    ecRenderGuardadas();
+  }
+  function cuentaConPresupuesto(id){
+    var l=leerCuentas();
+    for(var i=0;i<l.length;i++){ var si=l[i].secciones.findIndex(function(s){ return s.presupuestoId===id; }); if(si!==-1) return {c:l[i], si:si}; }
+    return null;
+  }
+  function saldoSeccion(c, si){
+    var guard=EC; EC=c; var t=totalesSeccion(c.secciones[si], si); EC=guard; return t.saldo;
+  }
+
+  function avisoEnlace(texto, cuentaId){
+    var a=document.getElementById('ec-aviso-enlace');
+    if(!a){ a=document.createElement('div'); a.id='ec-aviso-enlace';
+      a.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1A1814;color:#fff;padding:12px 16px;border-radius:12px;font:600 0.85rem Inter,sans-serif;z-index:9999;display:flex;gap:12px;align-items:center;box-shadow:0 8px 30px rgba(0,0,0,0.25);max-width:92vw';
+      document.body.appendChild(a); }
+    a.innerHTML='<span>'+esc(texto)+'</span>'+(cuentaId?'<button type="button" style="background:#2D6A4F;color:#fff;border:none;border-radius:8px;padding:6px 12px;font:700 0.8rem Inter,sans-serif;cursor:pointer;white-space:nowrap">Ver cuenta</button>':'');
+    var b=a.querySelector('button'); if(b) b.onclick=function(){ a.style.display='none'; ecVerCuenta(cuentaId); };
+    a.style.display='flex'; clearTimeout(a._t); a._t=setTimeout(function(){ a.style.display='none'; },7000);
+  }
+  window.ecVerCuenta = function(cuentaId){
+    var c=leerCuentas().find(function(x){ return x.id===cuentaId; }); if(!c) return;
+    EC=c;
+    if(typeof irAHerramienta==='function') irAHerramienta('estado-cuenta'); else { ecRenderFormulario(); ecPreview(); }
+  };
+  window.ecCuentaDePresupuesto = function(id){ var r=cuentaConPresupuesto(id); return r?r.c:null; };
+  window.ecCuentaDeCliente = function(cliente){
+    var n=norm(cliente); if(!n) return null;
+    return leerCuentas().find(function(c){ return norm(c.cliente)===n; }) || null;
+  };
+
+  // Se llama cuando cambia el estado de un presupuesto
+  window.ecSincronizarPresupuesto = function(id, d, estado){
+    var ya = cuentaConPresupuesto(id);
+    if(ACTIVOS.indexOf(estado)===-1){
+      if(ya && confirm('Este presupuesto está cargado en el estado de cuenta de '+ya.c.cliente+'. ¿Lo saco de ahí?')){
+        quitarSeccionDe(ya.c, ya.si); guardarCuentaObj(ya.c);
+        avisoEnlace('Se sacó del estado de cuenta de '+ya.c.cliente, ya.c.id);
+      }
+      return;
+    }
+    var c, si, nueva=false;
+    if(ya){ c=ya.c; si=ya.si; }
+    else {
+      var cliente = String(d.cliente||'').trim();
+      if(!cliente){ cliente = (prompt('Este presupuesto no tiene cliente. ¿A qué cliente se lo sumo en su estado de cuenta?')||'').trim(); if(!cliente) return; }
+      c = ecCuentaDeCliente(cliente);
+      if(!c){ c = cuentaNueva(); c.cliente = cliente; c.secciones=[]; nueva=true; }
+      c.secciones = c.secciones.filter(function(s){ return !esVacia(s); });
+      c.secciones.push({ titulo: d.proyecto||nroPres(id), presupuestoId: id, items: itemsDesdePresupuesto(d) });
+      si = c.secciones.length-1;
+    }
+    var pagosDe = c.pagos.filter(function(p){ return p.presupuestoId===id; });
+    if(estado==='Señado' && !pagosDe.length){
+      var r = prompt('¿Cuánto dejó de seña? (dejalo vacío si todavía no te pagó nada)', '');
+      var monto = num(r||'');
+      if(monto>0) c.pagos.push({fecha:hoyISO(), monto:monto, seccion:si, detalle:'Seña', presupuestoId:id});
+    }
+    if(estado==='Pagado'){
+      var saldo = saldoSeccion(c, si);
+      if(saldo>0) c.pagos.push({fecha:hoyISO(), monto:saldo, seccion:si, detalle:pagosDe.length?'Saldo':'Pago total', presupuestoId:id});
+    }
+    guardarCuentaObj(c);
+    var sal = saldoSeccion(c, si);
+    avisoEnlace((ya?'Estado de cuenta de ':(nueva?'Se creó el estado de cuenta de ':'Se sumó al estado de cuenta de '))+c.cliente+' · falta '+peso(Math.max(sal,0)), c.id);
+  };
+
+  // Si se edita un presupuesto que ya está en una cuenta, se actualizan sus productos
+  window.ecActualizarDesdePresupuesto = function(id, d){
+    var ya = cuentaConPresupuesto(id); if(!ya) return;
+    ya.c.secciones[ya.si].items = itemsDesdePresupuesto(d);
+    if(d.proyecto) ya.c.secciones[ya.si].titulo = d.proyecto;
+    guardarCuentaObj(ya.c);
+    avisoEnlace('También se actualizó el estado de cuenta de '+ya.c.cliente, ya.c.id);
+  };
+
+  // Desde la herramienta: traer un presupuesto a mano
+  window.ecTraerPresupuesto = function(){
+    if(!window.currentUser){ alert('Iniciá sesión para ver tus presupuestos.'); return; }
+    var mostrar = function(lista){
+      var m=document.createElement('div');
+      m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;display:flex;align-items:center;justify-content:center;padding:1rem';
+      var filas = lista.length ? lista.map(function(e){
+        var d=e.data, enCuenta=cuentaConPresupuesto(e.id);
+        return '<button type="button" data-id="'+e.id+'" style="display:flex;width:100%;text-align:left;gap:10px;align-items:center;padding:10px 12px;border:1px solid #E2DDD6;border-radius:10px;background:#fff;margin-bottom:6px;cursor:pointer;font-family:Inter,sans-serif">'+
+          '<span style="flex:1;min-width:0"><b style="font-size:0.88rem">'+esc(d.proyecto||'Sin nombre')+'</b><br><span style="font-size:0.75rem;color:#8A8479">'+esc(d.cliente||'Sin cliente')+' · '+nroPres(e.id)+' · '+esc(d.estado||'Enviado')+(enCuenta?' · ya en cuenta de '+esc(enCuenta.c.cliente):'')+'</span></span>'+
+          '<b style="font-size:0.85rem;color:#2D6A4F;white-space:nowrap">'+peso(d.precioTotal)+'</b></button>';
+      }).join('') : '<div class="ec-vacio">No tenés presupuestos guardados.</div>';
+      m.innerHTML='<div style="background:#fff;border-radius:16px;padding:1.25rem;max-width:480px;width:100%;max-height:80vh;overflow:auto;font-family:Inter,sans-serif">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem"><b>Elegí un presupuesto</b><button type="button" data-cerrar style="background:none;border:none;font-size:1rem;cursor:pointer">✕</button></div>'+filas+'</div>';
+      m.addEventListener('click', function(ev){
+        if(ev.target===m || ev.target.closest('[data-cerrar]')){ m.remove(); return; }
+        var b=ev.target.closest('[data-id]'); if(!b) return;
+        var e=lista.find(function(x){ return x.id===b.dataset.id; }); m.remove(); if(!e) return;
+        var otra=cuentaConPresupuesto(e.id);
+        if(otra && otra.c.id!==EC.id){ alert('Ese presupuesto ya está en el estado de cuenta de '+otra.c.cliente+'.'); return; }
+        if(otra){ alert('Ese presupuesto ya está en esta cuenta.'); return; }
+        ecLeerFormulario();
+        if(!EC.cliente.trim()) EC.cliente = e.data.cliente||'';
+        EC.secciones = EC.secciones.filter(function(s){ return !esVacia(s); });
+        EC.secciones.push({ titulo: e.data.proyecto||nroPres(e.id), presupuestoId: e.id, items: itemsDesdePresupuesto(e.data) });
+        ecRenderFormulario(); ecPreview(); ecGuardar(true);
+      });
+      document.body.appendChild(m);
+    };
+    if(typeof todosPresupuestos!=='undefined' && todosPresupuestos.length){ mostrar(todosPresupuestos); return; }
+    firebase.firestore().collection('presupuestos').where('uid','==',window.currentUser.uid).get().then(function(snap){
+      var ms=function(d){ return d.fecha && d.fecha.toMillis ? d.fecha.toMillis() : Date.now(); };
+      var l=snap.docs.map(function(x){ return {id:x.id, data:x.data()}; }).sort(function(a,b){ return ms(b.data)-ms(a.data); });
+      if(typeof todosPresupuestos!=='undefined') todosPresupuestos=l;
+      mostrar(l);
+    }).catch(function(e){ alert('No se pudieron cargar los presupuestos: '+e.message); });
+  };
 })();

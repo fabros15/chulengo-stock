@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', function(){
       window._handledInitialToolHash = true;
       var herramientasValidas = ['etiquetas','remito','svg-converter','qr-generator','estado-cuenta'];
       var hashActual = (window.location.hash||'').replace('#','');
+      if(hashActual==='presupuesto'){ setTimeout(function(){ abrirPresupuestoLibre(); }, 0); }
       if(herramientasValidas.indexOf(hashActual) !== -1){
         showPage('herramientas');
         setTimeout(function(){ abrirHerramienta(hashActual); }, 0);
@@ -1807,6 +1808,16 @@ function cerrarHerramienta(){
       <span class="home-card-go">Empezar →</span>
     </a>
 
+    <a href="#presupuesto" class="home-card" onclick="abrirPresupuestoLibre();return false;">
+      <div class="home-card-icon" style="background:#F1EEFB;color:#4C3BA8">📄</div>
+      <div class="home-card-body">
+        <div class="home-card-title">Hacer un presupuesto</div>
+        <div class="home-card-desc">Ya sabés los precios: escribí los productos y cuánto sale cada uno, y bajalo en PDF. Sin calculadora.</div>
+        <div class="home-card-note solo-sin-sesion">Necesitás iniciar sesión con Google</div>
+      </div>
+      <span class="home-card-go">Empezar →</span>
+    </a>
+
     <a href="#remito" class="home-card" onclick="irAHerramienta('remito',true);return false;">
       <div class="home-card-icon" style="background:#E6F4F1;color:#0F766E">🧾</div>
       <div class="home-card-body">
@@ -2128,6 +2139,7 @@ function cerrarHerramienta(){
         <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Generar presupuesto PDF
       </button>
+      <div style="text-align:center;margin-top:8px;font-size:0.8rem;font-family:Inter,sans-serif;color:#8A8479">¿Ya sabés el precio? <a href="#" onclick="abrirPresupuestoLibre();return false;" style="color:#2D6A4F;font-weight:600">Armá un presupuesto a mano</a></div>
       <div class="res-rep">
         <div class="rep-item"><div class="rep-lbl">Material</div><div class="rep-val" id="rep-mat">—</div></div>
         <div class="rep-item"><div class="rep-lbl">Impresora</div><div class="rep-val" id="rep-imp">—</div></div>
@@ -2756,7 +2768,7 @@ function cerrarHerramienta(){
         .ec-seccion{background:#FBFAF8;border:1px solid #E2DDD6;border-radius:10px;padding:10px;margin-bottom:10px}
         .ec-sec-head{display:flex;gap:6px;margin-bottom:8px}
         .ec-sec-titulo{font-weight:700}
-        .ec-item-cab,.ec-item{display:grid;grid-template-columns:minmax(0,1fr) 62px 100px 46px 28px;gap:6px;align-items:center}
+        .ec-item-cab,.ec-item{display:grid;grid-template-columns:minmax(0,1fr) 70px 100px 46px 28px;gap:6px;align-items:center}
         .ec-item-cab{font-size:0.68rem;font-weight:700;color:#8A8479;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;padding:0 2px}
         .ec-item{margin-bottom:6px}
         .ec-regalo{display:flex;align-items:center;justify-content:center;gap:2px;font-size:0.9rem;cursor:pointer}
@@ -2823,9 +2835,12 @@ function cerrarHerramienta(){
 
           <div class="ec-card">
             <div class="ec-card-tit"><span>Lo que encargó</span></div>
-            <div style="font-size:0.75rem;color:#8A8479;margin:-0.4rem 0 0.75rem">Separá en grupos si hay cosas de distintos lados (ej: lo de la liga y lo personal). Marcá 🎁 lo que va de regalo.</div>
+            <div style="font-size:0.75rem;color:#8A8479;margin:-0.4rem 0 0.75rem">Separá en grupos si hay cosas de distintos lados (ej: lo de la liga y lo personal). Marcá 🎁 lo que va de regalo. Los presupuestos que marcás como Aprobado o Señado se suman solos.</div>
             <div id="ec-secciones"></div>
-            <button type="button" class="ec-add" style="background:#F5F2ED" onclick="ecAgregarSeccion()">+ Agregar otro grupo</button>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <button type="button" class="ec-add" style="background:#F5F2ED" onclick="ecAgregarSeccion()">+ Agregar grupo a mano</button>
+              <button type="button" class="ec-add" style="background:#EFF6F1;border-color:#CBE3D3;color:#2D6A4F" onclick="ecTraerPresupuesto()">📄 Traer un presupuesto</button>
+            </div>
           </div>
 
           <div class="ec-card">
@@ -3186,6 +3201,7 @@ function cambiarEstadoYActualizar(docId, nuevoEstado, btnEl){
   firebase.firestore().collection('presupuestos').doc(docId).update({estado: nuevoEstado})
     .then(function(){
       var entry = todosPresupuestos.find(function(e){return e.id===docId;}); if(entry) entry.data.estado = nuevoEstado;
+      if(entry && typeof ecSincronizarPresupuesto==='function'){ ecSincronizarPresupuesto(docId, entry.data, nuevoEstado); }
       var btns = btnEl.closest('[data-estado-group]').querySelectorAll('.estado-badge');
       btns.forEach(function(b){ b.style.opacity = b.dataset.est === nuevoEstado ? '1' : '0.4'; b.style.borderWidth = b.dataset.est === nuevoEstado ? '2px' : '1px'; });
       var card = btnEl.closest('.pres-card');
@@ -3253,6 +3269,7 @@ function guardarPresupuesto(data){
     var id=data._editId; delete data._editId; delete data.estado;
     data.editado = firebase.firestore.FieldValue.serverTimestamp();
     op = col.doc(id).update(data);
+    op.then(function(){ if(typeof ecActualizarDesdePresupuesto==='function') ecActualizarDesdePresupuesto(id, data); });
   } else {
     data.fecha = firebase.firestore.FieldValue.serverTimestamp();
     op = col.add(data);
@@ -3319,7 +3336,8 @@ function renderListaPresupuestos(docs){
       lista.innerHTML='<div style="text-align:center;padding:2.5rem 1rem">'+
         '<div style="font-size:2.5rem;margin-bottom:0.75rem">📄</div>'+
         '<div style="font-size:0.95rem;font-weight:600;color:#1A1814;font-family:Inter,sans-serif;margin-bottom:0.5rem">Todavía no generaste ningún presupuesto</div>'+
-        '<div style="font-size:0.82rem;color:#8A8479;font-family:Inter,sans-serif;margin-bottom:1.25rem">Usá la calculadora para calcular el costo y generar un presupuesto para tu cliente.</div>'+
+        '<div style="font-size:0.82rem;color:#8A8479;font-family:Inter,sans-serif;margin-bottom:1.25rem">Hacelo a mano si ya sabés los precios, o usá la calculadora para sacar el costo.</div>'+
+        '<button onclick="abrirPresupuestoLibre()" style="background:#2D6A4F;color:#fff;border:none;border-radius:10px;padding:11px 24px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin:0 6px 8px">Hacer un presupuesto</button>'+
         '<button onclick="showPage(\'calc\',document.querySelectorAll(\'.nav-tab\')[1])" style="background:#1A1814;color:#fff;border:none;border-radius:10px;padding:11px 24px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Ir a la calculadora</button>'+
         '</div>';
     } else { lista.innerHTML='<p style="color:#8A8479;font-size:0.85rem;text-align:center;padding:2rem">No hay presupuestos con ese filtro.</p>'; }
@@ -3356,7 +3374,7 @@ function renderListaPresupuestos(docs){
     var itemsDiv=document.createElement('div'); itemsDiv.style.cssText='margin-bottom:0.75rem';
     items.forEach(function(item){
       var row=document.createElement('div'); row.style.cssText='display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F5F2ED;font-size:0.82rem;font-family:Inter,sans-serif';
-      row.innerHTML='<span style="color:#1A1814">'+item.nombre+'</span><span style="color:#2D6A4F;font-variant-numeric:tabular-nums;font-weight:600">'+fmtPeso(item.precio)+'</span>';
+      row.innerHTML='<span style="color:#1A1814">'+((item.cant||1)>1?item.cant+' × ':'')+item.nombre+'</span><span style="color:#2D6A4F;font-variant-numeric:tabular-nums;font-weight:600">'+fmtPeso(item.precio)+'</span>';
       itemsDiv.appendChild(row);
     });
     if(items.length>1){ var tot=document.createElement('div'); tot.style.cssText='display:flex;justify-content:space-between;padding:6px 0;font-size:0.88rem;font-weight:700;font-family:Inter,sans-serif'; tot.innerHTML='<span>Total</span><span style="color:#2D6A4F;font-variant-numeric:tabular-nums">'+fmtPeso(d.precioTotal)+'</span>'; itemsDiv.appendChild(tot); }
@@ -3370,6 +3388,14 @@ function renderListaPresupuestos(docs){
     var btnDel=document.createElement('button'); btnDel.style.cssText='padding:9px 14px;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;border-radius:8px;font-size:0.82rem;cursor:pointer;font-family:Inter,sans-serif'; btnDel.textContent='🗑'; btnDel.addEventListener('click',function(){eliminarPresupuesto(id,btnDel);});
     var btnEdit=document.createElement('button'); btnEdit.style.cssText='flex:1;min-width:120px;padding:9px;background:#fff;color:#1A1814;border:1.5px solid #1A1814;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif'; btnEdit.textContent='✏️ Editar'; btnEdit.addEventListener('click',function(){editarPresupuesto(id,d);});
     acciones.appendChild(btnEdit); acciones.appendChild(btnPDF); acciones.appendChild(btnWA); acciones.appendChild(btnDel); detalle.appendChild(acciones);
+    var cuentaEC = typeof ecCuentaDePresupuesto==='function' ? ecCuentaDePresupuesto(id) : null;
+    if(cuentaEC){
+      var btnEC=document.createElement('button'); btnEC.style.cssText='width:100%;margin-top:8px;padding:9px;background:#FEF3E7;color:#9A3412;border:1px solid #FED7AA;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif';
+      btnEC.textContent='📋 Ver estado de cuenta de '+cuentaEC.cliente; btnEC.addEventListener('click',function(){ ecVerCuenta(cuentaEC.id); });
+      detalle.appendChild(btnEC);
+      var tag=document.createElement('span'); tag.title='Sumado al estado de cuenta'; tag.textContent='📋'; tag.style.cssText='font-size:0.85rem;margin-top:2px';
+      header.insertBefore(tag, hBadge);
+    }
     header.addEventListener('click',function(){ var isOpen=detalle.style.display!=='none'; detalle.style.display=isOpen?'none':'block'; hChev.style.transform=isOpen?'':'rotate(180deg)'; });
     card.appendChild(header); card.appendChild(detalle); lista.appendChild(card);
   });
@@ -6721,7 +6747,8 @@ document.addEventListener('change', function(e){
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.875rem">
       <div style="font-size:1rem;font-weight:700;color:#1A1814;font-family:Inter,sans-serif">Mis presupuestos</div>
-      <div id="pres-count" style="font-size:0.78rem;color:#8A8479;font-family:Inter,sans-serif"></div>
+      <div style="display:flex;align-items:center;gap:10px"><div id="pres-count" style="font-size:0.78rem;color:#8A8479;font-family:Inter,sans-serif"></div>
+      <button onclick="abrirPresupuestoLibre()" style="background:#1A1814;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">+ Nuevo presupuesto</button></div>
     </div>
     <input id="pres-search" type="text" placeholder="Buscar por cliente o proyecto..." oninput="filtrarPresupuestos()" style="width:100%;padding:9px 12px;border:1.5px solid #E2DDD6;border-radius:10px;font-size:0.88rem;font-family:Inter,sans-serif;outline:none;box-sizing:border-box;margin-bottom:0.75rem">
     <div id="pres-filtros" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem">
@@ -6783,5 +6810,6 @@ document.addEventListener('change', function(e){
 // directamente en el HTML (onchange / onclick), no se necesita wiring extra acá.
 
 </script>
+<script src="presupuesto-libre.js"></script>
 </body>
 </html>
