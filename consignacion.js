@@ -107,7 +107,8 @@
     c.lista.forEach(function(x){ tot.u+=x.sinCobrar; tot.m+=x.monto; tot.prod+=x.producir; if(x.vendidoSinCobrar) tot.vend+=x.vendidoSinCobrar*x.precio; });
     var h = '<div class="cg">'+
       '<div class="rem-ficha-top"><button type="button" class="rem-back">← Volver</button></div>'+
-      '<div class="cg-tit"><div><div class="cg-h1">Stock en '+esc(cliente)+'</div><div class="rem-gris">Lo que llevaste, lo que te pagaron, lo que queda allá y lo que tenés que reponer.</div></div></div>'+
+      '<div class="cg-tit" style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap"><div><div class="cg-h1">Stock en '+esc(cliente)+'</div><div class="rem-gris">Lo que llevaste, lo que te pagaron, lo que queda allá y lo que tenés que reponer.</div></div>'+
+        '<button type="button" class="cg-btn" data-cg="ver-rub">👀 Ver como el cliente (prueba)</button></div>'+
       '<div class="cg-kpis">'+
         '<div class="cg-kpi"><span>Sin cobrar</span><b>'+cant(tot.u)+' u.</b></div>'+
         '<div class="cg-kpi"><span>Plata sin cobrar</span><b style="color:#B45309">'+peso(tot.m)+'</b></div>'+
@@ -188,8 +189,47 @@
     return h + '</div>';
   }
 
+  // ── Vista de prueba para el cliente (Rubén) ──
+  var demo = { vendidos:{}, filtro:'' };
+  function itemsCliente(cliente){
+    var c=calcular(cliente), out=[];
+    c.lista.forEach(function(x){
+      var stock = x.enCliente!=null ? x.enCliente : x.sinCobrar;
+      if(stock>0) out.push({ k:'p:'+x.p.id, nombre:x.p.nombre, precio:x.precio, sugerido:num(x.p.sugerido), stock:stock });
+    });
+    c.sueltos.forEach(function(s){ var st=s.ent-s.pag; if(st>0) out.push({ k:'n:'+s.n, nombre:s.nombre, precio:s.unit, sugerido:0, stock:st }); });
+    return out.sort(function(a,b){ return a.nombre.localeCompare(b.nombre); });
+  }
+  function renderDemo(cliente){
+    var items=itemsCliente(cliente), q=norm(demo.filtro), totU=0, totM=0;
+    items.forEach(function(it){ var v=demo.vendidos[it.k]||0; totU+=v; totM+=v*it.precio; });
+    var h='<div class="cg cgr">'+
+      '<div class="rem-ficha-top"><button type="button" class="rem-back">← Volver</button></div>'+
+      '<div class="cgr-aviso">Modo prueba: así lo vería '+esc(cliente)+'. Lo que toques acá no se guarda.</div>'+
+      '<div class="cgr-head"><div class="cgr-marca">Chulengo Estudio</div><div class="cgr-h1">Productos en '+esc(cliente)+'</div></div>'+
+      '<div class="cgr-total"><div><span>Vendido, a pagar a Chulengo</span><b>'+peso(totM)+'</b><small>'+cant(totU)+' unidades vendidas</small></div>'+
+        (totU?'<button type="button" class="cgr-reset" data-cg="rub-reset">Deshacer todo</button>':'')+'</div>'+
+      '<input id="cgr-buscar" class="cg-in cgr-buscar" placeholder="🔍 Buscar producto..." value="'+esc(demo.filtro)+'">'+
+      '<div class="cgr-lista">';
+    items.forEach(function(it){
+      if(q && norm(it.nombre).indexOf(q)===-1) return;
+      var v=demo.vendidos[it.k]||0, quedan=Math.max(0,it.stock-v);
+      h+='<div class="cgr-item'+(quedan===0?' agotado':'')+'">'+
+        '<div class="cgr-info"><div class="cgr-nom">'+esc(it.nombre)+'</div>'+
+          '<div class="cgr-sub">Quedan <b>'+cant(quedan)+'</b>'+(it.sugerido?' · Venta $ '+cant(it.sugerido):'')+' · Pagás '+peso(it.precio)+'</div>'+
+          (v?'<div class="cgr-vend">Vendiste '+cant(v)+' · '+peso(v*it.precio)+'</div>':'')+'</div>'+
+        '<div class="cgr-bts">'+
+          (v?'<button type="button" class="cgr-menos" data-cg="rub-menos" data-k="'+esc(it.k)+'">−</button>':'')+
+          '<button type="button" class="cgr-vendi" data-cg="rub-vendi" data-k="'+esc(it.k)+'"'+(quedan===0?' disabled':'')+'>Vendí 1</button></div>'+
+      '</div>';
+    });
+    if(!items.length) h+='<div class="cg-vacio">No hay productos sin cobrar en este cliente.</div>';
+    h+='</div><div class="rem-gris" style="text-align:center;margin-top:12px">Cuando '+esc(cliente)+' te paga, vos marcás el pago con la factura y esto vuelve a cero.</div></div>';
+    return h;
+  }
+
   // ── Acciones ──
-  function cliActual(){ return (typeof remNav!=='undefined' && remNav.tipo==='consig') ? remNav.cliente : null; }
+  function cliActual(){ return (typeof remNav!=='undefined' && (remNav.tipo==='consig'||remNav.tipo==='consig-rub')) ? remNav.cliente : null; }
   var tRef=null;
   function refrescar(despues){
     clearTimeout(tRef);
@@ -201,6 +241,10 @@
     var cliente = cliActual(); if(!cliente) return;
     var b = e.target.closest('[data-cg]'); if(!b || !b.closest('.cg')) return;
     var cat = catalogo(cliente), acc=b.dataset.cg, p;
+    if(acc==='rub-vendi'){ demo.vendidos[b.dataset.k]=(demo.vendidos[b.dataset.k]||0)+1; refrescar(); return; }
+    if(acc==='rub-menos'){ demo.vendidos[b.dataset.k]=Math.max(0,(demo.vendidos[b.dataset.k]||0)-1); refrescar(); return; }
+    if(acc==='rub-reset'){ demo.vendidos={}; refrescar(); return; }
+    if(acc==='ver-rub'){ demo.vendidos={}; demo.filtro=''; remIr({tipo:'consig-rub', cliente:cliente}); return; }
     if(acc==='abrir'){ estado.abierto = estado.abierto===b.dataset.pid ? null : b.dataset.pid; refrescar(); return; }
     if(acc==='nuevo'){
       var nom=(prompt('Nombre del producto:')||'').trim(); if(!nom) return;
@@ -269,10 +313,10 @@
     }
   });
   document.addEventListener('input', function(e){
-    if(e.target.id!=='cg-buscar' || !cliActual()) return;
-    estado.filtro = e.target.value;
+    var id=e.target.id; if((id!=='cg-buscar' && id!=='cgr-buscar') || !cliActual()) return;
+    if(id==='cg-buscar') estado.filtro = e.target.value; else demo.filtro = e.target.value;
     var pos=e.target.selectionStart;
-    refrescar(function(){ var nb=$('cg-buscar'); if(nb){ nb.focus(); try{ nb.setSelectionRange(pos,pos); }catch(_){} } });
+    refrescar(function(){ var nb=$(id); if(nb){ nb.focus(); try{ nb.setSelectionRange(pos,pos); }catch(_){} } });
   });
 
   // ── Enganches con la página ──
@@ -282,10 +326,10 @@
 
     var renderOrig = renderHistorialRemitos;
     window.renderHistorialRemitos = function(animar){
-      if(typeof remNav!=='undefined' && remNav.tipo==='consig'){
+      if(typeof remNav!=='undefined' && (remNav.tipo==='consig'||remNav.tipo==='consig-rub')){
         var cont=$('remito-historial-clientes'); if(!cont) return;
         var tb=document.querySelector('#remito-historial-wrap .rem-toolbar'); if(tb) tb.style.display='none';
-        cont.innerHTML = '<div class="rem-vista'+(animar?' entra':'')+'">'+render(remNav.cliente)+'</div>';
+        cont.innerHTML = '<div class="rem-vista'+(animar?' entra':'')+'">'+(remNav.tipo==='consig'?render(remNav.cliente):renderDemo(remNav.cliente))+'</div>';
         return;
       }
       return renderOrig.apply(this, arguments);
@@ -366,6 +410,19 @@
         '.cg-fila .cg-nom{grid-column:1 / 3}.cg-fila .cg-chev{grid-column:3;grid-row:1;text-align:right}'+
         '.cg-fila span[data-l]::before{content:attr(data-l);display:block;font-size:0.62rem;color:#A09890;font-weight:700;text-transform:uppercase}'+
         '.cg-grid{grid-template-columns:1fr 1fr}.cg-suelto{flex-direction:column;align-items:stretch}.cg-suelto-acc select{width:100%;flex:1}}'+
+      '.cgr{max-width:560px;margin:0 auto}'+
+      '.cgr-aviso{background:#FEF3C7;color:#92400E;border-radius:10px;padding:8px 12px;font-size:0.8rem;font-weight:600;margin-bottom:12px}'+
+      '.cgr-marca{font-size:0.75rem;font-weight:700;color:#2D6A4F;text-transform:uppercase;letter-spacing:0.06em}.cgr-h1{font-size:1.3rem;font-weight:800;margin-bottom:12px}'+
+      '.cgr-total{background:#1A1814;color:#fff;border-radius:16px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;position:sticky;top:8px;z-index:5}'+
+      '.cgr-total span{display:block;font-size:0.75rem;opacity:0.75;font-weight:600}.cgr-total b{display:block;font-size:1.7rem;font-weight:800}.cgr-total small{opacity:0.75;font-size:0.78rem}'+
+      '.cgr-reset{background:rgba(255,255,255,0.12);color:#fff;border:none;border-radius:8px;padding:7px 10px;font:600 0.75rem Inter,sans-serif;cursor:pointer}'+
+      '.cgr-buscar{padding:12px 14px;font-size:1rem;border-radius:12px;margin-bottom:10px}'+
+      '.cgr-item{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #E2DDD6;border-radius:14px;padding:12px 14px;margin-bottom:8px}.cgr-item.agotado{opacity:0.5}'+
+      '.cgr-info{flex:1;min-width:0}.cgr-nom{font-weight:700;font-size:0.98rem}.cgr-sub{font-size:0.8rem;color:#6B665E;margin-top:2px}.cgr-vend{font-size:0.8rem;color:#2D6A4F;font-weight:700;margin-top:3px}'+
+      '.cgr-bts{display:flex;gap:6px;flex-shrink:0}'+
+      '.cgr-vendi{background:#2D6A4F;color:#fff;border:none;border-radius:12px;padding:14px 16px;font:800 0.95rem Inter,sans-serif;cursor:pointer;min-width:92px}.cgr-vendi:disabled{background:#C9C4BC;cursor:default}'+
+      '.cgr-menos{background:#F5F2ED;border:1px solid #E2DDD6;border-radius:12px;width:46px;font:800 1.2rem Inter,sans-serif;cursor:pointer;color:#1A1814}'+
+      'body.dark .cgr-item{background:#1A1A1A;border-color:#2A2A2A}'+
       'body.dark .cg-bloque,body.dark .cg-kpi{background:#1A1A1A;border-color:#2A2A2A;color:#FAFAFA}body.dark .cg{color:#FAFAFA}';
     document.head.appendChild(st);
   }
