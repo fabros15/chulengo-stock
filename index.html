@@ -720,11 +720,13 @@ function abrirPDFModal(){
   else { var precioRaw=document.getElementById('r-precio').textContent.replace(/[^0-9.,]/g,''); var precioNum=parseFloat(precioRaw.replace(/\./g,'').replace(',','.'))||0; document.getElementById('pdf-precio-unit').value=precioNum>0?Math.round(precioNum):''; }
   document.getElementById('pdf-modal-overlay').classList.add('open');
   document.getElementById('pdf-descuento').value=''; document.getElementById('descuento-preview').style.display='none';
+  var rz=document.getElementById('pdf-descuento-razon'); if(rz){ rz.value=''; rz.style.display='none'; }
 }
 function actualizarDescuento(){
   var precio = parseFloat(document.getElementById('pdf-precio-unit').value)||0;
   var desc = parseFloat(document.getElementById('pdf-descuento').value)||0;
   var preview = document.getElementById('descuento-preview');
+  var razonEl=document.getElementById('pdf-descuento-razon'); if(razonEl) razonEl.style.display = desc>0 ? 'block' : 'none';
   if(desc > 0 && precio > 0){ var total = Math.round(precio * (1 - desc/100)); document.getElementById('descuento-preview-val').textContent = fmtPeso(total); preview.style.display = 'block'; }
   else { preview.style.display = 'none'; }
 }
@@ -746,8 +748,11 @@ function editarPresupuesto(id, d){
     set('pdf-precio-unit',Math.round(sub)); set('pdf-cantidad',1);
     set('pdf-descuento', sub>d.precioTotal&&sub>0 ? Math.round((1-d.precioTotal/sub)*100) : '');
   } else {
-    set('pdf-cantidad',cant); set('pdf-precio-unit',Math.round((d.precioTotal||0)/cant)); set('pdf-descuento','');
+    set('pdf-cantidad',cant);
+    if(d.precioUnitBase){ set('pdf-precio-unit',Math.round(d.precioUnitBase)); set('pdf-descuento', d.descuento||''); }
+    else { set('pdf-precio-unit',Math.round((d.precioTotal||0)/cant)); set('pdf-descuento',''); }
   }
+  set('pdf-descuento-razon', d.descuentoRazon||'');
   if(d.formasPago) document.querySelectorAll('#pdf-formas-pago input[type=checkbox]').forEach(function(c){ c.checked=d.formasPago.indexOf(c.value)!==-1; });
   actualizarDescuento();
   var av=document.getElementById('pdf-aviso-edicion');
@@ -890,12 +895,18 @@ function dibujarPresupuestoPDF(doc, P){
   });
 
   // Totales
-  y+=8;
+  y+=8; var extraRazon=0;
   var tx=w-M-78;
   doc.setFontSize(9);
   if(P.descuento>0){
     txt(gris); doc.setFont('helvetica','normal'); doc.text('Subtotal',tx,y); txt(tinta); doc.text($(P.subtotal),w-M,y,{align:'right'}); y+=6;
     doc.setTextColor(200,60,60); doc.text('Descuento ('+P.descuento+'%)',tx,y); doc.text('- '+$(P.subtotal-P.total),w-M,y,{align:'right'}); y+=5;
+    if(P.descuentoRazon){
+      doc.setFont('helvetica','italic'); doc.setFontSize(7.5); txt(gris);
+      var rl=doc.splitTextToSize(P.descuentoRazon,78); doc.text(rl,tx,y-0.5); y+=rl.length*3.4+1;
+      doc.setFont('helvetica','normal'); doc.setFontSize(9);
+      extraRazon=rl.length*3.4+1;
+    }
   }
   fill(c1); doc.roundedRect(tx,y,78,18,3,3,'F');
   fill(c2); doc.rect(tx,y+3,1.6,12,'F');
@@ -907,7 +918,7 @@ function dibujarPresupuestoPDF(doc, P){
   if(P.notas){
     doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
     var nw=tx-M-10, nl=doc.splitTextToSize(P.notas,nw-8);
-    var ny=finTotales-18-(P.descuento>0?11:0);
+    var ny=finTotales-18-(P.descuento>0?11+extraRazon:0);
     if(nl.length*4.2>40){ ny=finTotales+10; nw=w-2*M; nl=doc.splitTextToSize(P.notas,nw-8); }
     fill(suave2); doc.roundedRect(M,ny-5,nw,nl.length*4.2+12,2.5,2.5,'F');
     txt(c2); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.text('CONDICIONES',M+4,ny+0.5);
@@ -965,6 +976,7 @@ function generarPDF(sendWA){
   var notas=document.getElementById('pdf-notas')?document.getElementById('pdf-notas').value:(document.getElementById('pdf-condiciones')?document.getElementById('pdf-condiciones').value:'');
   var precioUnit=parseFloat(document.getElementById('pdf-precio-unit').value)||0;
   var descuento=parseFloat(document.getElementById('pdf-descuento').value)||0;
+  var descuentoRazon = descuento>0 ? (document.getElementById('pdf-descuento-razon').value||'').trim() : '';
   var precioOriginal=precioUnit;
   if(descuento>0) precioUnit=Math.round(precioUnit*(1-descuento/100));
   var precioTotal=precioUnit*cantidad;
@@ -992,10 +1004,10 @@ function generarPDF(sendWA){
     empresa: empresa, color1: color1, color2: color2, tel: tel, email: email, web: web, logo: pdfLogoBase64,
     proyecto: proyecto, cliente: document.getElementById('pdf-cliente').value||'', descripcion: descripcion, notas: notas,
     nro: nro, fecha: fecha, validoHasta: validoHastaTexto(validez), formasPago: formasPago,
-    items: itemsAjustados, subtotal: grandTotal, descuento: descuento, total: precioTotal
+    items: itemsAjustados, subtotal: grandTotal, descuento: descuento, descuentoRazon: descuentoRazon, total: precioTotal
   });
   var filename='Presupuesto-'+nro+'-'+proyecto.replace(/\s+/g,'-')+'.pdf';
-  guardarPresupuesto({ proyecto: proyecto, cliente: document.getElementById('pdf-cliente').value||'', descripcion: document.getElementById('pdf-descripcion').value||'', cantidad: cantidad, precioUnit: precioUnit, precioTotal: precioTotal, validez: document.getElementById('pdf-validez').value||'', condiciones: document.getElementById('pdf-notas')?document.getElementById('pdf-notas').value||'':'', items: itemsPresupuesto.length > 0 ? JSON.parse(JSON.stringify(itemsPresupuesto)) : [{nombre:proyecto, precio:precioTotal}], empresa: document.getElementById('pdf-empresa').value||'', tel: document.getElementById('pdf-tel').value||'', email2: document.getElementById('pdf-email').value||'', web: document.getElementById('pdf-web').value||'', colorPrimario: document.getElementById('pdf-color1').value||'', colorSecundario: document.getElementById('pdf-color2').value||'', formasPago: formasPago, _editId: editId });
+  guardarPresupuesto({ proyecto: proyecto, cliente: document.getElementById('pdf-cliente').value||'', descripcion: document.getElementById('pdf-descripcion').value||'', cantidad: cantidad, precioUnit: precioUnit, precioTotal: precioTotal, validez: document.getElementById('pdf-validez').value||'', condiciones: document.getElementById('pdf-notas')?document.getElementById('pdf-notas').value||'':'', items: itemsPresupuesto.length > 0 ? JSON.parse(JSON.stringify(itemsPresupuesto)) : [{nombre:proyecto, precio:precioTotal}], empresa: document.getElementById('pdf-empresa').value||'', tel: document.getElementById('pdf-tel').value||'', email2: document.getElementById('pdf-email').value||'', web: document.getElementById('pdf-web').value||'', colorPrimario: document.getElementById('pdf-color1').value||'', colorSecundario: document.getElementById('pdf-color2').value||'', formasPago: formasPago, descuento: descuento, descuentoRazon: descuentoRazon, precioUnitBase: parseFloat(document.getElementById('pdf-precio-unit').value)||0, _editId: editId });
   if(sendWA){ doc.save(filename); var msg='Hola! Te adjunto el presupuesto N° '+nro+' por el proyecto: *'+proyecto+'*. Total: '+new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(precioTotal)+'. Quedo a disposicion para cualquier consulta!'; setTimeout(function(){window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');},500); }
   else { doc.save(filename); }
   cerrarPDFModal(); itemsPresupuesto = []; renderItemsPresupuesto();
@@ -3323,7 +3335,7 @@ function regenerarPDF(docId, d){
     empresa: empresa, color1: color1, color2: color2, tel: tel, email: email, web: web, logo: pdfLogoBase64,
     proyecto: proyecto, cliente: d.cliente||'', descripcion: descripcion, notas: notas,
     nro: nro, fecha: fecha, validoHasta: validoHastaTexto(validez, desde), formasPago: d.formasPago||[],
-    items: itemsR, subtotal: subtotalR, descuento: descR, total: precioTotal
+    items: itemsR, subtotal: subtotalR, descuento: descR, descuentoRazon: descR>0 ? (d.descuentoRazon||'') : '', total: precioTotal
   });
   var filename = 'Presupuesto-'+nro+'-'+proyecto.replace(/\s+/g,'-')+'.pdf';
   doc.save(filename);
@@ -6681,6 +6693,7 @@ document.addEventListener('change', function(e){
         <div style="position:relative;flex:1"><input type="number" id="pdf-descuento" min="0" max="100" step="1" placeholder="0" oninput="actualizarDescuento()" style="width:100%;padding:10px 32px 10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:1rem;font-family:Inter,sans-serif;outline:none;box-sizing:border-box"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#8A8479;font-size:0.88rem;pointer-events:none">%</span></div>
         <div id="descuento-preview" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;text-align:center;min-width:110px"><div style="font-size:0.68rem;color:#8A8479;font-family:Inter,sans-serif">Total con descuento</div><div id="descuento-preview-val" style="font-size:1rem;font-weight:700;color:#2D6A4F;font-variant-numeric:tabular-nums"></div></div>
       </div>
+      <input type="text" id="pdf-descuento-razon" maxlength="80" placeholder="Razón del descuento (opcional). Ej: Cliente frecuente, pedido por cantidad" style="display:none;width:100%;margin-top:8px;padding:10px 12px;border:1.5px solid #E2DDD6;border-radius:8px;font-size:0.9rem;font-family:Inter,sans-serif;outline:none;box-sizing:border-box">
     </div>
     <div class="field"><label>Formas de pago</label>
       <div id="pdf-formas-pago" style="display:flex;flex-wrap:wrap;gap:6px">
