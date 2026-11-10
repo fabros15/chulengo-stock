@@ -881,15 +881,28 @@ function dibujarPresupuestoPDF(doc, P){
   (P.items||[]).forEach(function(it,i){
     doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
     var nombre=doc.splitTextToSize(String(it.nombre||''),colCant-M-30);
-    var rh=Math.max(11,nombre.length*4.4+6.5);
+    var conDesc=P.descuento>0 && P.subtotal>0;
+    var rh=Math.max(conDesc?14:11,nombre.length*4.4+6.5);
     if(y+rh>h-60){ doc.addPage(); y=20; }
     fill(c2); doc.circle(M+5.2,y+rh/2-0.2,2.6,'F');
     doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.text(String(i+1),M+5.2,y+rh/2+0.8,{align:'center'});
     txt(tinta); doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
     doc.text(nombre,M+13,y+rh/2-(nombre.length-1)*2.2+1.2);
     doc.text(String(it.cant||1),colCant,y+rh/2+1.2,{align:'center'});
-    txt(gris); doc.text($(it.precio/(it.cant||1)),colUnit,y+rh/2+1.2,{align:'right'});
-    txt(tinta); doc.setFont('helvetica','bold'); doc.text($(it.precio),colTot,y+rh/2+1.2,{align:'right'});
+    if(conDesc){
+      // Precio tachado arriba y precio con descuento abajo, para que se vea el ahorro
+      var f=P.total/P.subtotal, cant=(it.cant||1);
+      var tachado=function(t,x,yy){ doc.setFont('helvetica','normal'); doc.setFontSize(7.5); txt([150,150,150]); doc.text(t,x,yy,{align:'right'});
+        var tw=doc.getTextWidth(t); draw([150,150,150]); doc.setLineWidth(0.3); doc.line(x-tw,yy-0.9,x,yy-0.9); };
+      tachado($(it.precio/cant),colUnit,y+rh/2-1.6);
+      tachado($(it.precio),colTot,y+rh/2-1.6);
+      doc.setFontSize(9.5); doc.setTextColor(30,130,76); doc.setFont('helvetica','bold');
+      doc.text($(Math.round(it.precio*f/cant)),colUnit,y+rh/2+3.4,{align:'right'});
+      txt(tinta); doc.text($(Math.round(it.precio*f)),colTot,y+rh/2+3.4,{align:'right'});
+    } else {
+      txt(gris); doc.text($(it.precio/(it.cant||1)),colUnit,y+rh/2+1.2,{align:'right'});
+      txt(tinta); doc.setFont('helvetica','bold'); doc.text($(it.precio),colTot,y+rh/2+1.2,{align:'right'});
+    }
     y+=rh;
     draw([230,230,230]); doc.setLineWidth(0.25); doc.line(M,y,w-M,y);
   });
@@ -900,7 +913,7 @@ function dibujarPresupuestoPDF(doc, P){
   doc.setFontSize(9);
   if(P.descuento>0){
     txt(gris); doc.setFont('helvetica','normal'); doc.text('Subtotal',tx,y); txt(tinta); doc.text($(P.subtotal),w-M,y,{align:'right'}); y+=6;
-    doc.setTextColor(200,60,60); doc.text('Descuento ('+P.descuento+'%)',tx,y); doc.text('- '+$(P.subtotal-P.total),w-M,y,{align:'right'}); y+=5;
+    doc.setTextColor(30,130,76); doc.setFont('helvetica','bold'); doc.text('Descuento ('+P.descuento+'%)',tx,y); doc.text('- '+$(P.subtotal-P.total),w-M,y,{align:'right'}); doc.setFont('helvetica','normal'); y+=5;
     if(P.descuentoRazon){
       doc.setFont('helvetica','italic'); doc.setFontSize(7.5); txt(gris);
       var rl=doc.splitTextToSize(P.descuentoRazon,78); doc.text(rl,tx,y-0.5); y+=rl.length*3.4+1;
