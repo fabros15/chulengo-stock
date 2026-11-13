@@ -217,7 +217,7 @@
     h+='<div class="cs-acciones">'+
       (V.modo==='cliente'?'<button type="button" class="cs-btn primario" data-pt="a-ticket">🧾 Cargar ticket del día</button>':'')+
       (V.modo==='equipo'?(r.tot.u?'<button type="button" class="cs-btn primario" data-pt="cobrar">💰 Me pagó '+peso(r.tot.m)+'</button>':'')+
-        (pend.length?'<button type="button" class="cs-btn" data-pt="tab" data-p="altas">📥 '+pend.length+' remito'+(pend.length===1?'':'s')+' para dar de alta</button>':''):'')+
+        (pend.length?'<button type="button" class="cs-btn" data-pt="tab" data-p="altas">📥 '+pend.length+' remito'+(pend.length===1?'':'s')+' para dar de alta</button>':'')+'<button type="button" class="cs-btn" data-pt="como-ruben">👁 Ver como Rubén</button>':'')+
       '<button type="button" class="cs-btn ghost" data-pt="excel">⬇ Excel</button>'+
     '</div>';
 
