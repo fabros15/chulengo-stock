@@ -36,16 +36,18 @@
   function html(){
     var c=C(), m=MT(); if(!m) return '<div class="cs-in">Cargando…</div>';
     var D=m.datos().D, S=D.S, r=rango(R.per), A=sumar(D,r.ini,r.fin), B=sumar(D,r.pIni,r.pFin), res=c.resumen();
+    var sug=c.items().some(function(it){ return c.num(it.sugerido)>0; }), aq=sug?'al público':'a precio de Chulengo';
     var hayU=0, hayVal=0; c.items().forEach(function(it){ if(it.oculto) return; var h=c.hayDe(it,res); hayU+=h; hayVal+=h*precios(it).vende; });
 
     var h='<div class="cs-in"><div class="cs-titulo"><div><h2>Mis ventas</h2><p class="cs-sub">Cuánto vendiste, cuánto recaudaste y qué te conviene tener a mano. Se arma solo con los tickets que cargás.</p></div></div>';
     h+='<div class="cs-seg rb-per">'+[['7','Últimos 7 días'],['mes','Este mes'],['30','Últimos 30 días']].map(function(x){ return '<button type="button" class="'+(R.per===x[0]?'on':'')+'" data-rb="per" data-v="'+x[0]+'">'+x[1]+'</button>'; }).join('')+'</div>';
 
     h+='<div class="cs-kpis mt-kpis">'+
-      '<div class="cs-kpi destacado"><span>Recaudaste '+r.nom+'</span><b>'+c.peso(red(A.rec))+'</b><small>'+flecha(A.rec,B.rec)+' vs '+r.comp+'</small></div>'+
+      '<div class="cs-kpi destacado"><span>'+(sug?'Recaudaste ':'Vendiste ')+r.nom+'</span><b>'+c.peso(red(A.rec))+'</b><small>'+flecha(A.rec,B.rec)+' vs '+r.comp+'</small></div>'+
       '<div class="cs-kpi"><span>Productos vendidos</span><b>'+c.cant(red(A.u))+'</b><small>'+flecha(A.u,B.u)+'</small></div>'+
-      '<div class="cs-kpi"><span>Te queda a vos</span><b>'+(A.u&&A.gan?c.peso(red(A.gan)):'—')+'</b><small>'+(A.sinSug?A.sinSug+' producto(s) sin precio al público':'recaudado menos lo de Chulengo')+'</small></div>'+
-      '<div class="cs-kpi"><span>Mercadería en el Candy</span><b>'+c.cant(hayU)+' u.</b><small>vale '+c.peso(red(hayVal))+' al público</small></div>'+
+      (sug?'<div class="cs-kpi"><span>Te queda a vos</span><b>'+(A.u&&A.gan?c.peso(red(A.gan)):'—')+'</b><small>'+(A.sinSug?A.sinSug+' producto(s) sin precio al público':'recaudado menos lo de Chulengo')+'</small></div>'
+        :'<div class="cs-kpi"><span>Para pagar a Chulengo</span><b>'+c.peso(res.tot.m)+'</b><small>'+c.cant(res.tot.u)+' vendidos sin pagar</small></div>')+
+      '<div class="cs-kpi"><span>Mercadería en el Candy</span><b>'+c.cant(hayU)+' u.</b><small>vale '+c.peso(red(hayVal))+' '+aq+'</small></div>'+
     '</div>';
 
     // Más vendidos
@@ -66,7 +68,7 @@
     var hoyD=m.deIso(m.hoyIso()), meses=[];
     for(var i=5;i>=0;i--){ var ini=new Date(hoyD.getFullYear(),hoyD.getMonth()-i,1), fin=new Date(hoyD.getFullYear(),hoyD.getMonth()-i+1,0); var x=sumar(D,m.iso(ini),m.iso(fin)); meses.push({ n:MESES[ini.getMonth()], rec:x.rec, u:x.u, act:i===0 }); }
     var mxm=Math.max.apply(null, meses.map(function(x){ return x.rec; }).concat([1]));
-    h+='<div class="cs-card"><div class="cs-card-h"><div><h3>📈 Recaudación por mes</h3><small class="cs-gris">Lo que vendiste al público cada mes</small></div></div><div class="rb-meses">'+
+    h+='<div class="cs-card"><div class="cs-card-h"><div><h3>📈 Ventas por mes</h3><small class="cs-gris">Lo que vendiste cada mes, '+aq+'</small></div></div><div class="rb-meses">'+
       meses.map(function(x){ return '<div class="rb-mes'+(x.act?' act':'')+'"><small>'+(x.rec?c.peso(red(x.rec/1000))+'k':'')+'</small><div class="rb-col"><i style="height:'+Math.max(2,Math.round(x.rec/mxm*100))+'%"></i></div><b>'+x.n.slice(0,3)+'</b><span>'+c.cant(red(x.u))+' u.</span></div>'; }).join('')+
     '</div>'+(meses[5].act?'<div class="mt-nota">El mes actual va hasta hoy.</div>':'')+'</div>';
 
