@@ -60,10 +60,16 @@
   function quedanDe(it, r){ return Math.max(0, num(it.entregadas) - ((r.por[it.id]||{}).vend||0)); }
   function vendidasDe(id){ var t=0; P.ventas.forEach(function(v){ if(v.k===id) t+=num(v.cant); }); return t; }
 
+  function actualizarTarjeta(){
+    var el=$('candy-card-desc'); if(!el || !P.doc) return;
+    var r=resumen();
+    el.textContent = r.tot.u ? 'Rubén vendió '+cant(r.tot.u)+' sin cobrar: '+peso(r.tot.m)+'. Tocá para ver.' : 'Todo cobrado. Tocá para ver lo que queda en el Candy.';
+  }
   var tAvisar=null;
   function avisar(){
     clearTimeout(tAvisar);
     tAvisar=setTimeout(function(){
+      actualizarTarjeta();
       if($('pt-overlay')) pintarOverlay();
       if(typeof remNav!=='undefined' && remNav.tipo==='portal'){
         var a=document.activeElement;
@@ -293,6 +299,7 @@
 
   function renderAdmin(cliente){
     A.cliente=cliente; var pid=slug(cliente); suscribir(pid);
+    try{ if(P.doc) localStorage.setItem('pt-cliente', cliente); }catch(_){}
     var h='<div class="cg pt-adm"><div class="rem-ficha-top"><button type="button" class="rem-back">← Volver</button></div>'+
       '<div class="cg-tit"><div class="cg-h1">📱 Página en vivo · '+esc(cliente)+'</div><div class="rem-gris">Lo que ve y marca el cliente desde su celular. Se actualiza solo.</div></div>';
     if(P.err) return h+'<div class="cg-bloque pt-error">'+(errPermiso(P.err)?'<b>Falta pegar las reglas nuevas en Firebase.</b> Sin eso la página del cliente no puede guardar ni leer nada.':'Error: '+esc(P.err.message))+'</div></div>';
@@ -516,6 +523,32 @@
     if(A.pendiente && e.target.closest && e.target.closest('.pt-adm')){ A.pendiente=false; setTimeout(avisar, 50); }
   });
 
+  // ── Acceso rápido para Fabri: Inicio → "Candy del cine en vivo", o el link #candy ──
+  function clienteDelCandy(){
+    var keys = typeof clientesInfoCache!=='undefined' ? Object.keys(clientesInfoCache) : [];
+    try{ var g=localStorage.getItem('pt-cliente'); if(g) return Promise.resolve(g); }catch(_){}
+    return db().collection('consig_portal').where('equipo','==','chulengo').get().then(function(s){
+      var d=s.docs&&s.docs[0]; if(d && d.data().cliente) return d.data().cliente;
+      return keys.find(function(k){ return /CINE/.test(k); }) || null;
+    }).catch(function(){ return keys.find(function(k){ return /CINE/.test(k); }) || null; });
+  }
+  window.abrirCandy = function(){
+    if(!firebase.auth().currentUser){ if(typeof mostrarLoginModal==='function') mostrarLoginModal('default'); return; }
+    if(typeof irAHerramienta==='function') irAHerramienta('remito');
+    var intentos=0;
+    (function ir(){
+      clienteDelCandy().then(function(cli){
+        if(!cli){
+          if(++intentos<8) return setTimeout(ir, 500);
+          alert('Todavía no creaste la página del cine. Entrá a Remitos → ficha del cine → 📦 Stock y catálogo → 📱 Página en vivo.'); return;
+        }
+        remNavPila=[{tipo:'lista'}]; remNav={tipo:'portal', cliente:cli}; A.abierto=null; A.pegar=false; A.previa=null;
+        renderHistorialRemitos(true);
+        setTimeout(function(){ var w=$('remito-historial-wrap'); if(w) w.scrollIntoView({block:'start'}); history.replaceState(null,'','#candy'); }, 60);
+      });
+    })();
+  };
+
   // ── Quién entra ──
   function alCambiarUsuario(u){
     var quiere = /^#candy/i.test(location.hash||'');
@@ -524,12 +557,18 @@
       return;
     }
     var em=(u.email||'').toLowerCase();
+    setTimeout(function(){
+      if(!esEquipo() || P.pid) return;
+      try{ var g=localStorage.getItem('pt-cliente'); if(g) suscribir(slug(g)); }catch(_){}
+    }, 1200);
     db().collection('consig_acceso').doc(em).get().then(function(s){
-      if(s.exists && s.data().pid && (!esAdm() || quiere)){ suscribir(s.data().pid); abrirOverlay('cliente'); }
-      else if(quiere && !esAdm()) abrirOverlay('sinAcceso');
+      if(s.exists && s.data().pid && !esAdm()){ suscribir(s.data().pid); abrirOverlay('cliente'); }
+      else if(quiere && esEquipo()){ if(V.modo==='login') cerrarOverlay(); setTimeout(window.abrirCandy, 300); }
+      else if(quiere) abrirOverlay('sinAcceso');
       else if(V.modo==='login') cerrarOverlay();
     }).catch(function(){
-      if(quiere && !esAdm()) abrirOverlay('sinAcceso'); else if(V.modo==='login') cerrarOverlay();
+      if(quiere && esEquipo()){ if(V.modo==='login') cerrarOverlay(); setTimeout(window.abrirCandy, 300); }
+      else if(quiere) abrirOverlay('sinAcceso'); else if(V.modo==='login') cerrarOverlay();
     });
   }
 
