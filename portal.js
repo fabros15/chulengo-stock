@@ -168,8 +168,9 @@
   }
   var TABS=[['tabla','📦','Stock <em>lo ve Rubén</em>'],['metricas','📊','Métricas'],['produccion','🖨️','Producción'],['altas','📥','Entregas'],['ajustes','⚙️','Productos y acceso']];
   function tabsHtml(){
-    if(V.modo!=='equipo' || !P.doc) return '';
+    if(!P.doc || (V.modo!=='equipo' && V.modo!=='cliente')) return '';
     var act = V.pantalla==='ticket' ? 'tabla' : V.pantalla;
+    if(V.modo==='cliente') return '<nav class="cs-tabs"><div class="cs-tabs-in">'+[['tabla','📦','Stock'],['estadisticas','📈','Mis ventas']].map(function(t){ return '<button type="button" class="'+(act===t[0]?'on':'')+'" data-pt="tab" data-p="'+t[0]+'"><i>'+t[1]+'</i>'+t[2]+'</button>'; }).join('')+'</div></nav>';
     return '<nav class="cs-tabs"><div class="cs-tabs-in">'+TABS.map(function(t){ return '<button type="button" class="'+(act===t[0]?'on':'')+'" data-pt="tab" data-p="'+t[0]+'"><i>'+t[1]+'</i>'+t[2]+'</button>'; }).join('')+'<button type="button" class="cs-tab-ruben" data-pt="como-ruben"><i>👁</i>Ver como Rubén</button></div></nav>';
   }
   function titulo(t, sub, back){ return '<div class="cs-titulo">'+(back?'<button type="button" class="cs-btn" data-pt="a-tabla">← Volver</button>':'')+'<div><h2>'+t+'</h2>'+(sub?'<p class="cs-sub">'+sub+'</p>':'')+'</div></div>'; }
@@ -193,6 +194,7 @@
     if(V.pantalla==='metricas' && window.ptMetricas) return barra()+window.ptMetricas.html();
     if(V.pantalla==='produccion' && window.ptProduccion) return barra()+window.ptProduccion.html();
     if(V.pantalla==='ajustes' && V.modo==='equipo') return barra()+'<div class="cs-in cs-adm">'+titulo('Productos y acceso','Los productos que ve Rubén, sus precios y fotos, quién puede entrar y el stock contado.')+renderAdmin(P.doc.cliente)+'</div>';
+    if(V.pantalla==='estadisticas' && window.ptRuben) return barra()+window.ptRuben.html();
     if(V.pantalla==='ticket') return barra()+htmlTicket();
     if(V.pantalla==='altas') return barra()+htmlAltas();
     return barra()+htmlTabla();
@@ -321,7 +323,7 @@
     var ov=$('pt-overlay'); if(!ov) return;
     var act=document.activeElement, enBuscar = act && act.id==='cs-buscar', pos = enBuscar ? act.selectionStart : 0, sc=ov.scrollTop;
     if(V.comoRuben && V.modo==='equipo'){
-      if(V.pantalla!=='tabla' && V.pantalla!=='ticket') V.pantalla='tabla';
+      if(V.pantalla!=='tabla' && V.pantalla!=='ticket' && V.pantalla!=='estadisticas') V.pantalla='tabla';
       V.modo='cliente';
       try{ ov.innerHTML = '<div class="cs-preview"><span>👁 Estás viendo <b>exactamente lo que ve Rubén</b>. Nada de lo que toques acá se guarda.</span><button type="button" class="cs-btn" data-pt="como-yo">Volver a mi vista</button></div>'+htmlPantalla(); }
       finally{ V.modo='equipo'; }
@@ -501,7 +503,7 @@
     if(acc==='como-yo'){ V.comoRuben=false; V.pantalla='tabla'; pintar(); $('pt-overlay').scrollTop=0; return; }
     if(acc==='a-tabla'){ irA('tabla'); return; }
     if(acc==='tab'){
-      var pp=b.dataset.p; if(V.modo!=='equipo') return;
+      var pp=b.dataset.p; if((V.modo!=='equipo' || V.comoRuben) && pp!=='tabla' && pp!=='estadisticas') return;
       if(pp==='altas') V.remAbierto=null;
       irA(pp);
       if(pp==='metricas' && window.ptMetricas) window.ptMetricas.entrar();

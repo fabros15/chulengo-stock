@@ -369,5 +369,5 @@
     '@media(max-width:680px){.mt-sem th:nth-child(3),.mt-sem td:nth-child(3),.mt-sem th:nth-child(4),.mt-sem td:nth-child(4){display:none}.mt-inf>div{flex-direction:column;gap:2px}}';
   document.head.appendChild(st);
 
-  window.ptMetricas = { html:html, entrar:function(){ M.nuevoEv=false; }, datos:function(){ var D=ventasPorDia(); return { D:D, sem:semaforo(D) }; }, iso:iso, hoyIso:hoyIso, sumarDias:sumarDias };
+  window.ptMetricas = { todos:todos, deIso:deIso, difDias:difDias, ICO:ICO, html:html, entrar:function(){ M.nuevoEv=false; }, datos:function(){ var D=ventasPorDia(); return { D:D, sem:semaforo(D) }; }, iso:iso, hoyIso:hoyIso, sumarDias:sumarDias };
 })();
