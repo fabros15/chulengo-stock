@@ -126,7 +126,8 @@
     tAvisar=setTimeout(function(){
       actualizarTarjeta();
       var act=document.activeElement;
-      if($('pt-overlay') && !(act && act.classList && act.classList.contains('cs-num'))) pintar();
+      var escribiendo = act && act.closest && act.closest('#pt-overlay') && /INPUT|SELECT|TEXTAREA/.test(act.tagName) && act.id!=='cs-buscar';
+      if($('pt-overlay') && !escribiendo) pintar();
       if(typeof remNav!=='undefined' && (remNav.tipo==='portal' || remNav.tipo==='remito')){
         if(act && act.closest && act.closest('.pt-adm') && /INPUT|TEXTAREA|SELECT/.test(act.tagName)){ A.pendiente=true; return; }
         renderHistorialRemitos();
@@ -180,6 +181,7 @@
         '<p>Se crea vacía y después cargás el stock que contó Rubén (pegando las columnas del Excel). Desde ahí, cada remito nuevo se da de alta con un botón.</p>'+
         '<button type="button" class="cs-btn primario" data-pt="crear">Crear la tabla</button>');
     }
+    if(V.pantalla==='metricas' && window.ptMetricas) return barra()+window.ptMetricas.html();
     if(V.pantalla==='ticket') return barra()+htmlTicket();
     if(V.pantalla==='altas') return barra()+htmlAltas();
     return barra()+htmlTabla();
@@ -205,6 +207,7 @@
       (V.modo==='cliente'?'<button type="button" class="cs-btn primario" data-pt="a-ticket">🧾 Cargar ticket del día</button>':'')+
       (V.modo==='equipo'?'<button type="button" class="cs-btn primario" data-pt="a-altas">📥 Dar de alta un remito'+(pend.length?' <i class="cs-badge">'+pend.length+'</i>':'')+'</button>'+
         (r.tot.u?'<button type="button" class="cs-btn" data-pt="cobrar">💰 Me pagó</button>':'')+
+        '<button type="button" class="cs-btn" data-pt="a-metricas">📊 Métricas y reposición</button>'+
         '<button type="button" class="cs-btn ghost" data-pt="ajustes">⚙️ Productos y acceso</button>':'')+
       '<button type="button" class="cs-btn ghost" data-pt="excel">⬇ Excel</button>'+
     '</div>';
@@ -454,6 +457,7 @@
           '<label>Nombre<input class="cg-in" data-pt-it="nombre" data-k="'+it.id+'" value="'+esc(it.nombre)+'"></label>'+
           '<label>Precio a Chulengo<input class="cg-in" inputmode="numeric" data-pt-it="precio" data-k="'+it.id+'" value="'+esc(it.precio||'')+'"></label>'+
           '<label>Venta al público<input class="cg-in" inputmode="numeric" data-pt-it="sugerido" data-k="'+it.id+'" value="'+esc(it.sugerido||'')+'"></label>'+
+          '<label>Mínimo en el Candy<input class="cg-in" inputmode="numeric" data-pt-it="minimo" data-k="'+it.id+'" value="'+esc(it.minimo||'')+'" placeholder="ej: 10"></label>'+
           '<label>Corregir: hay hoy<input class="cg-in" inputmode="numeric" data-pt-it="contado" data-k="'+it.id+'" placeholder="'+cant(qd)+'"></label>'+
           '<label>Vendidas en total<input class="cg-in" disabled value="'+cant(x.vend)+'"></label>'+
         '</div>'+
@@ -481,6 +485,7 @@
     if(acc==='a-tabla'){ irA('tabla'); return; }
     if(acc==='a-ticket'){ if(V.modo!=='cliente') return; V.ticket={}; V.dia=diaHoy(); irA('ticket'); return; }
     if(acc==='a-altas'){ V.remAbierto=null; irA('altas'); return; }
+    if(acc==='a-metricas'){ if(V.modo!=='equipo') return; irA('metricas'); if(window.ptMetricas) window.ptMetricas.entrar(); return; }
     if(acc==='ver-movs'){ V.verMovs=true; pintar(); return; }
     if(acc==='ver-todos'){ V.verTodos=true; pintar(); return; }
     if(acc==='rem-abrir'){ V.remAbierto = V.remAbierto===b.dataset.id ? null : b.dataset.id; pintar(); return; }
@@ -604,6 +609,7 @@
     var val=t.value.trim();
     if(campo==='nombre'){ if(!val){ t.value=it.nombre; return; } it.nombre=val; }
     else if(campo==='precio' || campo==='sugerido'){ it[campo]= val==='' ? 0 : num(val); }
+    else if(campo==='minimo'){ it.minimo = val==='' ? 0 : Math.max(0,Math.round(num(val))); }
     else if(campo==='contado'){ if(val==='') return; it.entregadas = num(val) + vendidasDe(it.id); }
     guardarItems();
   });
@@ -785,5 +791,7 @@
       '.pt-check{display:flex;gap:6px;align-items:center;font-size:0.82rem}';
     document.head.appendChild(st);
   }
+  window.ptCore = { P:P, V:V, items:items, altas:altas, resumen:resumen, hayDe:hayDe, lineasDe:lineasDe, aFecha:aFecha, pintar:pintar, guardarItems:guardarItems,
+    db:db, FV:FV, esc:esc, peso:peso, num:num, cant:cant, norm:norm, nuevoId:nuevoId, catDe:catDe, pad:pad, diaTxt:diaTxt, emailAct:emailAct };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', enganchar); else enganchar();
 })();
