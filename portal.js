@@ -182,6 +182,7 @@
         '<button type="button" class="cs-btn primario" data-pt="crear">Crear la tabla</button>');
     }
     if(V.pantalla==='metricas' && window.ptMetricas) return barra()+window.ptMetricas.html();
+    if(V.pantalla==='produccion' && window.ptProduccion) return barra()+window.ptProduccion.html();
     if(V.pantalla==='ticket') return barra()+htmlTicket();
     if(V.pantalla==='altas') return barra()+htmlAltas();
     return barra()+htmlTabla();
@@ -208,6 +209,7 @@
       (V.modo==='equipo'?'<button type="button" class="cs-btn primario" data-pt="a-altas">📥 Dar de alta un remito'+(pend.length?' <i class="cs-badge">'+pend.length+'</i>':'')+'</button>'+
         (r.tot.u?'<button type="button" class="cs-btn" data-pt="cobrar">💰 Me pagó</button>':'')+
         '<button type="button" class="cs-btn" data-pt="a-metricas">📊 Métricas y reposición</button>'+
+        '<button type="button" class="cs-btn" data-pt="a-produccion">🖨️ Producción y ganancia</button>'+
         '<button type="button" class="cs-btn ghost" data-pt="ajustes">⚙️ Productos y acceso</button>':'')+
       '<button type="button" class="cs-btn ghost" data-pt="excel">⬇ Excel</button>'+
     '</div>';
@@ -485,6 +487,7 @@
     if(acc==='a-tabla'){ irA('tabla'); return; }
     if(acc==='a-ticket'){ if(V.modo!=='cliente') return; V.ticket={}; V.dia=diaHoy(); irA('ticket'); return; }
     if(acc==='a-altas'){ V.remAbierto=null; irA('altas'); return; }
+    if(acc==='a-produccion'){ if(V.modo!=='equipo') return; irA('produccion'); if(window.ptProduccion) window.ptProduccion.entrar(); return; }
     if(acc==='a-metricas'){ if(V.modo!=='equipo') return; irA('metricas'); if(window.ptMetricas) window.ptMetricas.entrar(); return; }
     if(acc==='ver-movs'){ V.verMovs=true; pintar(); return; }
     if(acc==='ver-todos'){ V.verTodos=true; pintar(); return; }
@@ -792,6 +795,6 @@
     document.head.appendChild(st);
   }
   window.ptCore = { P:P, V:V, items:items, altas:altas, resumen:resumen, hayDe:hayDe, lineasDe:lineasDe, aFecha:aFecha, pintar:pintar, guardarItems:guardarItems,
-    db:db, FV:FV, esc:esc, peso:peso, num:num, cant:cant, norm:norm, nuevoId:nuevoId, catDe:catDe, pad:pad, diaTxt:diaTxt, emailAct:emailAct };
+    db:db, FV:FV, esc:esc, irA:irA, delCatalogo:delCatalogo, peso:peso, num:num, cant:cant, norm:norm, nuevoId:nuevoId, catDe:catDe, pad:pad, diaTxt:diaTxt, emailAct:emailAct };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', enganchar); else enganchar();
 })();
