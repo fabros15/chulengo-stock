@@ -109,7 +109,7 @@
       '<div class="rem-ficha-top"><button type="button" class="rem-back">← Volver</button></div>'+
       '<div class="cg-tit" style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap"><div><div class="cg-h1">Stock en '+esc(cliente)+'</div><div class="rem-gris">Lo que llevaste, lo que te pagaron, lo que queda allá y lo que tenés que reponer.</div></div>'+
         '<button type="button" class="cg-btn" data-cg="ver-rub">👀 Ver como el cliente (prueba)</button></div>'+
-      '<div class="cg-bloque pt-acceso" data-pt="abrir-adm" data-cliente="'+esc(cliente)+'"><div><div class="cg-bt" style="margin:0">📱 Página en vivo para el cliente</div><div class="rem-gris">Lo que el cliente marca como vendido, los productos que ve, quién entra y cobrar.</div></div><span class="rem-flecha">›</span></div>'+
+      '<div class="cg-bloque pt-acceso" data-pt="abrir-tabla" data-cliente="'+esc(cliente)+'"><div><div class="cg-bt" style="margin:0">🍿 Stock compartido con el cliente</div><div class="rem-gris">La tabla que ven los dos: altas de remitos, tickets del día y lo que falta cobrar.</div></div><span class="rem-flecha">›</span></div>'+
       '<div class="cg-kpis">'+
         '<div class="cg-kpi"><span>Sin cobrar</span><b>'+cant(tot.u)+' u.</b></div>'+
         '<div class="cg-kpi"><span>Plata sin cobrar</span><b style="color:#B45309">'+peso(tot.m)+'</b></div>'+
