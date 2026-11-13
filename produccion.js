@@ -63,7 +63,7 @@
 
   function html(){
     var c=C(); suscribir();
-    var h='<div class="cs-in"><div class="cs-titulo"><button type="button" class="cs-btn" data-pt="a-tabla">← Volver</button><h2>Producción y ganancia</h2></div>';
+    var h='<div class="cs-in"><div class="cs-titulo"><div><h2>Producción y ganancia</h2><p class="cs-sub">Qué imprimir para el Candy, cuánto te deja cada cosa y el seguimiento de cada tanda.</p></div></div>';
     if(Q.err) return h+'<div class="cs-card cs-msg"><p>No se pudieron leer tus costos: '+c.esc(Q.err.message)+'</p></div></div>';
     if(!Q.doc) return h+'<div class="cs-card cs-vacio">Cargando…</div></div>';
     var F=filas(), cf=cfg(), sinCosto=F.filter(function(f){ return f.costo.v===null; }).length, sinHoras=F.filter(function(f){ return !f.horas; }).length;
@@ -78,17 +78,24 @@
       '<div class="cs-kpi"><span>Faltan datos</span><b>'+(sinCosto||sinHoras?'<span style="color:#B45309">'+sinCosto+' sin costo</span>':'Completo')+'</b><small>'+sinHoras+' sin horas de impresión</small></div>'+
     '</div>';
 
+    var enCurso=(d().tandas||[]).filter(function(x){ return x.estado!=='entregada'; }).length;
+    var SUBS=[['tanda','🖨️ Próxima tanda'+(enCurso?' · '+enCurso+' en marcha':'')],['ganancia','💲 Qué conviene imprimir'],['numeros','🔧 Tus costos'+(sinCosto?' · faltan '+sinCosto:'')]];
+    if(!Q.sub) Q.sub='tanda';
+    h+='<div class="cs-seg">'+SUBS.map(function(x){ return '<button type="button" class="'+(Q.sub===x[0]?'on':'')+'" data-pr="sub" data-sub="'+x[0]+'">'+x[1]+'</button>'; }).join('')+'</div>';
+    var cuerpo={tanda:'',ganancia:'',numeros:''};
+    var h0=h; h='';
     // Config
-    h+='<div class="cs-card"><div class="cs-card-h"><h3>Tus números</h3></div><div class="pr-cfg">'+
+    h+='<div class="cs-card"><div class="cs-card-h"><div><h3>Tus costos de impresión</h3><small class="cs-gris">Con esto la página calcula sola el costo de cada producto.</small></div></div><div class="pr-cfg">'+
       '<label>Precio del kg de filamento<input class="cs-input" inputmode="numeric" data-pr-cfg="kg" value="'+(cf.kg||'')+'" placeholder="$ por kg"></label>'+
       '<label>Costo por hora de máquina<input class="cs-input" inputmode="numeric" data-pr-cfg="hora" value="'+(cf.hora||'')+'" placeholder="luz + desgaste"></label>'+
       '<label>Máquinas para el Candy<input class="cs-input" inputmode="numeric" data-pr-cfg="maquinas" value="'+cf.maquinas+'"></label>'+
       '<label>Horas por día que imprimen<input class="cs-input" inputmode="numeric" data-pr-cfg="horasDia" value="'+cf.horasDia+'"></label>'+
       '</div><div class="mt-nota">Con el kg y el costo por hora, si a un producto le cargás gramos y horas, la página estima el costo sola. Si cargás el costo a mano, usa ese.</div></div>';
 
+    cuerpo.numeros=h; h='';
     // Qué conviene imprimir
     var orden=F.slice().sort(function(a,b){ return (b.ganMes===null?-1:b.ganMes)-(a.ganMes===null?-1:a.ganMes) || (b.porHora||0)-(a.porHora||0); });
-    h+='<div class="cs-card"><div class="cs-card-h"><h3>Qué conviene imprimir</h3><span class="cs-gris mt-ley">ordenado por lo que te deja por mes</span></div>'+
+    h+='<div class="cs-card"><div class="cs-card-h"><div><h3>Qué conviene imprimir</h3><small class="cs-gris">Ordenado por lo que te deja por mes. Tocá un casillero para cargar costo, gramos u horas.</small></div></div>'+
       '<div class="pr-scroll"><table class="cs-tabla pr-tabla"><thead><tr><th>Producto</th><th class="n">Te paga</th><th class="n">Costo</th><th class="n">Gramos</th><th class="n">Horas</th><th class="n">Ganás c/u</th><th class="n">Por hora de máquina</th><th class="n">Vende/sem</th><th class="n">Te deja por mes</th></tr></thead><tbody>';
     orden.forEach(function(f){
       var ph=c.num(f.x.costo)?'':(f.costo.v!==null?c.cant(f.costo.v):'');
@@ -104,10 +111,11 @@
     });
     h+='</tbody></table></div><div class="mt-nota"><b>Por hora de máquina</b> = lo que ganás con una unidad dividido las horas que tarda en imprimirse: sirve para elegir qué poner primero cuando las máquinas están ocupadas. <b>Te deja por mes</b> = ganancia por unidad × lo que se vende (últimas 4 semanas).</div></div>';
 
+    cuerpo.ganancia=h; h='';
     // Tanda de impresión
     if(!Q.tanda) Q.tanda = propuesta(F);
     var t=totales(Q.tanda, F);
-    h+='<div class="cs-card"><div class="cs-card-h"><h3>🖨️ Próxima tanda de impresión</h3><span><button type="button" class="cs-btn ghost" data-pr="recalcular">Volver a sugerir</button></span></div>';
+    h+='<div class="cs-card"><div class="cs-card-h"><div><h3>Próxima tanda de impresión</h3><small class="cs-gris">Sugerida según lo que falta en el Candy y tus mínimos. Podés cambiar cantidades, quitar o agregar.</small></div><span><button type="button" class="cs-btn ghost" data-pr="recalcular">Volver a sugerir</button></span></div>';
     if(!Q.tanda.length) h+='<div class="cs-vacio">'+(Q.guardada?'✓ Tanda guardada (abajo, en "Tandas en marcha"). ':'')+'No hay nada más para reponer según los mínimos. Cargá mínimos en Métricas o agregá productos a mano.</div>';
     else {
       h+='<table class="cs-tabla"><thead><tr><th>Producto</th><th class="n">Cantidad</th><th class="n">Horas</th><th class="n">Filamento</th><th></th></tr></thead><tbody>';
@@ -129,7 +137,7 @@
       '<div><span>Filamento</span><b>'+(t.g?c.cant(Math.round(t.g/100)/10)+' kg':'—')+'</b></div>'+
       '<div><span>Costo</span><b>'+c.peso(t.costo)+'</b></div>'+
       '<div><span>Ganancia al venderse</span><b>'+c.peso(t.gan)+'</b></div>'+
-    '</div>'+(t.sinDatos?'<div class="mt-nota">⚠️ '+t.sinDatos+' producto(s) sin horas de impresión: el tiempo total da de menos. Cargalas en la tabla de arriba.</div>':'')+
+    '</div>'+(t.sinDatos?'<div class="mt-nota">⚠️ '+t.sinDatos+' producto(s) sin horas de impresión: el tiempo total da de menos. Cargalas en «Qué conviene imprimir».</div>':'')+
     '<div class="cs-acciones" style="padding:0 16px 16px;margin:0"><button type="button" class="cs-btn primario" data-pr="guardar-tanda"'+(Q.tanda.length?'':' disabled')+'>Guardar tanda y empezar</button>'+
       '<button type="button" class="cs-btn" data-pr="copiar"'+(Q.tanda.length?'':' disabled')+'>📋 Copiar para WhatsApp</button></div></div>';
 
@@ -146,9 +154,10 @@
         if(!lista) h+='<div class="pr-lineas">'+td.lineas.map(function(l,i){ return '<label><span>'+c.esc(l.nombre)+'</span><input class="mt-min" inputmode="numeric" data-pr-hecho="'+td.id+'|'+i+'" value="'+(c.num(l.hechos)||'')+'" placeholder="0"> / '+c.num(l.cant)+'</label>'; }).join('')+'</div>';
         h+='</div>';
       });
-      h+='<div class="mt-nota">Cuando la tanda esté lista y la lleves al cine, hacé el remito y tocá <b>Dar de alta un remito</b> para sumarla al stock.</div></div>';
+      h+='<div class="mt-nota">Cuando la tanda esté lista y la lleves al cine, hacé el remito y dalo de alta en <b>Entregas</b> para sumarla al stock.</div></div>';
     }
-    return h+'</div>';
+    cuerpo.tanda=h;
+    return h0+cuerpo[Q.sub]+'</div>';
   }
 
   function textoWhatsApp(F){
@@ -160,6 +169,7 @@
   document.addEventListener('click', function(e){
     var b=e.target.closest('[data-pr]'); if(!b) return;
     var c=C(), acc=b.dataset.pr;
+    if(acc==='sub'){ Q.sub=b.dataset.sub; c.pintar(); var ov=document.getElementById('pt-overlay'); if(ov) ov.scrollTop=0; return; }
     if(acc==='recalcular'){ Q.tanda=null; Q.guardada=false; c.pintar(); return; }
     if(acc==='quitar'){ Q.tanda.splice(+b.dataset.i,1); c.pintar(); return; }
     if(acc==='copiar'){

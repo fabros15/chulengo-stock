@@ -1,0 +1,32 @@
+    // —— NUEVO: stock compartido del Candy (consignación con el cine) ——
+    // El equipo maneja todo; el cliente (Rubén) ve su tabla y carga tickets del día.
+    function emailAct() { return request.auth.token.email.lower(); }
+    function esClienteDe(pid) {
+      return logueado() && request.auth.token.email != null
+        && emailAct() in get(/databases/$(database)/documents/consig_portal/$(pid)).data.emails;
+    }
+    match /consig_acceso/{email} {
+      allow read: if logueado() && request.auth.token.email != null && emailAct() == email;
+      allow read, write: if esColab();
+    }
+    match /consig_portal/{pid} {
+      allow read: if esColab() || esClienteDe(pid);
+      allow write: if esColab();
+      match /ventas/{vid} {
+        allow read: if esColab() || esClienteDe(pid);
+        allow create: if esClienteDe(pid)
+          && request.resource.data.email == emailAct()
+          && request.resource.data.tipo == 'ticket'
+          && request.resource.data.cobrada == false
+          && request.resource.data.anulada == false
+          && request.resource.data.fecha == request.time
+          && request.resource.data.lineas is list
+          && request.resource.data.lineas.size() > 0 && request.resource.data.lineas.size() < 300;
+        allow update: if esClienteDe(pid)
+          && resource.data.email == emailAct()
+          && resource.data.cobrada == false
+          && request.resource.data.anulada == true
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['anulada', 'anuladaEn']);
+        allow create, update, delete: if esColab();
+      }
+    }

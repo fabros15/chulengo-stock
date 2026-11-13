@@ -194,9 +194,13 @@
     var sem=semaforo(D), rojos=sem.filter(function(x){ return x.est==='rojo'; }).length, amar=sem.filter(function(x){ return x.est==='amarillo'; }).length;
     var P=promedios(S);
 
-    var h='<div class="cs-in"><div class="cs-titulo"><button type="button" class="cs-btn" data-pt="a-tabla">← Volver</button><h2>Métricas y reposición</h2></div>';
-    if(!H.v.length) h+='<div class="cs-ok" style="background:#FEF3C7;border-color:#FDE68A;color:#78350F">Todavía no está importado el historial del Excel, así que hay pocos datos.</div>';
+    var sub=M.sub||'resumen', proxEst=todos().filter(function(e){ return e.fecha>=hoy && (e.tipo==='pelicula'||e.tipo==='especial'); }).sort(function(a,b){ return a.fecha<b.fecha?-1:1; })[0];
+    var dormN=sem.filter(function(x){ return x.hay>0 && x.sinVender!==null && x.sinVender>=30; }).length;
+    var h='<div class="cs-in"><div class="cs-titulo"><button type="button" class="cs-btn" data-pt="a-tabla">← Volver</button><div><h2>Métricas</h2><p class="cs-sub">Cómo viene vendiendo el Candy, qué reponer y qué se viene.</p></div></div>';
+    if(!H.v.length) h+='<div class="cs-aviso">Todavía no está importado el historial del Excel, así que hay pocos datos.</div>';
+    h+='<div class="cs-seg">'+[['resumen','Resumen'],['reponer','Reponer'+(rojos?' <i class="cs-badge">'+rojos+'</i>':'')],['fechas','Fechas y estrenos'],['analisis','Qué influye']].map(function(t){ return '<button type="button" class="'+(sub===t[0]?'on':'')+'" data-mt="sub" data-sub="'+t[0]+'">'+t[1]+'</button>'; }).join('')+'</div>';
 
+    if(sub==='resumen'){
     // KPIs
     h+='<div class="cs-kpis mt-kpis">'+
       '<div class="cs-kpi"><span>Vendido este mes</span><b>'+c.cant(Math.round(um))+' u.</b><small>≈ '+c.peso(mm)+' · al día '+diaMes+' del mes pasado: '+c.cant(Math.round(uaParcial))+' u.</small></div>'+
@@ -205,9 +209,15 @@
       '<div class="cs-kpi"><span>Reponer</span><b>'+(rojos?'<span style="color:#B91C1C">'+rojos+' urgentes</span>':'Nada urgente')+'</b><small>'+amar+' para ir preparando</small></div>'+
     '</div>';
 
-    // Pronóstico + próximos eventos
-    var prox=todos().filter(function(e){ return e.hasta>=hoy; }).sort(function(a,b){ return a.fecha<b.fecha?-1:1; });
-    h+='<div class="mt-2col"><div class="cs-card"><div class="cs-card-h"><h3>Próximos días en el Candy</h3></div>';
+      // Para hacer ahora
+      var tareas=[];
+      if(rojos) tareas.push('<button type="button" class="mt-tarea rojo" data-mt="sub" data-sub="reponer"><b>'+rojos+(rojos===1?' producto urgente':' productos urgentes')+' para reponer</b><span>Ver qué imprimir →</span></button>');
+      if(proxEst){ var fx=difDias(hoy,proxEst.fecha); if(fx<=30) tareas.push('<button type="button" class="mt-tarea'+(fx<=21?' amarillo':'')+'" data-mt="sub" data-sub="fechas"><b>'+(ICO[proxEst.tipo]||'📌')+' '+c.esc(proxEst.titulo)+' en '+fx+' días</b><span>'+(fx<=21?'Tené el merch listo':'Ver calendario')+' →</span></button>'); }
+      if(dormN) tareas.push('<button type="button" class="mt-tarea" data-mt="sub" data-sub="reponer"><b>😴 '+dormN+' producto'+(dormN===1?'':'s')+' sin venderse hace +30 días</b><span>Pensar precio →</span></button>');
+      var sinMin=c.items().filter(function(it){ return !it.oculto && !c.num(it.minimo); }).length;
+      if(sinMin) tareas.push('<button type="button" class="mt-tarea" data-mt="sub" data-sub="reponer"><b>'+sinMin+' productos sin mínimo cargado</b><span>Cargarlos para que avise →</span></button>');
+      if(tareas.length) h+='<div class="mt-tareas">'+tareas.join('')+'</div>';
+      h+='<div class="cs-card"><div class="cs-card-h"><h3>Próximos 7 días</h3><span class="cs-gris mt-ley">clima en Madryn y ventas esperadas</span></div>';
     if(M.prono){
       h+='<div class="mt-prono">'+M.prono.slice(0,7).map(function(p){
         var wd=deIso(p.d).getDay(), base=P.porWd[wd], est=base?base.p:0, llu=null, seco=null;
@@ -219,23 +229,13 @@
           '<em>~'+Math.round(est)+' ventas</em>'+(ev.length?'<small class="mt-evd">'+ev.map(function(e){ return (ICO[e.tipo]||'📌')+' '+c.esc(e.titulo); }).join('<br>')+'</small>':'')+'</div>';
       }).join('')+'</div><div class="mt-nota">Ventas esperadas según cómo vienen los mismos días de la semana desde junio, ajustado si llueve.</div>';
     } else h+='<div class="cs-vacio">'+(M.errClima?'No se pudo cargar el pronóstico.':'Cargando pronóstico…')+'</div>';
-    h+='</div><div class="cs-card"><div class="cs-card-h"><h3>Estrenos, obras y fechas</h3><button type="button" class="cs-btn" data-mt="nuevo-ev">+ Agregar</button></div>';
-    if(M.nuevoEv){
-      h+='<div class="mt-form"><input type="date" id="mt-ev-fecha" class="cs-input"><select id="mt-ev-tipo" class="cs-input"><option value="pelicula">🎬 Estreno de película</option><option value="teatro">🎭 Obra / show en el cine</option><option value="especial">⭐ Fecha especial (evento, visita, festival…)</option><option value="feriado">🇦🇷 Feriado local</option><option value="otro">📌 Otro</option></select>'+
-        '<input id="mt-ev-titulo" class="cs-input" placeholder="Título (ej: Avengers: Doomsday)"><input id="mt-ev-nota" class="cs-input" placeholder="Merch / nota (opcional)">'+
-        '<div><button type="button" class="cs-btn primario" data-mt="guardar-ev">Guardar</button> <button type="button" class="cs-btn ghost" data-mt="cancelar-ev">Cancelar</button></div></div>';
-    }
-    if(!prox.length) h+='<div class="cs-vacio">No hay estrenos ni obras cargados.</div>';
-    prox.slice(0, M.verTodasFechas?60:6).forEach(function(e){
-      var falta=difDias(hoy,e.fecha), aviso = (e.tipo==='pelicula' || e.tipo==='especial') && falta<=21 && falta>=0;
-      var cuando = e.fecha<=hoy ? (e.hasta>e.fecha?'en curso hasta el '+c.diaTxt(e.hasta):'hoy') : 'faltan '+falta+' días';
-      h+='<div class="mt-ev-f'+(e.fijo?' fijo':'')+'"><span class="mt-ev-i">'+(ICO[e.tipo]||'📌')+'</span><div><b>'+c.esc(e.titulo)+'</b><small>'+c.diaTxt(e.fecha)+(e.hasta>e.fecha?' al '+c.diaTxt(e.hasta):'')+' · '+cuando+(e.nota?' · '+c.esc(e.nota):'')+'</small>'+
-        (aviso?'<small class="mt-alerta">⚠️ Menos de 3 semanas: '+(e.tipo==='pelicula'?'tené el merch listo':'¿hay algo para vender ese día?')+'</small>':'')+'</div>'+
-        (e.fijo?'':'<button type="button" class="cs-link" data-mt="borrar-ev" data-id="'+c.esc(e.id)+'">Quitar</button>')+'</div>';
-    });
-    if(prox.length>6 && !M.verTodasFechas) h+='<div style="padding:8px 16px"><button type="button" class="cs-btn ghost" data-mt="ver-fechas">Ver todas ('+prox.length+')</button></div>';
-    h+='</div></div>';
+      h+='</div>';
+    // Gráfico
+    h+='<div class="cs-card"><div class="cs-card-h"><h3>Ventas por semana</h3><span class="cs-gris mt-ley">🎬 estreno · 🎭 obra</span></div><div class="mt-graf">'+grafico(S)+'</div></div>';
 
+    }
+
+    if(sub==='reponer'){
     // Semáforo
     h+='<div class="cs-card"><div class="cs-card-h"><h3>Reposición</h3><span class="cs-gris mt-ley">🔴 urgente · 🟡 preparar · 🟢 bien · ⚪ sin mínimo ni ventas</span></div>'+
       '<table class="cs-tabla mt-sem"><thead><tr><th>Producto</th><th class="n">Hay</th><th class="n">Mínimo</th><th class="n">Vende</th><th class="n">Se agota</th><th class="n">Producir</th></tr></thead><tbody>';
@@ -260,12 +260,39 @@
       }).join('')+'</div></div>';
     }
 
-    // Gráfico
-    h+='<div class="cs-card"><div class="cs-card-h"><h3>Ventas por semana</h3><span class="cs-gris mt-ley">🎬 estreno · 🎭 obra</span></div><div class="mt-graf">'+grafico(S)+'</div></div>';
+    }
 
+    if(sub==='fechas'){
+      var prox=todos().filter(function(e){ return e.hasta>=hoy; }).sort(function(a,b){ return a.fecha<b.fecha?-1:1; });
+      h+='<div class="cs-card"><div class="cs-card-h"><h3>Próximas fechas</h3><button type="button" class="cs-btn" data-mt="nuevo-ev">+ Agregar estreno, obra o fecha</button></div>';
+    if(M.nuevoEv){
+      h+='<div class="mt-form"><input type="date" id="mt-ev-fecha" class="cs-input"><select id="mt-ev-tipo" class="cs-input"><option value="pelicula">🎬 Estreno de película</option><option value="teatro">🎭 Obra / show en el cine</option><option value="especial">⭐ Fecha especial (evento, visita, festival…)</option><option value="feriado">🇦🇷 Feriado local</option><option value="otro">📌 Otro</option></select>'+
+        '<input id="mt-ev-titulo" class="cs-input" placeholder="Título (ej: Avengers: Doomsday)"><input id="mt-ev-nota" class="cs-input" placeholder="Merch / nota (opcional)">'+
+        '<div><button type="button" class="cs-btn primario" data-mt="guardar-ev">Guardar</button> <button type="button" class="cs-btn ghost" data-mt="cancelar-ev">Cancelar</button></div></div>';
+    }
+    if(!prox.length) h+='<div class="cs-vacio">No hay estrenos ni obras cargados.</div>';
+    prox.slice(0, M.verTodasFechas?80:12).forEach(function(e){
+      var falta=difDias(hoy,e.fecha), aviso = (e.tipo==='pelicula' || e.tipo==='especial') && falta<=21 && falta>=0;
+      var cuando = e.fecha<=hoy ? (e.hasta>e.fecha?'en curso hasta el '+c.diaTxt(e.hasta):'hoy') : 'faltan '+falta+' días';
+      h+='<div class="mt-ev-f'+(e.fijo?' fijo':'')+'"><span class="mt-ev-i">'+(ICO[e.tipo]||'📌')+'</span><div><b>'+c.esc(e.titulo)+'</b><small>'+c.diaTxt(e.fecha)+(e.hasta>e.fecha?' al '+c.diaTxt(e.hasta):'')+' · '+cuando+(e.nota?' · '+c.esc(e.nota):'')+'</small>'+
+        (aviso?'<small class="mt-alerta">⚠️ Menos de 3 semanas: '+(e.tipo==='pelicula'?'tené el merch listo':'¿hay algo para vender ese día?')+'</small>':'')+'</div>'+
+        (e.fijo?'':'<button type="button" class="cs-link" data-mt="borrar-ev" data-id="'+c.esc(e.id)+'">Quitar</button>')+'</div>';
+    });
+    if(prox.length>12 && !M.verTodasFechas) h+='<div style="padding:8px 16px"><button type="button" class="cs-btn ghost" data-mt="ver-fechas">Ver todas ('+prox.length+')</button></div>';
+      h+='</div>';
+    h+='<div class="cs-card"><div class="cs-card-h"><h3>Cómo vendieron los estrenos, obras y fechas especiales</h3></div><div class="mt-inf">'+
+      (P.evs.length ? P.evs.slice().reverse().map(function(z){
+        var lab = z.e.tipo==='pelicula' ? '10 días después del estreno de ' : (z.e.hasta>z.e.fecha ? '' : '');
+        return '<div><span>'+(ICO[z.e.tipo]||'📌')+' '+lab+c.esc(z.e.titulo)+' <small class="cs-gris">'+c.diaTxt(z.e.fecha)+'</small></span>'+vsGen(z.r,z.base)+'</div>'; }).join('') : '<div class="cs-gris">Todavía no hay fechas pasadas con ventas cargadas.</div>')+
+      '</div><div class="mt-nota">Estrenos: los 10 días siguientes contra el promedio general. Fechas de un solo día: contra el promedio de ese mismo día de la semana. Rangos (vacaciones, visita del Papa): todo el período contra el promedio general.</div></div>';
+
+    }
+
+    if(sub==='analisis'){
+      h+='<div class="mt-3col">';
     // Qué influye
     var maxWd=Math.max.apply(null,P.porWd.map(function(x){ return x?x.p:0; }).concat([0.1]));
-    h+='<div class="mt-2col"><div class="cs-card"><div class="cs-card-h"><h3>Qué día se vende más</h3></div><div class="mt-barras">'+
+    h+='<div class="cs-card"><div class="cs-card-h"><h3>Qué día se vende más</h3></div><div class="mt-barras">'+
       [1,2,3,4,5,6,0].map(function(w){ var x=P.porWd[w]; return '<div class="mt-bh"><span>'+DIAS[w]+'</span><div><i style="width:'+(x?Math.round(x.p/maxWd*100):0)+'%"></i></div><b>'+(x?c.cant(Math.round(x.p*10)/10):'—')+'</b></div>'; }).join('')+
       '</div><div class="mt-nota">Promedio de ventas por día desde junio.</div>'+
       '<div class="cs-card-h" style="border-top:1px solid #EEEAE4"><h3>Según el día del mes</h3></div><div class="mt-inf">'+
@@ -273,19 +300,15 @@
     h+='<div class="cs-card"><div class="cs-card-h"><h3>Clima y eventos</h3></div><div class="mt-inf">'+
       (P.clima ? P.clima.map(function(b){ return '<div><span>'+b.t+'</span>'+vsGen(b.r,P.gen)+'</div>'; }).join('') : '<div class="cs-gris">'+(M.errClima?'No se pudo cargar el clima.':'Cargando clima…')+'</div>')+
       '<div><span>🇦🇷 Todos los feriados</span>'+vsGen(P.feriados,P.gen)+'</div>'+
-      '</div><div class="mt-nota">Comparado con el promedio general ('+(P.gen?c.cant(Math.round(P.gen.p*10)/10):'—')+' ventas por día). Clima de Puerto Madryn (Open-Meteo).</div></div></div>'+
-      '<div class="cs-card"><div class="cs-card-h"><h3>Cómo vendieron los estrenos, obras y fechas especiales</h3></div><div class="mt-inf">'+
-      (P.evs.length ? P.evs.slice().reverse().map(function(z){
-        var lab = z.e.tipo==='pelicula' ? '10 días después del estreno de ' : (z.e.hasta>z.e.fecha ? '' : '');
-        return '<div><span>'+(ICO[z.e.tipo]||'📌')+' '+lab+c.esc(z.e.titulo)+' <small class="cs-gris">'+c.diaTxt(z.e.fecha)+'</small></span>'+vsGen(z.r,z.base)+'</div>'; }).join('') : '<div class="cs-gris">Todavía no hay fechas pasadas con ventas cargadas.</div>')+
-      '</div><div class="mt-nota">Estrenos: los 10 días siguientes contra el promedio general. Fechas de un solo día: contra el promedio de ese mismo día de la semana. Rangos (vacaciones, visita del Papa): todo el período contra el promedio general.</div></div>';
-
+      '</div><div class="mt-nota">Comparado con el promedio general ('+(P.gen?c.cant(Math.round(P.gen.p*10)/10):'—')+' ventas por día). Clima de Puerto Madryn (Open-Meteo).</div></div>';
+      h+='</div>';
     // Cobros
     if(H.liq && H.liq.length){
       var mx=Math.max.apply(null,H.liq.map(function(l){ return l[2]; }));
       h+='<div class="cs-card"><div class="cs-card-h"><h3>Lo que te pagó en cada liquidación</h3></div><div class="mt-barras">'+
         H.liq.map(function(l){ return '<div class="mt-bh ancho"><span>'+c.diaTxt(l[0])+'</span><div><i style="width:'+Math.round(l[2]/mx*100)+'%"></i></div><b>'+c.peso(l[2])+'</b></div>'; }).join('')+
         '</div><div class="mt-nota">Del Excel de Rubén (hoja DEUDA FABRIZIO).</div></div>';
+    }
     }
     return h+'</div>';
   }
@@ -297,6 +320,7 @@
     if(acc==='nuevo-ev'){ M.nuevoEv=!M.nuevoEv; c.pintar(); return; }
     if(acc==='cancelar-ev'){ M.nuevoEv=false; c.pintar(); return; }
     if(acc==='ver-sem'){ M.verTodosSem=true; c.pintar(); return; }
+    if(acc==='sub'){ M.sub=b.dataset.sub; c.pintar(); var ov=document.getElementById('pt-overlay'); if(ov) ov.scrollTop=0; return; }
     if(acc==='ver-fechas'){ M.verTodasFechas=true; c.pintar(); return; }
     if(acc==='guardar-ev'){
       var f=(document.getElementById('mt-ev-fecha')||{}).value, t=((document.getElementById('mt-ev-titulo')||{}).value||'').trim();
@@ -320,6 +344,9 @@
 
   var st=document.createElement('style');
   st.textContent=
+    '.mt-tareas{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-bottom:16px}'+
+    '.mt-tarea{display:flex;flex-direction:column;gap:3px;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid #E2DDD6;background:#fff;cursor:pointer;font:inherit;color:#1A1814}.mt-tarea b{font-size:0.88rem}.mt-tarea span{font-size:0.78rem;color:#2D6A4F;font-weight:600}.mt-tarea.rojo{border-color:#FECACA;background:#FEF2F2}.mt-tarea.amarillo{border-color:#FDE68A;background:#FFFBEB}.mt-tarea:hover{border-color:#B9B3A9}'+
+    '.mt-3col{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.mt-3col>.cs-card{margin-bottom:0}.mt-3col+*{margin-top:16px}'+
     '.mt-kpis{grid-template-columns:repeat(4,1fr)!important}.mt-kpis .cs-kpi small{display:block;margin-top:2px}'+
     '.mt-2col{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}.mt-2col>.cs-card{margin-bottom:16px}'+
     '.mt-prono{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:12px}'+
@@ -338,7 +365,7 @@
     '.mt-bh>div{background:#F0ECE6;border-radius:4px;height:14px;overflow:hidden}.mt-bh i{display:block;height:100%;background:#2D6A4F;border-radius:4px}.mt-bh b{text-align:right}'+
     '.mt-inf{padding:8px 16px}.mt-inf>div{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed #EEEAE4;font-size:0.85rem}.mt-inf>div:last-child{border-bottom:none}.mt-inf span{color:#3F3A33}'+
     '.mt-v{white-space:nowrap;text-align:right;flex-shrink:0}.mt-pct{font-style:normal;font-weight:700;font-size:0.78rem;padding:1px 6px;border-radius:999px;margin-left:4px}.mt-pct.mas{background:#DCFCE7;color:#166534}.mt-pct.menos{background:#FEE2E2;color:#B91C1C}.mt-pct.igual{background:#EEEAE4;color:#6B665E}'+
-    '@media(max-width:860px){.mt-2col{grid-template-columns:1fr}.mt-kpis{grid-template-columns:1fr 1fr!important}.mt-prono{grid-template-columns:repeat(4,1fr)}}'+
+    '@media(max-width:860px){.mt-3col{grid-template-columns:1fr}.mt-2col{grid-template-columns:1fr}.mt-kpis{grid-template-columns:1fr 1fr!important}.mt-prono{grid-template-columns:repeat(4,1fr)}}'+
     '@media(max-width:680px){.mt-sem th:nth-child(3),.mt-sem td:nth-child(3),.mt-sem th:nth-child(4),.mt-sem td:nth-child(4){display:none}.mt-inf>div{flex-direction:column;gap:2px}}';
   document.head.appendChild(st);
 
