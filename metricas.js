@@ -13,7 +13,13 @@
   function sumarDias(s,n){ var d=deIso(s); d.setDate(d.getDate()+n); return iso(d); }
   function difDias(a,b){ return Math.round((deIso(b)-deIso(a))/864e5); }
   function palabras(s){ return C().norm(s).replace(/\(.*?\)/g,' ').split(' ').filter(function(w){ return w.length>1; }); }
-  function hist(){ var d=C().P.doc; return (d && d.hist) || {v:[],e:[],liq:[]}; }
+  // Firestore no acepta arrays anidados: el historial se guarda como objetos {d,n,c} / {d,u,m}
+  function hist(){
+    var d=C().P.doc, h=(d && d.hist) || {};
+    function v(r){ return Array.isArray(r) ? r : [r.d, r.n, r.c]; }
+    function l(r){ return Array.isArray(r) ? r : [r.d, r.u, r.m]; }
+    return { v:(h.v||[]).map(v), e:(h.e||[]).map(v), liq:(h.liq||[]).map(l) };
+  }
   function eventos(){ var d=C().P.doc; return (d && Array.isArray(d.eventos)) ? d.eventos : []; }
 
   // ── Qué productos actuales corresponden a cada nombre del historial ──
