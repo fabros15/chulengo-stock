@@ -202,8 +202,8 @@
     '</div>';
 
     h+='<div class="cs-acciones">'+
-      '<button type="button" class="cs-btn primario" data-pt="a-ticket">🧾 Cargar ticket del día</button>'+
-      (V.modo==='equipo'?'<button type="button" class="cs-btn" data-pt="a-altas">📥 Dar de alta un remito'+(pend.length?' <i class="cs-badge">'+pend.length+'</i>':'')+'</button>'+
+      (V.modo==='cliente'?'<button type="button" class="cs-btn primario" data-pt="a-ticket">🧾 Cargar ticket del día</button>':'')+
+      (V.modo==='equipo'?'<button type="button" class="cs-btn primario" data-pt="a-altas">📥 Dar de alta un remito'+(pend.length?' <i class="cs-badge">'+pend.length+'</i>':'')+'</button>'+
         (r.tot.u?'<button type="button" class="cs-btn" data-pt="cobrar">💰 Me pagó</button>':'')+
         '<button type="button" class="cs-btn ghost" data-pt="ajustes">⚙️ Productos y acceso</button>':'')+
       '<button type="button" class="cs-btn ghost" data-pt="excel">⬇ Excel</button>'+
@@ -242,7 +242,7 @@
         if(m.tipo==='alta'){
           h+='<div class="cs-mov"><span class="cs-tag azul">Entrega</span><div class="cs-mov-t"><b>Remito'+(m.a.fechaRemito?' del '+esc(m.a.fechaRemito):'')+'</b><small>'+esc(m.a.lineas.map(function(l){ return cant(l.cant)+' '+l.nombre; }).join(' · '))+'</small></div><div class="cs-mov-r"><b>+'+cant(m.u)+' u.</b><small>'+fechaCorta(m.d)+'</small></div></div>';
         } else {
-          var v=m.v, puede = !v.cobrada && !v.anulada && (V.modo==='equipo' || v.email===emailAct());
+          var v=m.v, puede = !v.cobrada && !v.anulada && V.modo==='cliente' && v.email===emailAct();
           h+='<div class="cs-mov'+(v.anulada?' anulado':'')+'"><span class="cs-tag '+(v.anulada?'gris">Anulado':v.cobrada?'verde">Pagado':'rojo">Sin pagar')+'</span>'+
             '<div class="cs-mov-t"><b>Ticket'+(v.dia?' del '+diaTxt(v.dia):'')+'</b><small>'+esc(lineasDe(v).map(function(l){ return cant(l.cant)+' '+l.nombre; }).join(' · '))+'</small></div>'+
             '<div class="cs-mov-r"><b>−'+cant(m.t.u)+' u. · '+peso(m.t.m)+'</b><small>'+fechaCorta(m.d)+(puede?' · <button type="button" class="cs-link" data-pt="anular" data-id="'+esc(v.id)+'">Anular</button>':'')+'</small></div></div>';
@@ -479,7 +479,7 @@
     if(acc==='recargar'){ location.reload(); return; }
     if(acc==='excel'){ descargarExcel(); return; }
     if(acc==='a-tabla'){ irA('tabla'); return; }
-    if(acc==='a-ticket'){ V.ticket={}; V.dia=diaHoy(); irA('ticket'); return; }
+    if(acc==='a-ticket'){ if(V.modo!=='cliente') return; V.ticket={}; V.dia=diaHoy(); irA('ticket'); return; }
     if(acc==='a-altas'){ V.remAbierto=null; irA('altas'); return; }
     if(acc==='ver-movs'){ V.verMovs=true; pintar(); return; }
     if(acc==='ver-todos'){ V.verTodos=true; pintar(); return; }
