@@ -21,6 +21,39 @@
     return { v:(h.v||[]).map(v), e:(h.e||[]).map(v), liq:(h.liq||[]).map(l) };
   }
   function eventos(){ var d=C().P.doc; return (d && Array.isArray(d.eventos)) ? d.eventos : []; }
+  // Feriados nacionales, fechas comerciales y fechas extraordinarias (fijas, no se borran).
+  // tipo: feriado | especial | vacaciones.  h = hasta (para rangos).
+  var FIJAS=[
+    {d:'2026-06-15',t:'Feriado: Paso a la Inmortalidad de Güemes',tipo:'feriado'},
+    {d:'2026-06-20',t:'Día de la Bandera',tipo:'feriado'},
+    {d:'2026-06-21',t:'Día del Padre',tipo:'especial'},
+    {d:'2026-07-09',h:'2026-07-10',t:'Día de la Independencia + puente',tipo:'feriado'},
+    {d:'2026-07-13',h:'2026-07-24',t:'Vacaciones de invierno en Chubut',tipo:'vacaciones'},
+    {d:'2026-07-20',t:'Día del Amigo',tipo:'especial'},
+    {d:'2026-07-28',t:'Aniversario de Puerto Madryn',tipo:'feriado'},
+    {d:'2026-08-16',t:'Día del Niño',tipo:'especial'},
+    {d:'2026-08-17',t:'Feriado: Paso a la Inmortalidad de San Martín',tipo:'feriado'},
+    {d:'2026-09-21',t:'Día del Estudiante y de la Primavera',tipo:'especial'},
+    {d:'2026-10-12',t:'Día de la Diversidad Cultural',tipo:'feriado'},
+    {d:'2026-10-18',t:'Día de la Madre',tipo:'especial'},
+    {d:'2026-10-31',t:'Halloween',tipo:'especial'},
+    {d:'2026-11-08',h:'2026-11-11',t:'Visita del Papa León XIV a la Argentina',tipo:'especial'},
+    {d:'2026-11-23',t:'Feriado: Día de la Soberanía Nacional',tipo:'feriado'},
+    {d:'2026-12-07',h:'2026-12-08',t:'Puente + Inmaculada Concepción',tipo:'feriado'},
+    {d:'2026-12-18',t:'Último día de clases en Chubut',tipo:'especial'},
+    {d:'2026-12-19',h:'2027-02-28',t:'Vacaciones de verano',tipo:'vacaciones'},
+    {d:'2026-12-24',h:'2026-12-25',t:'Nochebuena y Navidad',tipo:'feriado'},
+    {d:'2026-12-31',h:'2027-01-01',t:'Fin de año y Año Nuevo',tipo:'feriado'},
+    {d:'2027-01-06',t:'Día de Reyes',tipo:'especial'},
+    {d:'2027-02-08',h:'2027-02-09',t:'Carnaval',tipo:'feriado'},
+    {d:'2027-02-14',t:'San Valentín',tipo:'especial'},
+    {d:'2027-03-24',t:'Día de la Memoria',tipo:'feriado'},
+    {d:'2027-03-26',t:'Viernes Santo',tipo:'feriado'}
+  ];
+  var ICO={pelicula:'🎬',teatro:'🎭',feriado:'🇦🇷',especial:'⭐',vacaciones:'🏖️',otro:'📌'};
+  function fijas(){ return FIJAS.map(function(f,i){ return { id:'fx'+i, fecha:f.d, hasta:f.h||f.d, titulo:f.t, tipo:f.tipo, fijo:true }; }); }
+  function todos(){ return eventos().map(function(e){ var x=Object.assign({},e); x.hasta=e.hasta||e.fecha; return x; }).concat(fijas()); }
+  function enDia(d){ return todos().filter(function(e){ return d>=e.fecha && d<=e.hasta; }); }
 
   // ── Qué productos actuales corresponden a cada nombre del historial ──
   var cacheMatch={};
@@ -109,11 +142,17 @@
       ].map(function(z){ return { t:z[0], r:prom(z[1]) }; });
     }
     // eventos pasados: estrenos (10 días siguientes) y obras (ese día)
-    var evs=eventos().filter(function(e){ return e.fecha>=desde && e.fecha<hoy; }).map(function(e){
-      var arr = e.tipo==='teatro' ? dias.filter(function(x){ return x.d===e.fecha; }) : dias.filter(function(x){ var k=difDias(e.fecha,x.d); return k>=0 && k<10; });
-      return { e:e, r:prom(arr) };
+    var evs=todos().filter(function(e){ return e.fecha>=desde && e.fecha<hoy; }).map(function(e){
+      var arr, base=gen;
+      if(e.tipo==='pelicula') arr=dias.filter(function(x){ var k=difDias(e.fecha,x.d); return k>=0 && k<10; });
+      else arr=dias.filter(function(x){ return x.d>=e.fecha && x.d<=e.hasta; });
+      // un solo día: comparar contra el promedio de ese mismo día de la semana
+      if(e.fecha===e.hasta && e.tipo!=='pelicula') base=porWd[deIso(e.fecha).getDay()];
+      return { e:e, r:prom(arr), base:base };
     });
-    return { gen:gen, porWd:porWd, porMes:porMes, clima:clima, evs:evs, dias:dias };
+    var fer=dias.filter(function(x){ return todos().some(function(e){ return e.tipo==='feriado' && x.d>=e.fecha && x.d<=e.hasta; }); });
+    var feriados=prom(fer);
+    return { gen:gen, porWd:porWd, porMes:porMes, clima:clima, evs:evs, dias:dias, feriados:feriados };
   }
   function vsGen(r, gen){
     if(!r || !gen || !gen.p) return '<span class="mt-v cs-gris">sin datos</span>';
@@ -135,9 +174,9 @@
       h+='<rect x="'+(i*bw+4)+'" y="'+y+'" width="'+(bw-8)+'" height="'+bh+'" rx="3" class="mt-bar'+(i===N-1?' actual':'')+'"><title>Semana del '+c.diaTxt(x.ini)+': '+x.u+' u.</title></rect>';
       if(x.u) h+='<text x="'+(i*bw+bw/2)+'" y="'+(y-4)+'" class="mt-val">'+Math.round(x.u)+'</text>';
       if(i%3===0 || i===N-1){ var p=x.ini.split('-'); h+='<text x="'+(i*bw+bw/2)+'" y="'+(H+14)+'" class="mt-lab">'+p[2]+'/'+p[1]+'</text>'; }
-      eventos().forEach(function(e){
-        if(e.fecha>=x.ini && e.fecha<sumarDias(x.ini,7)) h+='<text x="'+(i*bw+bw/2)+'" y="'+(H+29)+'" class="mt-ev"><title>'+c.esc(e.titulo)+' ('+c.diaTxt(e.fecha)+')</title>'+(e.tipo==='teatro'?'🎭':'🎬')+'</text>';
-      });
+      var marcas=todos().filter(function(e){ return e.tipo!=='vacaciones' && e.fecha>=x.ini && e.fecha<sumarDias(x.ini,7); });
+      if(marcas.length) h+='<text x="'+(i*bw+bw/2)+'" y="'+(H+29)+'" class="mt-ev"><title>'+marcas.map(function(e){ return c.esc(e.titulo)+' ('+c.diaTxt(e.fecha)+')'; }).join(' · ')+'</title>'+marcas.slice(0,2).map(function(e){ return ICO[e.tipo]||'📌'; }).join('')+'</text>';
+      if(todos().some(function(e){ return e.tipo==='vacaciones' && e.fecha<sumarDias(x.ini,7) && e.hasta>=x.ini; })) h+='<rect x="'+(i*bw+2)+'" y="'+(H+2)+'" width="'+(bw-4)+'" height="3" class="mt-vac"><title>Vacaciones</title></rect>';
     });
     return h+'</svg>';
   }
@@ -167,31 +206,34 @@
     '</div>';
 
     // Pronóstico + próximos eventos
-    var prox=eventos().filter(function(e){ return e.fecha>=hoy; }).sort(function(a,b){ return a.fecha<b.fecha?-1:1; });
+    var prox=todos().filter(function(e){ return e.hasta>=hoy; }).sort(function(a,b){ return a.fecha<b.fecha?-1:1; });
     h+='<div class="mt-2col"><div class="cs-card"><div class="cs-card-h"><h3>Próximos días en el Candy</h3></div>';
     if(M.prono){
       h+='<div class="mt-prono">'+M.prono.slice(0,7).map(function(p){
         var wd=deIso(p.d).getDay(), base=P.porWd[wd], est=base?base.p:0, llu=null, seco=null;
         if(P.clima){ llu=P.clima[0].r; seco=P.clima[1].r; }
         if(p.lluvia>=1 && llu && seco && seco.p) est*=Math.min(1.6,Math.max(0.6,llu.p/seco.p));
-        var ev=eventos().filter(function(e){ return e.fecha===p.d; });
+        var ev=enDia(p.d);
         return '<div class="mt-dia'+(ev.length?' con-ev':'')+'"><b>'+(p.d===hoy?'Hoy':DIAS[wd]+' '+(+p.d.slice(8,10)))+'</b><i>'+icono(p.code,p.lluvia)+'</i>'+
           '<span>'+Math.round(p.tmax)+'° / '+Math.round(p.tmin)+'°</span><small>'+(p.prob!=null?p.prob+'% lluvia':'')+'</small>'+
-          '<em>~'+Math.round(est)+' ventas</em>'+(ev.length?'<small class="mt-evd">'+ev.map(function(e){ return (e.tipo==='teatro'?'🎭 ':'🎬 ')+c.esc(e.titulo); }).join('<br>')+'</small>':'')+'</div>';
+          '<em>~'+Math.round(est)+' ventas</em>'+(ev.length?'<small class="mt-evd">'+ev.map(function(e){ return (ICO[e.tipo]||'📌')+' '+c.esc(e.titulo); }).join('<br>')+'</small>':'')+'</div>';
       }).join('')+'</div><div class="mt-nota">Ventas esperadas según cómo vienen los mismos días de la semana desde junio, ajustado si llueve.</div>';
     } else h+='<div class="cs-vacio">'+(M.errClima?'No se pudo cargar el pronóstico.':'Cargando pronóstico…')+'</div>';
-    h+='</div><div class="cs-card"><div class="cs-card-h"><h3>Estrenos y obras</h3><button type="button" class="cs-btn" data-mt="nuevo-ev">+ Agregar</button></div>';
+    h+='</div><div class="cs-card"><div class="cs-card-h"><h3>Estrenos, obras y fechas</h3><button type="button" class="cs-btn" data-mt="nuevo-ev">+ Agregar</button></div>';
     if(M.nuevoEv){
-      h+='<div class="mt-form"><input type="date" id="mt-ev-fecha" class="cs-input"><select id="mt-ev-tipo" class="cs-input"><option value="pelicula">🎬 Estreno de película</option><option value="teatro">🎭 Obra / show en el cine</option><option value="otro">📌 Otro (feriado, vacaciones…)</option></select>'+
+      h+='<div class="mt-form"><input type="date" id="mt-ev-fecha" class="cs-input"><select id="mt-ev-tipo" class="cs-input"><option value="pelicula">🎬 Estreno de película</option><option value="teatro">🎭 Obra / show en el cine</option><option value="especial">⭐ Fecha especial (evento, visita, festival…)</option><option value="feriado">🇦🇷 Feriado local</option><option value="otro">📌 Otro</option></select>'+
         '<input id="mt-ev-titulo" class="cs-input" placeholder="Título (ej: Avengers: Doomsday)"><input id="mt-ev-nota" class="cs-input" placeholder="Merch / nota (opcional)">'+
         '<div><button type="button" class="cs-btn primario" data-mt="guardar-ev">Guardar</button> <button type="button" class="cs-btn ghost" data-mt="cancelar-ev">Cancelar</button></div></div>';
     }
     if(!prox.length) h+='<div class="cs-vacio">No hay estrenos ni obras cargados.</div>';
-    prox.slice(0,8).forEach(function(e){
-      var falta=difDias(hoy,e.fecha), aviso = e.tipo==='pelicula' && falta<=21 && falta>=0;
-      h+='<div class="mt-ev-f"><span class="mt-ev-i">'+(e.tipo==='teatro'?'🎭':e.tipo==='otro'?'📌':'🎬')+'</span><div><b>'+c.esc(e.titulo)+'</b><small>'+c.diaTxt(e.fecha)+' · '+(falta===0?'hoy':'faltan '+falta+' días')+(e.nota?' · '+c.esc(e.nota):'')+'</small>'+
-        (aviso?'<small class="mt-alerta">⚠️ Menos de 3 semanas: tené el merch listo</small>':'')+'</div><button type="button" class="cs-link" data-mt="borrar-ev" data-id="'+c.esc(e.id)+'">Quitar</button></div>';
+    prox.slice(0, M.verTodasFechas?60:6).forEach(function(e){
+      var falta=difDias(hoy,e.fecha), aviso = (e.tipo==='pelicula' || e.tipo==='especial') && falta<=21 && falta>=0;
+      var cuando = e.fecha<=hoy ? (e.hasta>e.fecha?'en curso hasta el '+c.diaTxt(e.hasta):'hoy') : 'faltan '+falta+' días';
+      h+='<div class="mt-ev-f'+(e.fijo?' fijo':'')+'"><span class="mt-ev-i">'+(ICO[e.tipo]||'📌')+'</span><div><b>'+c.esc(e.titulo)+'</b><small>'+c.diaTxt(e.fecha)+(e.hasta>e.fecha?' al '+c.diaTxt(e.hasta):'')+' · '+cuando+(e.nota?' · '+c.esc(e.nota):'')+'</small>'+
+        (aviso?'<small class="mt-alerta">⚠️ Menos de 3 semanas: '+(e.tipo==='pelicula'?'tené el merch listo':'¿hay algo para vender ese día?')+'</small>':'')+'</div>'+
+        (e.fijo?'':'<button type="button" class="cs-link" data-mt="borrar-ev" data-id="'+c.esc(e.id)+'">Quitar</button>')+'</div>';
     });
+    if(prox.length>6 && !M.verTodasFechas) h+='<div style="padding:8px 16px"><button type="button" class="cs-btn ghost" data-mt="ver-fechas">Ver todas ('+prox.length+')</button></div>';
     h+='</div></div>';
 
     // Semáforo
@@ -230,8 +272,13 @@
       P.porMes.map(function(b){ return '<div><span>'+b.t+'</span>'+vsGen(b.r,P.gen)+'</div>'; }).join('')+'</div></div>';
     h+='<div class="cs-card"><div class="cs-card-h"><h3>Clima y eventos</h3></div><div class="mt-inf">'+
       (P.clima ? P.clima.map(function(b){ return '<div><span>'+b.t+'</span>'+vsGen(b.r,P.gen)+'</div>'; }).join('') : '<div class="cs-gris">'+(M.errClima?'No se pudo cargar el clima.':'Cargando clima…')+'</div>')+
-      (P.evs.length ? P.evs.map(function(z){ return '<div><span>'+(z.e.tipo==='teatro'?'🎭 Día de ':'🎬 10 días después de ')+c.esc(z.e.titulo)+'</span>'+vsGen(z.r,P.gen)+'</div>'; }).join('') : '<div class="cs-gris">Cargá estrenos y obras pasados para ver cuánto movieron las ventas.</div>')+
-      '</div><div class="mt-nota">Comparado con el promedio general ('+(P.gen?c.cant(Math.round(P.gen.p*10)/10):'—')+' ventas por día). Clima de Puerto Madryn (Open-Meteo).</div></div></div>';
+      '<div><span>🇦🇷 Todos los feriados</span>'+vsGen(P.feriados,P.gen)+'</div>'+
+      '</div><div class="mt-nota">Comparado con el promedio general ('+(P.gen?c.cant(Math.round(P.gen.p*10)/10):'—')+' ventas por día). Clima de Puerto Madryn (Open-Meteo).</div></div></div>'+
+      '<div class="cs-card"><div class="cs-card-h"><h3>Cómo vendieron los estrenos, obras y fechas especiales</h3></div><div class="mt-inf">'+
+      (P.evs.length ? P.evs.slice().reverse().map(function(z){
+        var lab = z.e.tipo==='pelicula' ? '10 días después del estreno de ' : (z.e.hasta>z.e.fecha ? '' : '');
+        return '<div><span>'+(ICO[z.e.tipo]||'📌')+' '+lab+c.esc(z.e.titulo)+' <small class="cs-gris">'+c.diaTxt(z.e.fecha)+'</small></span>'+vsGen(z.r,z.base)+'</div>'; }).join('') : '<div class="cs-gris">Todavía no hay fechas pasadas con ventas cargadas.</div>')+
+      '</div><div class="mt-nota">Estrenos: los 10 días siguientes contra el promedio general. Fechas de un solo día: contra el promedio de ese mismo día de la semana. Rangos (vacaciones, visita del Papa): todo el período contra el promedio general.</div></div>';
 
     // Cobros
     if(H.liq && H.liq.length){
@@ -250,6 +297,7 @@
     if(acc==='nuevo-ev'){ M.nuevoEv=!M.nuevoEv; c.pintar(); return; }
     if(acc==='cancelar-ev'){ M.nuevoEv=false; c.pintar(); return; }
     if(acc==='ver-sem'){ M.verTodosSem=true; c.pintar(); return; }
+    if(acc==='ver-fechas'){ M.verTodasFechas=true; c.pintar(); return; }
     if(acc==='guardar-ev'){
       var f=(document.getElementById('mt-ev-fecha')||{}).value, t=((document.getElementById('mt-ev-titulo')||{}).value||'').trim();
       if(!f || !t){ alert('Poné la fecha y el título.'); return; }
@@ -285,7 +333,7 @@
     '.mt-sem .cs-prod{gap:10px}.mt-dorm{color:#B45309!important}'+
     '.mt-min{width:56px;padding:6px;border:1px solid #D9D3C9;border-radius:6px;text-align:center;font:inherit;font-weight:700;background:#fff;color:#1A1814}'+
     '.mt-graf{padding:12px 10px 4px}.mt-svg{width:100%;height:220px;display:block}.mt-bar{fill:#A3B8AC}.mt-bar.actual{fill:#2D6A4F}'+
-    '.mt-val{font-size:10px;fill:#6B665E;text-anchor:middle}.mt-lab{font-size:10px;fill:#8A8479;text-anchor:middle}.mt-ev{font-size:12px;text-anchor:middle}'+
+    '.mt-vac{fill:#F59E0B}.mt-ev-f.fijo{background:#FCFBF9}.mt-val{font-size:10px;fill:#6B665E;text-anchor:middle}.mt-lab{font-size:10px;fill:#8A8479;text-anchor:middle}.mt-ev{font-size:12px;text-anchor:middle}'+
     '.mt-barras{padding:12px 16px;display:flex;flex-direction:column;gap:7px}.mt-bh{display:grid;grid-template-columns:40px 1fr 44px;gap:8px;align-items:center;font-size:0.82rem}.mt-bh.ancho{grid-template-columns:84px 1fr 96px}'+
     '.mt-bh>div{background:#F0ECE6;border-radius:4px;height:14px;overflow:hidden}.mt-bh i{display:block;height:100%;background:#2D6A4F;border-radius:4px}.mt-bh b{text-align:right}'+
     '.mt-inf{padding:8px 16px}.mt-inf>div{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed #EEEAE4;font-size:0.85rem}.mt-inf>div:last-child{border-bottom:none}.mt-inf span{color:#3F3A33}'+
