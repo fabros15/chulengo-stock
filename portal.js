@@ -149,6 +149,7 @@
     var ov=$('pt-overlay');
     if(!ov){ ov=document.createElement('div'); ov.id='pt-overlay'; ov.className='cs'; document.body.appendChild(ov); }
     document.body.classList.add('pt-abierto');
+    V.comoRuben=false;
     ov.classList.toggle('con-tabs', modo==='equipo');
     pintar(); ov.scrollTop=0;
   }
@@ -165,11 +166,11 @@
         (V.modo==='cliente'?'<button type="button" class="cs-btn ghost" data-pt="salir-cuenta">Salir</button>':'')+
       '</div></div>'+tabsHtml()+'</header>';
   }
-  var TABS=[['tabla','📦','Stock'],['metricas','📊','Métricas'],['produccion','🖨️','Producción'],['altas','📥','Entregas'],['ajustes','⚙️','Productos y acceso']];
+  var TABS=[['tabla','📦','Stock <em>lo ve Rubén</em>'],['metricas','📊','Métricas'],['produccion','🖨️','Producción'],['altas','📥','Entregas'],['ajustes','⚙️','Productos y acceso']];
   function tabsHtml(){
     if(V.modo!=='equipo' || !P.doc) return '';
     var act = V.pantalla==='ticket' ? 'tabla' : V.pantalla;
-    return '<nav class="cs-tabs"><div class="cs-tabs-in">'+TABS.map(function(t){ return '<button type="button" class="'+(act===t[0]?'on':'')+'" data-pt="tab" data-p="'+t[0]+'"><i>'+t[1]+'</i>'+t[2]+'</button>'; }).join('')+'</div></nav>';
+    return '<nav class="cs-tabs"><div class="cs-tabs-in">'+TABS.map(function(t){ return '<button type="button" class="'+(act===t[0]?'on':'')+'" data-pt="tab" data-p="'+t[0]+'"><i>'+t[1]+'</i>'+t[2]+'</button>'; }).join('')+'<button type="button" class="cs-tab-ruben" data-pt="como-ruben"><i>👁</i>Ver como Rubén</button></div></nav>';
   }
   function titulo(t, sub, back){ return '<div class="cs-titulo">'+(back?'<button type="button" class="cs-btn" data-pt="a-tabla">← Volver</button>':'')+'<div><h2>'+t+'</h2>'+(sub?'<p class="cs-sub">'+sub+'</p>':'')+'</div></div>'; }
   function caja(titulo, cuerpo){ return '<div class="cs-in"><div class="cs-card cs-msg"><h2>'+titulo+'</h2>'+cuerpo+'</div></div>'; }
@@ -319,7 +320,12 @@
   function pintar(){
     var ov=$('pt-overlay'); if(!ov) return;
     var act=document.activeElement, enBuscar = act && act.id==='cs-buscar', pos = enBuscar ? act.selectionStart : 0, sc=ov.scrollTop;
-    ov.innerHTML = htmlPantalla();
+    if(V.comoRuben && V.modo==='equipo'){
+      if(V.pantalla!=='tabla' && V.pantalla!=='ticket') V.pantalla='tabla';
+      V.modo='cliente';
+      try{ ov.innerHTML = '<div class="cs-preview"><span>👁 Estás viendo <b>exactamente lo que ve Rubén</b>. Nada de lo que toques acá se guarda.</span><button type="button" class="cs-btn" data-pt="como-yo">Volver a mi vista</button></div>'+htmlPantalla(); }
+      finally{ V.modo='equipo'; }
+    } else ov.innerHTML = htmlPantalla();
     ov.scrollTop=sc;
     if(enBuscar){ var nb=$('cs-buscar'); if(nb){ nb.focus(); try{ nb.setSelectionRange(pos,pos); }catch(_){} } }
   }
@@ -486,10 +492,13 @@
     var acc=b.dataset.pt, k=b.dataset.k, it=k?items().find(function(x){ return x.id===k; }):null;
 
     if(acc==='login'){ loginGoogle(); return; }
+    if(acc==='salir-cuenta' && V.comoRuben){ V.comoRuben=false; V.pantalla='tabla'; pintar(); return; }
     if(acc==='salir-cuenta'){ if(V.modo==='cliente' && !confirm('¿Cerrar sesión?')) return; firebase.auth().signOut(); return; }
     if(acc==='cerrar'){ cerrarOverlay(); return; }
     if(acc==='recargar'){ location.reload(); return; }
     if(acc==='excel'){ descargarExcel(); return; }
+    if(acc==='como-ruben'){ if(V.modo!=='equipo') return; V.comoRuben=true; V.pantalla='tabla'; pintar(); $('pt-overlay').scrollTop=0; return; }
+    if(acc==='como-yo'){ V.comoRuben=false; V.pantalla='tabla'; pintar(); $('pt-overlay').scrollTop=0; return; }
     if(acc==='a-tabla'){ irA('tabla'); return; }
     if(acc==='tab'){
       var pp=b.dataset.p; if(V.modo!=='equipo') return;
@@ -499,7 +508,7 @@
       if(pp==='produccion' && window.ptProduccion) window.ptProduccion.entrar();
       return;
     }
-    if(acc==='a-ticket'){ if(V.modo!=='cliente') return; V.ticket={}; V.dia=diaHoy(); irA('ticket'); return; }
+    if(acc==='a-ticket'){ if(V.modo!=='cliente' && !V.comoRuben) return; V.ticket={}; V.dia=diaHoy(); irA('ticket'); return; }
     if(acc==='a-altas'){ V.remAbierto=null; irA('altas'); return; }
     if(acc==='a-produccion'){ if(V.modo!=='equipo') return; irA('produccion'); if(window.ptProduccion) window.ptProduccion.entrar(); return; }
     if(acc==='a-metricas'){ if(V.modo!=='equipo') return; irA('metricas'); if(window.ptMetricas) window.ptMetricas.entrar(); return; }
@@ -513,6 +522,7 @@
       V.ticket[k]=Math.max(0,Math.min(mx,nv)); pintar(); return;
     }
     if(acc==='guardar-ticket'){
+      if(V.comoRuben){ alert('Esto es la vista previa de lo que ve Rubén: el ticket no se guarda. Los tickets los carga él.'); V.ticket={}; irA('tabla'); return; }
       var lineas=[], u=0, m=0;
       items().forEach(function(x){ var c=V.ticket[x.id]||0; if(c>0){ lineas.push({ k:x.id, nombre:x.nombre, cant:c, precio:num(x.precio) }); u+=c; m+=c*num(x.precio); } });
       if(!lineas.length){ alert('No cargaste ningún producto vendido.'); return; }
@@ -754,6 +764,9 @@
       '.cs-tabs button i{font-style:normal}.cs-tabs button:hover{color:#1A1814}.cs-tabs button.on{color:#1A1814;border-bottom-color:#2D6A4F}'+
       '.con-tabs .cs-titulo [data-pt=a-tabla]{display:none}.cs-adm .rem-ficha-top,.cs-adm .cg-tit{display:none!important}'+
       '.cs-adm .cg-bloque{background:#fff;border:1px solid #E2DDD6;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:none}.cs-adm .cg-bt{font-size:0.95rem;font-weight:700;margin-bottom:10px}'+
+      '.cs-tabs button em{font-style:normal;font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;background:#E7F3EC;color:#2D6A4F;padding:2px 6px;border-radius:99px}'+
+      '.cs-tabs .cs-tab-ruben{margin-left:auto;color:#2D6A4F}.cs-tabs .cs-tab-ruben:hover{color:#1B4332}'+
+      '.cs-preview{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;background:#FEF3C7;border-bottom:2px solid #F59E0B;color:#78350F;padding:10px 16px;font-size:0.92rem;text-align:center}'+
       '.cs-sub{margin:3px 0 0;color:#6B665E;font-size:0.9rem}.cs-titulo{align-items:flex-start}.cs-titulo .cs-btn{margin-top:2px}'+
       '.cs-aviso{background:#FFFBEB;border:1px solid #FDE68A;color:#78350F;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:0.9rem}'+
       '.cs-seg{display:flex;gap:4px;background:#EAE6DF;padding:4px;border-radius:10px;margin-bottom:18px;overflow-x:auto;scrollbar-width:none}.cs-seg::-webkit-scrollbar{display:none}'+
